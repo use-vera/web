@@ -36,10 +36,25 @@ const gilroy = localFont({
   ],
 });
 
+const title = "Vera | Buy the ticket. Keep the moment.";
+const description =
+  "Vera is where you find events, grab tickets safely, and relive them through the moments your circle shares.";
+
 export const metadata: Metadata = {
-  title: "Vera | Buy the ticket. Keep the moment.",
-  description:
-    "Vera is where you find events, grab tickets safely, and relive them through the moments your circle shares.",
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    siteName: "Vera",
+    type: "website",
+    locale: "en_NG",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export default function RootLayout({

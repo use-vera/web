@@ -7,10 +7,15 @@ import HowItWorksSteps from "@/components/how-it-works-steps";
 import Reveal from "@/components/motion/reveal";
 import type { Metadata } from "next";
 
+const title = "How Vera works — Find it. Book it. Live it.";
+const description =
+  "Exactly what happens from the moment you open Vera to the moment you're walking through the door — discovery, checkout, check-in, and the moments after.";
+
 export const metadata: Metadata = {
-  title: "How Vera works — Find it. Book it. Live it.",
-  description:
-    "Exactly what happens from the moment you open Vera to the moment you're walking through the door — discovery, checkout, check-in, and the moments after.",
+  title,
+  description,
+  openGraph: { title, description },
+  twitter: { title, description },
 };
 
 export default function HowItWorksPage() {

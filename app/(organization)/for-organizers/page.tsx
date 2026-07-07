@@ -8,10 +8,15 @@ import OrganizerPricing from "@/components/organizer-pricing";
 import OrganizerTrustStrip from "@/components/organizer-trust-strip";
 import type { Metadata } from "next";
 
+const title = "For Organizers — Vera handles the rest.";
+const description =
+  "Sell tickets, verify entry, control resale, and get discovered — all from one dashboard, with payouts that land automatically.";
+
 export const metadata: Metadata = {
-  title: "For Organizers — Vera handles the rest.",
-  description:
-    "Sell tickets, verify entry, control resale, and get discovered — all from one dashboard, with payouts that land automatically.",
+  title,
+  description,
+  openGraph: { title, description },
+  twitter: { title, description },
 };
 
 export default function ForOrganizersPage() {
