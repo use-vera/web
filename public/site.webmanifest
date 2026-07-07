@@ -1,0 +1,21 @@
+{
+  "name": "Vera",
+  "short_name": "Vera",
+  "description": "Buy the ticket. Keep the moment.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f3ef",
+  "theme_color": "#0fb26e",
+  "icons": [
+    {
+      "src": "/brand/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/brand/apple-touch-icon-180.png",
+      "type": "image/png",
+      "sizes": "180x180"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 470 150" width="470" height="150">
+  <g transform="translate(4 15)">
+  <path d="M28 100 L28 58 A32 32 0 0 1 92 58 L92 100" fill="none" stroke="#0FB26E" stroke-width="15" stroke-linecap="round"></path>
+  <path d="M44 76 L60 56 L76 76" fill="none" stroke="#0FB26E" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"></path></g>
+  <text x="150" y="113" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="108" font-weight="600" letter-spacing="-5" fill="#16150F">Vera</text>
+</svg>
