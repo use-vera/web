@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthModalProvider } from "@/components/auth/auth-modal-provider";
 import SmoothScrollProvider from "@/components/smooth-scroll-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
@@ -19,7 +20,9 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SmoothScrollProvider>{children}</SmoothScrollProvider>
+      <SmoothScrollProvider>
+        <AuthModalProvider>{children}</AuthModalProvider>
+      </SmoothScrollProvider>
     </QueryClientProvider>
   );
 };

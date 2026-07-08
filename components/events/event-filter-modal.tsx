@@ -63,7 +63,7 @@ const EventFilterModal = ({
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               When
             </span>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {TIME_FILTERS.map((option) => {
                 const active = option.value === filter;
 
@@ -73,7 +73,7 @@ const EventFilterModal = ({
                     type="button"
                     onClick={() => onFilterChange(option.value)}
                     className={cn(
-                      "flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-semibold transition-colors",
+                      "flex items-center justify-between gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap",
                       active
                         ? "border-primary bg-accent text-accent-foreground"
                         : "border-border bg-card text-foreground hover:bg-secondary",

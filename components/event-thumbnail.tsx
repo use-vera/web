@@ -12,15 +12,32 @@ interface EventThumbnailProps {
   iconClassName?: string;
 }
 
+/**
+ * next/image throws (rather than firing onError) for hosts outside
+ * next.config.ts's remotePatterns, so unrecognized hosts — e.g. stray local
+ * upload URLs in seed data — must be filtered out before render, not caught.
+ */
+const isOptimizableImageUrl = (url: string) => {
+  try {
+    return new URL(url).hostname === "res.cloudinary.com";
+  } catch {
+    return false;
+  }
+};
+
 const EventThumbnail = ({
   imageUrl,
   alt = "",
   className,
   iconClassName,
 }: EventThumbnailProps) => {
-  const [failed, setFailed] = useState(false);
+  // Keyed to the url itself (not a plain boolean) so a component reused
+  // across changing imageUrls — e.g. a rotating carousel — doesn't keep
+  // showing the fallback for every image after just one of them fails.
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const hasFailed = failedUrl === imageUrl;
 
-  if (imageUrl && !failed) {
+  if (imageUrl && isOptimizableImageUrl(imageUrl) && !hasFailed) {
     return (
       <div className={cn("relative overflow-hidden", className)}>
         <Image
@@ -29,7 +46,7 @@ const EventThumbnail = ({
           fill
           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
           className={cn("object-cover", iconClassName)}
-          onError={() => setFailed(true)}
+          onError={() => setFailedUrl(imageUrl)}
         />
       </div>
     );

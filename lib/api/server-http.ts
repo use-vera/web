@@ -7,7 +7,7 @@ import axios from "axios";
  * via the `Authorization` header rather than baking it in here.
  */
 const serverHttp = axios.create({
-  baseURL: process.env.BACKEND_API_URL ?? "http://localhost:5050/api",
+  baseURL: process.env.BACKEND_API_URL,
   headers: {
     "Content-Type": "application/json",
   },

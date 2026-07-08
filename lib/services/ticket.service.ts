@@ -1,5 +1,8 @@
 import clientHttp from "@/lib/api/client-http";
 import {
+  type MyTicketApi,
+  type MyTicketsQuery,
+  type PaginatedResponse,
   type TicketPurchasePayload,
   type TicketPurchaseResponse,
   type VerifyTicketResponse,
@@ -31,6 +34,17 @@ export const ticketService = {
     const response = await clientHttp.post<ApiEnvelope<VerifyTicketResponse>>(
       `/tickets/${ticketId}/verify`,
       { reference },
+    );
+
+    return response.data.data;
+  },
+
+  listMyTickets: async (
+    query: MyTicketsQuery,
+  ): Promise<PaginatedResponse<MyTicketApi>> => {
+    const response = await clientHttp.get<ApiEnvelope<PaginatedResponse<MyTicketApi>>>(
+      "/tickets",
+      { params: query },
     );
 
     return response.data.data;

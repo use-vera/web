@@ -134,3 +134,46 @@ export interface VerifyTicketResponse {
   paymentStatus: string;
   alreadyVerified: boolean;
 }
+
+export interface TicketEventSummaryApi {
+  _id: string;
+  organizerUserId: EventOrganizerSummary | string;
+  name: string;
+  imageUrl?: string;
+  address: string;
+  state?: string;
+  startsAt: string;
+  endsAt: string;
+  timezone: string;
+  isPaid: boolean;
+  ticketPriceNaira: number;
+  currency: "NGN";
+  nextOccurrenceAt: string;
+  nextOccurrenceEndsAt: string;
+}
+
+export interface MyTicketApi {
+  _id: string;
+  eventId: TicketEventSummaryApi | string;
+  quantity: number;
+  ticketCategoryName?: string;
+  unitPriceNaira: number;
+  totalPriceNaira: number;
+  currency: "NGN";
+  status: "pending" | "paid" | "cancelled" | "used" | "expired";
+  attendeeName: string;
+  attendeeEmail: string;
+  ticketCode: string;
+  barcodeValue: string;
+  paidAt?: string | null;
+  usedAt?: string | null;
+  cancelledAt?: string | null;
+  createdAt: string;
+}
+
+export interface MyTicketsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: "all" | "pending" | "paid" | "cancelled" | "used" | "expired";
+}
