@@ -29,8 +29,17 @@ const SmoothScrollProvider = ({ children }: { children: React.ReactNode }) => {
     <ReactLenis
       root
       options={{
+        // `lerp` and `duration` are mutually exclusive in Lenis — when
+        // `duration` is a number it wins (Lenis auto-assigns a default
+        // easing and the duration+easing branch takes priority over lerp
+        // internally), so `lerp` here was silently dead. That meant every
+        // wheel tick restarted a fresh 1.4s eased animation toward a new
+        // target instead of continuously damping toward it — with real
+        // trackpad/mouse input firing every ~16ms, each tick interrupted
+        // the previous curve right at its slow start, reading as the
+        // scroll repeatedly starting then stalling. `lerp`-only gives
+        // continuous, low-latency damping instead.
         lerp: 0.1,
-        duration: 1.4,
         smoothWheel: true,
       }}
     >
