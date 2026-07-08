@@ -1,7 +1,10 @@
 import EventThumbnail from "@/components/event-thumbnail";
 import Badge from "@/components/ui/badge";
 import { formatEventDate } from "@/lib/format-date";
-import { type MyTicketApi, type TicketEventSummaryApi } from "@/lib/types/event";
+import {
+  type MyTicketApi,
+  type TicketEventSummaryApi,
+} from "@/lib/types/event";
 import { ChevronRight, MapPin } from "lucide-react";
 
 interface TicketListItemProps {
@@ -30,10 +33,14 @@ const TicketListItem = ({ ticket, onSelect }: TicketListItemProps) => {
     <button
       type="button"
       onClick={() => onSelect(ticket)}
-      className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-shadow hover:shadow-lg"
+      className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-shadow hover:shadow-lg sm:max-w-lg"
     >
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-        <EventThumbnail imageUrl={event?.imageUrl} alt={event?.name} className="h-full w-full" />
+        <EventThumbnail
+          imageUrl={event?.imageUrl}
+          alt={event?.name}
+          className="h-full w-full"
+        />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">

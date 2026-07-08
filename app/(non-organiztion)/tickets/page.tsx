@@ -7,7 +7,10 @@ import Button, { buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useSession } from "@/lib/hooks/use-auth";
 import { useMyTickets } from "@/lib/hooks/use-tickets";
-import { type MyTicketApi, type TicketEventSummaryApi } from "@/lib/types/event";
+import {
+  type MyTicketApi,
+  type TicketEventSummaryApi,
+} from "@/lib/types/event";
 import { cn } from "@/lib/utils";
 import { Loader2, Ticket } from "lucide-react";
 import Link from "next/link";
@@ -38,7 +41,9 @@ export default function TicketsPage() {
   const { openAuthModal } = useAuthModal();
   const sessionQuery = useSession();
   const [tab, setTab] = useState<Tab>("upcoming");
-  const [selectedTicket, setSelectedTicket] = useState<MyTicketApi | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<MyTicketApi | null>(
+    null,
+  );
 
   const isAuthenticated = Boolean(sessionQuery.data?.user);
   const ticketsQuery = useMyTickets();
@@ -94,7 +99,7 @@ export default function TicketsPage() {
 
   return (
     <main className="flex-1">
-      <section className="mx-auto max-w-3xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="flex flex-col gap-3">
           <span className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
             Dashboard

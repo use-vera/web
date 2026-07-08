@@ -20,6 +20,12 @@ const DialogContent = ({
     <BaseDialog.Portal>
       <BaseDialog.Backdrop className="fixed inset-0 z-50 bg-foreground/40" />
       <BaseDialog.Popup
+        // The page runs Lenis (see SmoothScrollProvider) which hijacks wheel
+        // events globally for smooth-scrolling the root — without this
+        // attribute it swallows wheel input over the dialog too, since Lenis
+        // doesn't know this element has its own native overflow-y-auto
+        // scroll region. This is Lenis's documented opt-out.
+        data-lenis-prevent
         className={cn(
           "fixed top-1/2 left-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl bg-card shadow-2xl outline-none",
           className,
