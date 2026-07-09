@@ -24,6 +24,15 @@ export interface EventTicketCategoryApi {
   quantity: number;
 }
 
+export interface EventSalesPolicyApi {
+  startsAt: string | null;
+  presaleEnabled: boolean;
+  presaleStartsAt: string | null;
+  presaleEndsAt: string | null;
+  presaleQuantity: number;
+  presalePriceNaira: number;
+}
+
 export interface PublicEventApi {
   _id: string;
   organizerUserId: EventOrganizerSummary | string;
@@ -33,6 +42,7 @@ export interface PublicEventApi {
   imageUrl?: string;
   address: string;
   state?: string;
+  status?: "draft" | "published" | "cancelled";
   startsAt: string;
   endsAt: string;
   timezone: string;
@@ -43,6 +53,7 @@ export interface PublicEventApi {
   expectedTickets: number;
   ticketCategories?: EventTicketCategoryApi[];
   salePhase?: "upcoming" | "presale" | "main";
+  sales?: EventSalesPolicyApi;
   nextOccurrenceAt: string;
   nextOccurrenceEndsAt: string;
   soldTickets: number;

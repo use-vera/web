@@ -60,7 +60,7 @@ const AuthEventsCarousel = ({ events, className }: AuthEventsCarouselProps) => {
         <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/55 to-black/15" />
 
         <span className="absolute top-4 left-4 text-[10px] font-bold text-white/70 uppercase">
-          Happening soon
+          Events we have for you
         </span>
 
         <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-4">

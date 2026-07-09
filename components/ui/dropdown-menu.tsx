@@ -26,7 +26,7 @@ const DropdownMenuContent = ({
       >
         <BaseMenu.Popup
           className={cn(
-            "min-w-48 origin-[var(--transform-origin)] rounded-xl border border-border bg-card p-1.5 shadow-xl outline-none transition-[transform,opacity] data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
+            "min-w-48 origin-[var(--transform-origin)] rounded-sm border border-border bg-card p-1.5 shadow-xl outline-none transition-[transform,opacity] data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
             className,
           )}
           {...props}
@@ -38,13 +38,10 @@ const DropdownMenuContent = ({
   );
 };
 
-const DropdownMenuItem = ({
-  className,
-  ...props
-}: BaseMenu.Item.Props) => (
+const DropdownMenuItem = ({ className, ...props }: BaseMenu.Item.Props) => (
   <BaseMenu.Item
     className={cn(
-      "flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none data-[highlighted]:bg-secondary",
+      "flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2.5 text-sm font-semibold text-foreground outline-none data-[highlighted]:bg-secondary",
       className,
     )}
     {...props}

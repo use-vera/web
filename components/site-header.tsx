@@ -15,7 +15,7 @@ import { useSession, useLogout } from "@/lib/hooks/use-auth";
 import { navLinks } from "@/lib/nav-links";
 import { useActiveNavHref } from "@/lib/use-active-nav-href";
 import { cn, ROUTES } from "@/lib/utils";
-import { ChevronDown, Download, LogOut, Ticket } from "lucide-react";
+import { ChevronDown, Download, LogOut, Terminal, Ticket } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -89,6 +89,12 @@ const SiteHeader = ({ inverted = false }: SiteHeaderProps) => {
                 >
                   <Ticket className="h-4 w-4" />
                   My tickets
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  render={<Link href={ROUTES.DEVELOPERS} />}
+                >
+                  <Terminal className="h-4 w-4" />
+                  Developer Portal
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownloadClick}>
                   <Download className="h-4 w-4" />

@@ -1,6 +1,7 @@
 import EventThumbnail from "@/components/event-thumbnail";
 import PerforatedDivider from "@/components/perforated-divider";
 import Badge from "@/components/ui/badge";
+import { isEventLive } from "@/lib/event-status";
 import { formatNaira } from "@/lib/format-currency";
 import { formatEventDate } from "@/lib/format-date";
 import { type PublicEventApi } from "@/lib/types/event";
@@ -14,6 +15,7 @@ interface EventCardProps {
 const EventCard = ({ event, onSelect }: EventCardProps) => {
   const priceNaira = event.currentTicketPriceNaira ?? event.ticketPriceNaira;
   const priceLabel = event.isPaid ? `From ${formatNaira(priceNaira)}` : "Free entry";
+  const live = isEventLive(event);
 
   return (
     <button
@@ -28,11 +30,15 @@ const EventCard = ({ event, onSelect }: EventCardProps) => {
           className="h-full w-full"
           iconClassName="transition-transform group-hover:scale-110"
         />
-        {event.state ? (
-          <div className="absolute left-3 top-3">
-            <Badge>{event.state}</Badge>
-          </div>
-        ) : null}
+        <div className="absolute left-3 top-3 flex items-center gap-2">
+          {live ? (
+            <Badge className="border-transparent bg-red-600 text-white">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+              Live
+            </Badge>
+          ) : null}
+          {event.state ? <Badge>{event.state}</Badge> : null}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-5">

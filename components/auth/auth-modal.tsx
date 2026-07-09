@@ -4,6 +4,7 @@ import AuthEventsCarousel from "@/components/auth/auth-events-carousel";
 import SignInView from "@/components/auth/sign-in-view";
 import SignUpView from "@/components/auth/sign-up-view";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { isEventStrictlyUpcoming } from "@/lib/event-status";
 import { useEvents } from "@/lib/hooks/use-events";
 import { cn } from "@/lib/utils";
 
@@ -24,8 +25,13 @@ const AuthModal = ({
   onOpenChange,
   onAuthenticated,
 }: AuthModalProps) => {
-  const eventsQuery = useEvents({ filter: "upcoming", sort: "dateAsc", limit: 6 });
-  const events = eventsQuery.data?.items ?? [];
+  // "upcoming" only excludes events that have already *ended*, so it still
+  // includes ones currently in progress — filter those out here since this
+  // panel is meant to preview what's coming up next, not what's live now.
+  const eventsQuery = useEvents({ filter: "upcoming", sort: "dateAsc", limit: 10 });
+  const events = (eventsQuery.data?.items ?? [])
+    .filter(isEventStrictlyUpcoming)
+    .slice(0, 6);
   const showCarousel = events.length > 0;
 
   return (

@@ -6,6 +6,7 @@ import Button from "@/components/ui/button";
 import { useLogin } from "@/lib/hooks/use-auth";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface SignInViewProps {
   onSuccess: () => void;
@@ -15,19 +16,17 @@ interface SignInViewProps {
 const SignInView = ({ onSuccess, onSwitchToSignUp }: SignInViewProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
 
   const login = useLogin();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setError("");
 
     try {
       await login.mutateAsync({ email, password });
       onSuccess();
     } catch {
-      setError("Couldn't sign you in. Check your email and password.");
+      toast.error("Couldn't sign you in. Check your email and password.");
     }
   };
 
@@ -58,8 +57,6 @@ const SignInView = ({ onSuccess, onSwitchToSignUp }: SignInViewProps) => {
           minLength={8}
         />
       </div>
-
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       <div className="flex flex-col gap-3">
         <Button

@@ -8,6 +8,7 @@ import QrCodePlaceholder from "@/components/qr-code-placeholder";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { getEventPurchasability, isEventLive } from "@/lib/event-status";
 import { formatNaira } from "@/lib/format-currency";
 import { formatEventDate } from "@/lib/format-date";
 import { useSession } from "@/lib/hooks/use-auth";
@@ -33,6 +34,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 type FlowStep =
   | "detail"
@@ -40,8 +42,7 @@ type FlowStep =
   | "sign-up"
   | "awaiting-payment"
   | "verifying"
-  | "success"
-  | "failed";
+  | "success";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -88,7 +89,6 @@ const EventDetailModalBody = ({
     );
   const [quantity, setQuantity] = useState(1);
   const [ticketCode, setTicketCode] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
 
   const sessionQuery = useSession();
   const initializeMutation = useInitializeTicketPurchase(event._id);
@@ -102,6 +102,8 @@ const EventDetailModalBody = ({
     : 0;
   const isFree = !event.isPaid;
   const subtotal = unitPriceNaira * quantity;
+  const { purchasable, reason } = getEventPurchasability(event);
+  const live = isEventLive(event);
 
   const runVerifyWithRetry = async (ticketId: string, reference?: string) => {
     for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -115,10 +117,10 @@ const EventDetailModalBody = ({
         return;
       } catch {
         if (attempt === 7) {
-          setErrorMessage(
+          toast.error(
             "We couldn't confirm your payment yet. Check your tickets shortly — if you were charged, it will show up.",
           );
-          setStep("failed");
+          setStep("detail");
           return;
         }
 
@@ -128,8 +130,6 @@ const EventDetailModalBody = ({
   };
 
   const startCheckout = async () => {
-    setErrorMessage("");
-
     try {
       const result = await initializeMutation.mutateAsync({
         quantity,
@@ -144,8 +144,7 @@ const EventDetailModalBody = ({
       }
 
       if (!result.payment?.authorizationUrl) {
-        setErrorMessage("Couldn't start checkout. Please try again.");
-        setStep("failed");
+        toast.error("Couldn't start checkout. Please try again.");
         return;
       }
 
@@ -165,8 +164,7 @@ const EventDetailModalBody = ({
         }
       }, 700);
     } catch {
-      setErrorMessage("Couldn't start checkout. Please try again.");
-      setStep("failed");
+      toast.error("Couldn't start checkout. Please try again.");
     }
   };
 
@@ -189,11 +187,15 @@ const EventDetailModalBody = ({
               alt={event.name}
               className="h-full w-full"
             />
-            {event.state ? (
-              <div className="absolute top-3 left-3">
-                <Badge>{event.state}</Badge>
-              </div>
-            ) : null}
+            <div className="absolute top-3 left-3 flex items-center gap-2">
+              {live ? (
+                <Badge variant="solid">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-foreground" />
+                  Live
+                </Badge>
+              ) : null}
+              {event.state ? <Badge>{event.state}</Badge> : null}
+            </div>
           </div>
 
           <div className="flex flex-col gap-5 p-6">
@@ -311,25 +313,30 @@ const EventDetailModalBody = ({
                 </div>
               ) : null}
 
+              {!purchasable ? (
+                <p className="text-center text-xs text-muted-foreground">
+                  {reason}
+                </p>
+              ) : null}
+
               <Button
                 size="lg"
                 onClick={handlePrimaryAction}
-                disabled={
-                  initializeMutation.isPending || event.remainingTickets <= 0
-                }
+                loading={initializeMutation.isPending}
+                disabled={!purchasable}
               >
-                {event.remainingTickets <= 0
+                {!purchasable && event.remainingTickets <= 0
                   ? "Sold out"
                   : isFree
                     ? `Get ${quantity} ticket${quantity > 1 ? "s" : ""}`
                     : `Pay ${formatNaira(subtotal)}`}
               </Button>
 
-              <p className="text-center text-xs text-muted-foreground">
-                {sessionQuery.data?.user
-                  ? "Chat opens after you get a ticket. Feed stays available now."
-                  : "You'll be asked to sign in before checkout."}
-              </p>
+              {!sessionQuery.data?.user ? (
+                <p className="text-center text-xs text-muted-foreground">
+                  You&apos;ll be asked to sign in before checkout.
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
@@ -353,17 +360,6 @@ const EventDetailModalBody = ({
           <p className="text-sm font-semibold text-foreground">
             Verifying payment…
           </p>
-        </div>
-      ) : null}
-
-      {step === "failed" ? (
-        <div className="flex flex-col gap-5 p-6 pt-14 text-center">
-          <p className="text-sm font-semibold text-foreground">
-            {errorMessage}
-          </p>
-          <Button size="lg" onClick={() => setStep("detail")}>
-            Back to event
-          </Button>
         </div>
       ) : null}
 

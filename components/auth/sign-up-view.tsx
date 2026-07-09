@@ -6,6 +6,7 @@ import Button from "@/components/ui/button";
 import { useRegister } from "@/lib/hooks/use-auth";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface SignUpViewProps {
   onSuccess: () => void;
@@ -16,19 +17,17 @@ const SignUpView = ({ onSuccess, onSwitchToSignIn }: SignUpViewProps) => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
 
   const register = useRegister();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setError("");
 
     try {
       await register.mutateAsync({ fullName, email, password });
       onSuccess();
     } catch {
-      setError("Couldn't create your account. Try a different email.");
+      toast.error("Couldn't create your account. Try a different email.");
     }
   };
 
@@ -68,8 +67,6 @@ const SignUpView = ({ onSuccess, onSwitchToSignIn }: SignUpViewProps) => {
           minLength={8}
         />
       </div>
-
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       <div className="flex flex-col gap-3">
         <Button

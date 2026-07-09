@@ -2,6 +2,7 @@
 
 import { AuthModalProvider } from "@/components/auth/auth-modal-provider";
 import SmoothScrollProvider from "@/components/smooth-scroll-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -23,6 +24,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
       <SmoothScrollProvider>
         <AuthModalProvider>{children}</AuthModalProvider>
       </SmoothScrollProvider>
+      <Toaster />
     </QueryClientProvider>
   );
 };
