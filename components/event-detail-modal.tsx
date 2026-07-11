@@ -4,7 +4,7 @@ import SignInView from "@/components/auth/sign-in-view";
 import SignUpView from "@/components/auth/sign-up-view";
 import EventThumbnail from "@/components/event-thumbnail";
 import PerforatedDivider from "@/components/perforated-divider";
-import QrCodePlaceholder from "@/components/qr-code-placeholder";
+import TicketPassCard from "@/components/tickets/ticket-pass-card";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -18,13 +18,14 @@ import {
 } from "@/lib/hooks/use-tickets";
 import {
   type EventTicketCategoryApi,
+  type MyTicketApi,
   type PublicEventApi,
+  type TicketPurchaseResponse,
 } from "@/lib/types/event";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
   Calendar,
-  CheckCircle2,
   Loader2,
   Lock,
   Minus,
@@ -88,7 +89,9 @@ const EventDetailModalBody = ({
       event.ticketCategories?.[0] ?? null,
     );
   const [quantity, setQuantity] = useState(1);
-  const [ticketCode, setTicketCode] = useState("");
+  const [purchasedTicket, setPurchasedTicket] = useState<
+    TicketPurchaseResponse["ticket"] | null
+  >(null);
 
   const sessionQuery = useSession();
   const initializeMutation = useInitializeTicketPurchase(event._id);
@@ -112,7 +115,7 @@ const EventDetailModalBody = ({
           ticketId,
           reference,
         });
-        setTicketCode(result.ticket.ticketCode);
+        setPurchasedTicket(result.ticket);
         setStep("success");
         return;
       } catch {
@@ -138,7 +141,7 @@ const EventDetailModalBody = ({
       });
 
       if (!result.requiresPayment) {
-        setTicketCode(result.ticket.ticketCode);
+        setPurchasedTicket(result.ticket);
         setStep("success");
         return;
       }
@@ -363,58 +366,26 @@ const EventDetailModalBody = ({
         </div>
       ) : null}
 
-      {step === "success" ? (
-        <div className="flex flex-col gap-5 p-6 pt-14">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <CheckCircle2 className="h-10 w-10 text-primary" />
-            <h2 className="text-xl font-bold text-card-foreground">
-              Ticket ready
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {isFree
-                ? `${quantity} ticket${quantity > 1 ? "s" : ""} issued successfully.`
-                : "Payment confirmed and ticket is active."}
-            </p>
-          </div>
-
-          <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-secondary">
-            <div className="flex flex-col gap-1 p-4">
-              <div className="flex items-center gap-1.5 text-primary">
-                <Ticket className="h-3.5 w-3.5" />
-                <span className="text-xs font-semibold uppercase tracking-wide">
-                  {selectedCategory?.name ?? "General"}
-                </span>
-              </div>
-              <span className="text-sm font-bold text-foreground">
-                {event.name}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {formatEventDate(event.nextOccurrenceAt)} · {event.address}
-              </span>
-            </div>
-
-            <PerforatedDivider />
-
-            <div className="flex items-center justify-start gap-4 p-4">
-              <QrCodePlaceholder className="h-46 w-46 shrink-0" />
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[11px] text-muted-foreground">
-                  Ticket code
-                </span>
-                <span className="text-sm font-bold text-foreground">
-                  {ticketCode}
-                </span>
-                <span className="mt-1 text-[11px] text-muted-foreground">
-                  Quantity: {quantity}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <Button size="lg" onClick={onClose}>
-            Done
-          </Button>
-        </div>
+      {step === "success" && purchasedTicket ? (
+        <TicketPassCard
+          ticket={
+            {
+              _id: purchasedTicket._id,
+              eventId: event,
+              quantity,
+              ticketCategoryName: selectedCategory?.name,
+              unitPriceNaira,
+              totalPriceNaira: subtotal,
+              currency: event.currency,
+              status: purchasedTicket.status,
+              attendeeName: sessionQuery.data?.user?.fullName || "Guest",
+              attendeeEmail: sessionQuery.data?.user?.email || "",
+              ticketCode: purchasedTicket.ticketCode,
+              barcodeValue: purchasedTicket.barcodeValue,
+              createdAt: new Date().toISOString(),
+            } satisfies MyTicketApi
+          }
+        />
       ) : null}
 
       {step === "sign-in" ? (

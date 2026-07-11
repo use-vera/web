@@ -6,7 +6,7 @@ import TicketPassCard from "@/components/tickets/ticket-pass-card";
 import Button, { buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useSession } from "@/lib/hooks/use-auth";
-import { useMyTickets } from "@/lib/hooks/use-tickets";
+import { useMyTicketsInfinite } from "@/lib/hooks/use-tickets";
 import {
   type MyTicketApi,
   type TicketEventSummaryApi,
@@ -46,8 +46,11 @@ export default function TicketsPage() {
   );
 
   const isAuthenticated = Boolean(sessionQuery.data?.user);
-  const ticketsQuery = useMyTickets();
-  const tickets = ticketsQuery.data?.items;
+  const ticketsQuery = useMyTicketsInfinite({ limit: 20 });
+  const tickets = useMemo(
+    () => ticketsQuery.data?.pages.flatMap((page) => page.items),
+    [ticketsQuery.data],
+  );
 
   const { upcoming, past } = useMemo(() => {
     const upcomingItems: MyTicketApi[] = [];
@@ -169,6 +172,18 @@ export default function TicketsPage() {
             </div>
           )}
         </div>
+
+        {ticketsQuery.hasNextPage ? (
+          <div className="mt-6 flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => void ticketsQuery.fetchNextPage()}
+              loading={ticketsQuery.isFetchingNextPage}
+            >
+              Load more
+            </Button>
+          </div>
+        ) : null}
       </section>
 
       <Dialog

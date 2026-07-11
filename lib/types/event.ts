@@ -24,6 +24,16 @@ export interface EventTicketCategoryApi {
   quantity: number;
 }
 
+export interface CategoryApi {
+  _id: string;
+  name: string;
+  slug: string;
+  iconKey: string;
+  description: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
 export interface EventSalesPolicyApi {
   startsAt: string | null;
   presaleEnabled: boolean;
@@ -37,6 +47,7 @@ export interface PublicEventApi {
   _id: string;
   organizerUserId: EventOrganizerSummary | string;
   eventCenterId?: EventCenterSummary | string | null;
+  categoryIds?: (string | CategoryApi)[];
   name: string;
   description: string;
   imageUrl?: string;
@@ -101,7 +112,18 @@ export interface EventListQuery {
   sort?: "dateAsc" | "newest";
   filter?: "upcoming" | "this-week" | "this-month" | "all";
   ticketType?: "all" | "free" | "paid";
-  state?: string;
+  country?: string;
+  category?: string;
+  nearLat?: number;
+  nearLng?: number;
+  nearRadiusKm?: number;
+  from?: string;
+  to?: string;
+}
+
+export interface EventCountryApi {
+  country: string;
+  count: number;
 }
 
 export interface TicketPurchasePayload {

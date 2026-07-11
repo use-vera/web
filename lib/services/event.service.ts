@@ -1,5 +1,6 @@
 import clientHttp from "@/lib/api/client-http";
 import {
+  type EventCountryApi,
   type EventListQuery,
   type PaginatedResponse,
   type PublicEventApi,
@@ -27,6 +28,14 @@ export const eventService = {
   getEventById: async (eventId: string): Promise<PublicEventDetailsResponse> => {
     const response = await clientHttp.get<ApiEnvelope<PublicEventDetailsResponse>>(
       `/events/${eventId}`,
+    );
+
+    return response.data.data;
+  },
+
+  listEventCountries: async (): Promise<EventCountryApi[]> => {
+    const response = await clientHttp.get<ApiEnvelope<EventCountryApi[]>>(
+      "/events/countries",
     );
 
     return response.data.data;

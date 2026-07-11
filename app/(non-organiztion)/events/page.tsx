@@ -1,17 +1,34 @@
 "use client";
 
 import EventCard from "@/components/event-card";
+import EventCardCompact from "@/components/event-card-compact";
 import EventDetailModal from "@/components/event-detail-modal";
+import CategoryChipRow from "@/components/events/category-chip-row";
 import EventFilterModal, {
   TICKET_TYPE_FILTERS,
   TIME_FILTERS,
 } from "@/components/events/event-filter-modal";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
-import { useEvents } from "@/lib/hooks/use-events";
+import { useCategories } from "@/lib/hooks/use-categories";
+import { useEventCountries, useEvents } from "@/lib/hooks/use-events";
 import { type EventListQuery, type PublicEventApi } from "@/lib/types/event";
-import { Loader2, Search, SlidersHorizontal, X } from "lucide-react";
+import { Loader2, MapPin, Search, SlidersHorizontal, X } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
+
+// startDate is a plain YYYY-MM-DD string from the native <input type="date">
+// — parsed as local-calendar midnight (not UTC) so the day bounds sent to
+// the backend match what the picker visually shows the user.
+const startOfDayIso = (dateKey: string) => {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day, 0, 0, 0, 0).toISOString();
+};
+
+const endOfDayIso = (dateKey: string) => {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day, 23, 59, 59, 999).toISOString();
+};
 
 export default function EventsPage() {
   const [search, setSearch] = useState("");
@@ -23,17 +40,34 @@ export default function EventsPage() {
     null,
   );
   const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [category, setCategory] = useState<string | null>(null);
+  const [country, setCountry] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const categoriesQuery = useCategories();
+  const countriesQuery = useEventCountries();
 
   const query = useMemo<EventListQuery>(
-    () => ({ search, filter, ticketType, limit: 24 }),
-    [search, filter, ticketType],
+    () => ({
+      search,
+      filter,
+      ticketType,
+      category: category ?? undefined,
+      country: country ?? undefined,
+      from: startDate ? startOfDayIso(startDate) : undefined,
+      to: startDate ? endOfDayIso(startDate) : undefined,
+      limit: 24,
+    }),
+    [search, filter, ticketType, category, country, startDate],
   );
 
   const eventsQuery = useEvents(query);
   const events = eventsQuery.data?.items ?? [];
 
   const activeFilterCount =
-    (filter === "upcoming" ? 0 : 1) + (ticketType === "all" ? 0 : 1);
+    (filter === "upcoming" ? 0 : 1) +
+    (ticketType === "all" ? 0 : 1) +
+    (country ? 1 : 0) +
+    (startDate ? 1 : 0);
 
   const activeFilterLabel = TIME_FILTERS.find(
     (option) => option.value === filter,
@@ -45,7 +79,7 @@ export default function EventsPage() {
   return (
     <>
       <main className="flex-1">
-        <section className="mx-auto max-w-6xl px-6 py-16">
+        <section className="mx-auto max-w-6xl px-6 py-8">
           <div className="flex flex-col gap-3">
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
               Events
@@ -57,6 +91,13 @@ export default function EventsPage() {
               Browse what&apos;s happening around you, grab a ticket, and see
               who else is going.
             </p>
+            <Link
+              href="/events/near-me"
+              className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+            >
+              <MapPin className="h-4 w-4" />
+              See what&apos;s near me
+            </Link>
           </div>
 
           <div className="mt-8 flex items-center gap-3">
@@ -109,25 +150,68 @@ export default function EventsPage() {
                   <X className="h-3.5 w-3.5" />
                 </button>
               ) : null}
+
+              {country ? (
+                <button
+                  type="button"
+                  onClick={() => setCountry(null)}
+                  className="flex items-center gap-1.5 rounded-full border border-primary bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground"
+                >
+                  {country}
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ) : null}
+
+              {startDate ? (
+                <button
+                  type="button"
+                  onClick={() => setStartDate(null)}
+                  className="flex items-center gap-1.5 rounded-full border border-primary bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground"
+                >
+                  {startDate}
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ) : null}
             </div>
+          ) : null}
+
+          {categoriesQuery.data?.length ? (
+            <CategoryChipRow
+              className="mt-6"
+              categories={categoriesQuery.data}
+              selectedCategoryId={category}
+              onSelect={setCategory}
+            />
           ) : null}
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-24">
+        <section className="mx-auto max-w-6xl px-6 pb-12">
           {eventsQuery.isLoading ? (
             <div className="flex items-center justify-center py-24">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : events.length ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {events.map((event) => (
-                <EventCard
-                  key={event._id}
-                  event={event}
-                  onSelect={setSelectedEvent}
-                />
-              ))}
-            </div>
+            search.trim() ? (
+              <div className="flex flex-col gap-3">
+                {events.map((event) => (
+                  <EventCardCompact
+                    key={event._id}
+                    event={event}
+                    onSelect={setSelectedEvent}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {events.map((event) => (
+                  <EventCard
+                    key={event._id}
+                    event={event}
+                    onSelect={setSelectedEvent}
+                  />
+                ))}
+              </div>
+            )
           ) : (
             <div className="rounded-2xl border border-border bg-card px-8 py-16 text-center">
               <p className="text-base font-semibold text-card-foreground">
@@ -151,6 +235,11 @@ export default function EventsPage() {
         onFilterChange={setFilter}
         ticketType={ticketType}
         onTicketTypeChange={setTicketType}
+        country={country}
+        onCountryChange={setCountry}
+        countries={countriesQuery.data ?? []}
+        startDate={startDate}
+        onStartDateChange={setStartDate}
       />
     </>
   );

@@ -9,13 +9,13 @@ const HowItWorksHero = () => {
         </span>
 
         <h1 className="mt-4 font-bold text-foreground">
-          <span className="block text-5xl leading-[0.95] sm:text-7xl lg:text-6xl">
+          <span className="block text-5xl  sm:text-7xl lg:text-6xl">
             Find it.
           </span>
-          <span className="block pl-[6%] text-5xl leading-[0.95] text-primary sm:text-7xl lg:text-6xl">
+          <span className="block pl-[6%] text-5xl  text-primary sm:text-7xl lg:text-6xl">
             Book it.
           </span>
-          <span className="-rotate-1 block pl-[2%] text-5xl leading-[0.95] sm:text-7xl lg:text-6xl">
+          <span className="-rotate-1 block pl-[2%] text-5xl  sm:text-7xl lg:text-6xl">
             Live it.
           </span>
         </h1>

@@ -59,7 +59,10 @@ const EventThumbnail = ({
         className,
       )}
     >
-      <Ticket className={cn("h-10 w-10 text-primary/70", iconClassName)} strokeWidth={1.5} />
+      <Ticket
+        className={cn("h-10 w-10 text-primary/70", iconClassName)}
+        strokeWidth={1.5}
+      />
     </div>
   );
 };
