@@ -85,7 +85,7 @@ export default function EventsPage() {
               Events
             </span>
             <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
-              Find your next day (or night 😉) out.
+              Find your next adventure.
             </h1>
             <p className="max-w-xl text-base text-muted-foreground">
               Browse what&apos;s happening around you, grab a ticket, and see
