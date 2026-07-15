@@ -13,6 +13,14 @@ interface MemberPortraitProps {
   size: "card" | "modal";
 }
 
+const getInitials = (name: string) => {
+  const nameArr = name?.split(" ");
+  const firstNameFirstLetter = nameArr?.[0]?.[0];
+  const lastNameFirstletter = nameArr?.[1]?.[0];
+
+  return `${firstNameFirstLetter}${lastNameFirstletter}`;
+};
+
 const MemberPortrait = ({ member, size }: MemberPortraitProps) => {
   const dimensions = size === "card" ? "h-72 w-full" : "h-88 w-80";
 
@@ -38,7 +46,7 @@ const MemberPortrait = ({ member, size }: MemberPortraitProps) => {
             size === "card" ? "text-6xl" : "text-7xl",
           )}
         >
-          {member.initials}
+          {getInitials(member?.name)}
         </div>
       )}
     </div>

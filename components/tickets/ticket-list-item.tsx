@@ -29,7 +29,8 @@ const STATUS_LABEL: Record<MyTicketApi["status"], string> = {
 const STATUS_STYLES: Record<MyTicketApi["status"], string> = {
   paid: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
   used: "bg-muted text-muted-foreground",
-  pending: "bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
+  pending:
+    "bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
   cancelled: "bg-red-500/10 text-red-700 dark:bg-red-400/10 dark:text-red-300",
   expired: "bg-muted text-muted-foreground",
 };
@@ -80,7 +81,9 @@ const TicketListItem = ({ ticket, onSelect }: TicketListItemProps) => {
 
       <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">
         <span className="text-sm font-bold text-foreground">
-          {ticket.totalPriceNaira > 0 ? formatNaira(ticket.totalPriceNaira) : "Free"}
+          {ticket.totalPriceNaira > 0
+            ? formatNaira(ticket.totalPriceNaira)
+            : "Free"}
         </span>
         {ticket.ticketCategoryName ? (
           <span className="text-xs text-muted-foreground">
