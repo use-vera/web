@@ -144,10 +144,7 @@ const DevelopersLayout = ({ children }: { children: React.ReactNode }) => {
           and the window has nothing to scroll here. Without this attribute
           Lenis intercepts the wheel input and tries to scroll the window,
           so nothing happens. This is Lenis's documented opt-out. */}
-      <main
-        data-lenis-prevent
-        className="h-screen flex-1 overflow-y-auto"
-      >
+      <main data-lenis-prevent className="h-screen flex-1 overflow-y-auto">
         {children}
       </main>
     </SidebarProvider>

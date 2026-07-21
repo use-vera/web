@@ -41,6 +41,23 @@ export const useMyTicketsInfinite = (
   });
 };
 
+/**
+ * Fetches every ticket from one purchase (quantity > 1 issues one row per
+ * seat, each with its own code) — used by the post-checkout success step
+ * to show all codes, not just the primary ticket the purchase/verify
+ * response itself carries.
+ */
+export const useTicketsByPurchaseBatch = (purchaseBatchId: string | null) =>
+  useQuery({
+    queryKey: ["tickets", "batch", purchaseBatchId],
+    queryFn: () =>
+      ticketService.listMyTickets({
+        purchaseBatchId: purchaseBatchId as string,
+        limit: 50,
+      }),
+    enabled: Boolean(purchaseBatchId),
+  });
+
 export const useInitializeTicketPurchase = (eventId: string) =>
   useMutation({
     mutationFn: (payload: TicketPurchasePayload) =>

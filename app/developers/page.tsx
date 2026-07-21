@@ -56,7 +56,9 @@ const DevelopersOverviewPage = () => {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
                   <link.icon className="h-5 w-5 text-primary" />
                 </div>
-                <CardTitle className="mt-2">{link.title}</CardTitle>
+                <CardTitle className="mt-2 font-semibold">
+                  {link.title}
+                </CardTitle>
                 <CardDescription>{link.description}</CardDescription>
               </CardHeader>
             </Card>
@@ -66,7 +68,7 @@ const DevelopersOverviewPage = () => {
 
       <Card className="mt-10">
         <CardHeader>
-          <CardTitle>Getting started</CardTitle>
+          <CardTitle className="font-semibold">Getting started</CardTitle>
           <CardDescription>Three steps to your first API call.</CardDescription>
         </CardHeader>
         <CardContent>

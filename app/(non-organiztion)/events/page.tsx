@@ -11,11 +11,16 @@ import EventFilterModal, {
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import { useCategories } from "@/lib/hooks/use-categories";
-import { useEventCountries, useEvents } from "@/lib/hooks/use-events";
+import {
+  useEventCountries,
+  useEvents,
+  useFeaturedEvents,
+  useInfiniteEvents,
+} from "@/lib/hooks/use-events";
+import { useGeolocation } from "@/lib/hooks/use-geolocation";
 import { type EventListQuery, type PublicEventApi } from "@/lib/types/event";
 import { Loader2, MapPin, Search, SlidersHorizontal, X } from "lucide-react";
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 // startDate is a plain YYYY-MM-DD string from the native <input type="date">
 // — parsed as local-calendar midnight (not UTC) so the day bounds sent to
@@ -43,10 +48,17 @@ export default function EventsPage() {
   const [category, setCategory] = useState<string | null>(null);
   const [country, setCountry] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
+  const [nearMeActive, setNearMeActive] = useState(false);
+  const resultsRef = useRef<HTMLDivElement | null>(null);
   const categoriesQuery = useCategories();
   const countriesQuery = useEventCountries();
+  const geolocation = useGeolocation();
+  const nearMeReady = nearMeActive && geolocation.status === "granted";
 
-  const query = useMemo<EventListQuery>(
+  // Excludes `page` — useInfiniteEvents drives pagination itself via
+  // fetchNextPage, and changing any of these fields changes the query's
+  // cache key, which naturally restarts from page 1 (no manual reset needed).
+  const query = useMemo<Omit<EventListQuery, "page">>(
     () => ({
       search,
       filter,
@@ -55,19 +67,60 @@ export default function EventsPage() {
       country: country ?? undefined,
       from: startDate ? startOfDayIso(startDate) : undefined,
       to: startDate ? endOfDayIso(startDate) : undefined,
+      nearLat:
+        nearMeReady && geolocation.status === "granted"
+          ? geolocation.latitude
+          : undefined,
+      nearLng:
+        nearMeReady && geolocation.status === "granted"
+          ? geolocation.longitude
+          : undefined,
+      nearRadiusKm: nearMeReady ? 25 : undefined,
       limit: 24,
     }),
-    [search, filter, ticketType, category, country, startDate],
+    [
+      search,
+      filter,
+      ticketType,
+      category,
+      country,
+      startDate,
+      nearMeReady,
+      geolocation,
+    ],
   );
 
-  const eventsQuery = useEvents(query);
-  const events = eventsQuery.data?.items ?? [];
+  const eventsQuery = useInfiniteEvents(query);
+  const events = useMemo(
+    () => eventsQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    [eventsQuery.data],
+  );
+  const isInitialLoading = eventsQuery.isLoading && !events.length;
+
+  const featuredEventsQuery = useFeaturedEvents(12);
+  const featuredEvents = featuredEventsQuery.data ?? [];
+
+  const nearMePreviewQuery = useEvents(
+    {
+      filter: "upcoming",
+      nearLat: geolocation.status === "granted" ? geolocation.latitude : 0,
+      nearLng: geolocation.status === "granted" ? geolocation.longitude : 0,
+      nearRadiusKm: 25,
+      limit: 8,
+    },
+    geolocation.status === "granted" && !nearMeActive,
+  );
+  const nearMePreviewEvents = (nearMePreviewQuery.data?.items ?? []).slice(
+    0,
+    6,
+  );
 
   const activeFilterCount =
     (filter === "upcoming" ? 0 : 1) +
     (ticketType === "all" ? 0 : 1) +
     (country ? 1 : 0) +
-    (startDate ? 1 : 0);
+    (startDate ? 1 : 0) +
+    (nearMeActive ? 1 : 0);
 
   const activeFilterLabel = TIME_FILTERS.find(
     (option) => option.value === filter,
@@ -91,13 +144,6 @@ export default function EventsPage() {
               Browse what&apos;s happening around you, grab a ticket, and see
               who else is going.
             </p>
-            <Link
-              href="/events/near-me"
-              className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-            >
-              <MapPin className="h-4 w-4" />
-              See what&apos;s near me
-            </Link>
           </div>
 
           <div className="mt-8 flex items-center gap-3">
@@ -185,8 +231,152 @@ export default function EventsPage() {
           ) : null}
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-12">
-          {eventsQuery.isLoading ? (
+        {featuredEventsQuery.isLoading || featuredEvents.length ? (
+          <section className="mx-auto max-w-6xl px-6 pb-4">
+            <div className="mb-4">
+              <h2 className="text-lg font-bold text-foreground">
+                Featured events
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Promoted by organizers
+              </p>
+            </div>
+
+            <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2">
+              {featuredEventsQuery.isLoading
+                ? Array.from({ length: 3 }, (_, index) => (
+                    <div
+                      key={`featured-skeleton-${index}`}
+                      className="h-72 w-72 shrink-0 animate-pulse rounded-2xl bg-secondary"
+                    />
+                  ))
+                : featuredEvents.map((event) => (
+                    <div key={event._id} className="w-72 shrink-0 snap-start">
+                      <EventCard event={event} onSelect={setSelectedEvent} />
+                    </div>
+                  ))}
+            </div>
+          </section>
+        ) : null}
+
+        {nearMeActive ? null : (
+          <section className="mx-auto max-w-6xl px-6 pb-4">
+            <div className="mb-4 flex items-end justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Near me</h2>
+                <p className="text-sm text-muted-foreground">
+                  What&apos;s happening within 25km
+                </p>
+              </div>
+              {geolocation.status === "granted" &&
+              nearMePreviewEvents.length ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNearMeActive(true);
+                    resultsRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }}
+                  className="shrink-0 text-sm font-semibold text-primary hover:underline"
+                >
+                  View all
+                </button>
+              ) : null}
+            </div>
+
+            {geolocation.status === "granted" ? (
+              nearMePreviewQuery.isLoading ? (
+                <div className="flex gap-4 overflow-x-auto pb-2">
+                  {Array.from({ length: 3 }, (_, index) => (
+                    <div
+                      key={`near-me-skeleton-${index}`}
+                      className="h-20 w-80 shrink-0 animate-pulse rounded-xl bg-secondary"
+                    />
+                  ))}
+                </div>
+              ) : nearMePreviewEvents.length ? (
+                <div className="flex snap-x snap-mandatory gap-4 flex-wrap pb-2">
+                  {nearMePreviewEvents.map((event) => (
+                    <div
+                      key={event._id}
+                      className="w-[calc(33.3%-16px)] shrink-0 snap-start"
+                    >
+                      <EventCardCompact
+                        event={event}
+                        onSelect={setSelectedEvent}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-border bg-card px-6 py-8 text-center">
+                  <p className="text-sm font-semibold text-card-foreground">
+                    Nothing upcoming within 25km right now.
+                  </p>
+                </div>
+              )
+            ) : (
+              <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card px-6 py-8 text-center sm:flex-row sm:justify-between sm:text-left">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent">
+                    <MapPin className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-card-foreground">
+                      {geolocation.status === "denied"
+                        ? "We couldn't get your location"
+                        : "See what's happening near you"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {geolocation.status === "denied"
+                        ? "Check your browser's location permission, then try again."
+                        : "Share your location to see events within 25km."}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={geolocation.request}
+                  className="shrink-0"
+                >
+                  {geolocation.status === "denied"
+                    ? "Try again"
+                    : "Share location"}
+                </Button>
+              </div>
+            )}
+          </section>
+        )}
+
+        <section ref={resultsRef} className="mx-auto max-w-6xl px-6 pb-12">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">
+                {nearMeActive
+                  ? "Events near me"
+                  : "Events you might be interested in"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {nearMeActive
+                  ? "Everything upcoming within 25km"
+                  : "Some outings that you and your friends might not want to miss"}
+              </p>
+            </div>
+            {nearMeActive ? (
+              <button
+                type="button"
+                onClick={() => setNearMeActive(false)}
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-primary bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground"
+              >
+                Near me
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+          </div>
+
+          {isInitialLoading ? (
             <div className="flex items-center justify-center py-24">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -222,6 +412,18 @@ export default function EventsPage() {
               </p>
             </div>
           )}
+
+          {eventsQuery.hasNextPage ? (
+            <div className="mt-8 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => eventsQuery.fetchNextPage()}
+                disabled={eventsQuery.isFetchingNextPage}
+              >
+                {eventsQuery.isFetchingNextPage ? "Loading..." : "Load more"}
+              </Button>
+            </div>
+          ) : null}
         </section>
       </main>
       <EventDetailModal

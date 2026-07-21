@@ -142,6 +142,12 @@ export interface TicketPurchaseResponse {
     barcodeValue: string;
     status: "pending" | "paid" | "cancelled" | "used" | "expired";
   };
+  // Every ticket created in this purchase (quantity > 1 issues one row —
+  // and one distinct scannable code — per seat, not one row with a
+  // quantity field). Combined with purchaseBatchId, lets the UI fetch and
+  // show every code, not just this primary one.
+  ticketIds: string[];
+  purchaseBatchId: string | null;
   payment: {
     reference: string;
     authorizationUrl: string;
@@ -166,6 +172,7 @@ export interface VerifyTicketResponse {
   };
   paymentStatus: string;
   alreadyVerified: boolean;
+  purchaseBatchId: string | null;
 }
 
 export interface TicketEventSummaryApi {
@@ -209,4 +216,5 @@ export interface MyTicketsQuery {
   limit?: number;
   search?: string;
   status?: "all" | "pending" | "paid" | "cancelled" | "used" | "expired";
+  purchaseBatchId?: string;
 }

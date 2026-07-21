@@ -40,4 +40,13 @@ export const eventService = {
 
     return response.data.data;
   },
+
+  listFeaturedEvents: async (limit?: number): Promise<PublicEventApi[]> => {
+    const response = await clientHttp.get<ApiEnvelope<PublicEventApi[]>>(
+      "/events/featured",
+      { params: limit ? { limit } : undefined },
+    );
+
+    return response.data.data;
+  },
 };

@@ -14,13 +14,12 @@ import { formatEventDate } from "@/lib/format-date";
 import { useSession } from "@/lib/hooks/use-auth";
 import {
   useInitializeTicketPurchase,
+  useTicketsByPurchaseBatch,
   useVerifyTicketPayment,
 } from "@/lib/hooks/use-tickets";
 import {
   type EventTicketCategoryApi,
-  type MyTicketApi,
   type PublicEventApi,
-  type TicketPurchaseResponse,
 } from "@/lib/types/event";
 import { cn } from "@/lib/utils";
 import {
@@ -89,13 +88,13 @@ const EventDetailModalBody = ({
       event.ticketCategories?.[0] ?? null,
     );
   const [quantity, setQuantity] = useState(1);
-  const [purchasedTicket, setPurchasedTicket] = useState<
-    TicketPurchaseResponse["ticket"] | null
-  >(null);
+  const [purchaseBatchId, setPurchaseBatchId] = useState<string | null>(null);
 
   const sessionQuery = useSession();
   const initializeMutation = useInitializeTicketPurchase(event._id);
   const verifyMutation = useVerifyTicketPayment();
+  const purchasedTicketsQuery = useTicketsByPurchaseBatch(purchaseBatchId);
+  const purchasedTickets = purchasedTicketsQuery.data?.items ?? [];
 
   const hasCategories = Boolean(event.ticketCategories?.length);
   const unitPriceNaira = event.isPaid
@@ -115,7 +114,7 @@ const EventDetailModalBody = ({
           ticketId,
           reference,
         });
-        setPurchasedTicket(result.ticket);
+        setPurchaseBatchId(result.purchaseBatchId);
         setStep("success");
         return;
       } catch {
@@ -141,7 +140,7 @@ const EventDetailModalBody = ({
       });
 
       if (!result.requiresPayment) {
-        setPurchasedTicket(result.ticket);
+        setPurchaseBatchId(result.purchaseBatchId);
         setStep("success");
         return;
       }
@@ -366,26 +365,29 @@ const EventDetailModalBody = ({
         </div>
       ) : null}
 
-      {step === "success" && purchasedTicket ? (
-        <TicketPassCard
-          ticket={
-            {
-              _id: purchasedTicket._id,
-              eventId: event,
-              quantity,
-              ticketCategoryName: selectedCategory?.name,
-              unitPriceNaira,
-              totalPriceNaira: subtotal,
-              currency: event.currency,
-              status: purchasedTicket.status,
-              attendeeName: sessionQuery.data?.user?.fullName || "Guest",
-              attendeeEmail: sessionQuery.data?.user?.email || "",
-              ticketCode: purchasedTicket.ticketCode,
-              barcodeValue: purchasedTicket.barcodeValue,
-              createdAt: new Date().toISOString(),
-            } satisfies MyTicketApi
-          }
-        />
+      {step === "success" ? (
+        purchasedTicketsQuery.isLoading ? (
+          <div className="flex flex-col items-center gap-4 p-6 py-20 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm font-semibold text-foreground">
+              Loading your ticket{quantity > 1 ? "s" : ""}…
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 p-6">
+            {purchasedTickets.length > 1 ? (
+              <p className="text-center text-sm font-semibold text-foreground">
+                You got {purchasedTickets.length} tickets — each one has its
+                own code below.
+              </p>
+            ) : null}
+            <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
+              {purchasedTickets.map((ticket) => (
+                <TicketPassCard key={ticket._id} ticket={ticket} />
+              ))}
+            </div>
+          </div>
+        )
       ) : null}
 
       {step === "sign-in" ? (

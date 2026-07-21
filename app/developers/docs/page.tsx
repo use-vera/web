@@ -1,3 +1,4 @@
+import DocsToc from "@/components/developers/docs-toc";
 import EndpointDocBlock from "@/components/developers/endpoint-doc";
 import Badge from "@/components/ui/badge";
 import CodeBlock from "@/components/ui/code-block";
@@ -20,35 +21,15 @@ const DevelopersDocsPage = () => {
   return (
     <div className="mx-auto flex max-w-6xl gap-10 px-6 py-16">
       <aside className="hidden w-48 shrink-0 lg:block">
-        <nav className="sticky top-8 flex flex-col gap-1 text-sm">
-          {TOC_SECTIONS.map((section) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              className="rounded-sm px-2 py-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground font-medium"
-            >
-              {section.label}
-            </a>
-          ))}
-          {ENDPOINT_GROUPS.map((group) => (
-            <div key={group} className="mt-6">
-              <p className="px-2 text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">
-                {group}
-              </p>
-              {ENDPOINTS.filter((endpoint) => endpoint.group === group).map(
-                (endpoint) => (
-                  <a
-                    key={endpoint.id}
-                    href={`#${endpoint.id}`}
-                    className="block truncate rounded-sm px-2 py-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground font-medium"
-                  >
-                    {endpoint.summary}
-                  </a>
-                ),
-              )}
-            </div>
-          ))}
-        </nav>
+        <DocsToc
+          topLinks={TOC_SECTIONS}
+          groups={ENDPOINT_GROUPS.map((group) => ({
+            label: group,
+            links: ENDPOINTS.filter((endpoint) => endpoint.group === group).map(
+              (endpoint) => ({ id: endpoint.id, label: endpoint.summary }),
+            ),
+          }))}
+        />
       </aside>
 
       <div className="min-w-0 flex-1">

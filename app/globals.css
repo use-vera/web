@@ -35,8 +35,6 @@
   --input: #e1ddd1;
   --ring: #0fb26e;
 
-  /* Developer Portal sidebar — flush with the page background, separated
-     only by the perforated tear-line divider rather than a boxed panel. */
   --sidebar: var(--background);
   --sidebar-foreground: var(--foreground);
   --sidebar-accent: var(--accent);
@@ -46,7 +44,6 @@
 }
 
 .dark {
-  /* Vera — Ink (dark) */
   --background: #16150f;
   --foreground: #f5f3ef;
 
@@ -124,7 +121,6 @@ body {
   color: var(--foreground);
 }
 
-/* Signature: perforated ticket-stub divider */
 .ticket-perforation {
   position: relative;
   border: none;
@@ -138,7 +134,6 @@ body {
   );
 }
 
-/* Vertical perforated tear-line, for the download card's ticket-stub cut */
 .ticket-perforation-vertical {
   position: relative;
   border: none;
@@ -152,13 +147,11 @@ body {
   );
 }
 
-/* Manifesto section: faint perforation-dot texture */
 .ticket-dot-texture {
   background-image: radial-gradient(var(--border) 1px, transparent 1px);
   background-size: 16px 16px;
 }
 
-/* Page transitions: soften the browser's default crossfade timing */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.45s;

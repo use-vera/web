@@ -1,6 +1,6 @@
 import { eventService } from "@/lib/services/event.service";
 import { type EventListQuery } from "@/lib/types/event";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 const normalizeQuery = (query?: EventListQuery) => ({
   page: query?.page ?? 1,
@@ -23,12 +23,30 @@ const normalizeQuery = (query?: EventListQuery) => ({
   to: query?.to || undefined,
 });
 
-export const useEvents = (query?: EventListQuery) => {
+export const useEvents = (query?: EventListQuery, enabled = true) => {
   const normalized = normalizeQuery(query);
 
   return useQuery({
     queryKey: ["events", "list", normalized],
     queryFn: () => eventService.listEvents(normalized),
+    enabled,
+  });
+};
+
+// Paginated "Load more" browsing — TanStack Query owns the accumulated
+// pages itself (via `pages`/`fetchNextPage`), so callers never need to
+// hand-roll a merged-rows state or a "reset page on filter change" effect;
+// changing `query` changes the cache key, which resets to page 1 for free.
+export const useInfiniteEvents = (query?: Omit<EventListQuery, "page">) => {
+  const normalized = normalizeQuery(query);
+
+  return useInfiniteQuery({
+    queryKey: ["events", "list", "infinite", normalized],
+    queryFn: ({ pageParam }) =>
+      eventService.listEvents({ ...normalized, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasNextPage ? lastPage.page + 1 : undefined,
   });
 };
 
@@ -44,4 +62,11 @@ export const useEventCountries = () =>
     queryKey: ["events", "countries"],
     queryFn: eventService.listEventCountries,
     staleTime: 5 * 60 * 1000,
+  });
+
+export const useFeaturedEvents = (limit?: number) =>
+  useQuery({
+    queryKey: ["events", "featured", limit ?? null],
+    queryFn: () => eventService.listFeaturedEvents(limit),
+    staleTime: 60 * 1000,
   });
