@@ -15,7 +15,14 @@ import { useSession, useLogout } from "@/lib/hooks/use-auth";
 import { navLinks } from "@/lib/nav-links";
 import { useActiveNavHref } from "@/lib/use-active-nav-href";
 import { cn, ROUTES } from "@/lib/utils";
-import { ChevronDown, Download, LogOut, Terminal, Ticket } from "lucide-react";
+import {
+  ChevronDown,
+  Download,
+  LogOut,
+  ShieldCheck,
+  Terminal,
+  Ticket,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -76,7 +83,6 @@ const SiteHeader = ({ inverted = false }: SiteHeaderProps) => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="flex h-12.5 items-center gap-2 rounded-full border border-border bg-secondary px-4 text-sm font-semibold text-foreground">
-
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                   {user.fullName.charAt(0).toUpperCase()}
                 </span>
@@ -84,15 +90,15 @@ const SiteHeader = ({ inverted = false }: SiteHeaderProps) => {
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem
-                  render={<Link href={ROUTES.TICKETS} />}
-                >
+                <DropdownMenuItem render={<Link href={ROUTES.TICKETS} />}>
                   <Ticket className="h-4 w-4" />
                   My tickets
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  render={<Link href={ROUTES.DEVELOPERS} />}
-                >
+                <DropdownMenuItem render={<Link href={ROUTES.ORGANIZER} />}>
+                  <ShieldCheck className="h-4 w-4" />
+                  Organizer Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<Link href={ROUTES.DEVELOPERS} />}>
                   <Terminal className="h-4 w-4" />
                   Developer Portal
                 </DropdownMenuItem>

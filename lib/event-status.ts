@@ -68,3 +68,55 @@ export const isEventStrictlyUpcoming = (event: PublicEventApi) => {
   const startsAtMs = Date.parse(event.nextOccurrenceAt || event.startsAt || "");
   return Number.isFinite(startsAtMs) && startsAtMs > Date.now();
 };
+
+export type OrganizerEventBadge =
+  | "draft"
+  | "cancelled"
+  | "ended"
+  | "sold-out"
+  | "live";
+
+/**
+ * What the organizer's own list should call an event. Only draft/published/
+ * cancelled are stored, so "ended" and "sold out" are derived here rather than
+ * read off the record — and the clock reads stay out of component render, as
+ * with the other helpers in this file.
+ */
+export const getOrganizerEventBadge = (
+  event: PublicEventApi,
+): OrganizerEventBadge => {
+  if (event.status === "draft") {
+    return "draft";
+  }
+
+  if (event.status === "cancelled") {
+    return "cancelled";
+  }
+
+  const endsAtMs = Date.parse(event.nextOccurrenceEndsAt || event.endsAt || "");
+
+  if (Number.isFinite(endsAtMs) && endsAtMs < Date.now()) {
+    return "ended";
+  }
+
+  return Number(event.remainingTickets || 0) <= 0 ? "sold-out" : "live";
+};
+
+/** Whole days from now until `iso`, rounded up. Negative once it has passed. */
+export const daysUntil = (iso: string) => {
+  const targetMs = Date.parse(iso);
+
+  if (!Number.isFinite(targetMs)) {
+    return 0;
+  }
+
+  return Math.ceil((targetMs - Date.now()) / (1000 * 60 * 60 * 24));
+};
+
+/** Wall-clock HH:MM, defaulting to now when a timestamp is missing. */
+export const clockLabel = (iso?: string | null) =>
+  new Intl.DateTimeFormat("en-NG", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(iso ? new Date(iso) : new Date());

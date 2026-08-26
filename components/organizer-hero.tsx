@@ -20,7 +20,10 @@ const OrganizerHero = () => {
       </p>
 
       <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-        <Link href="#pricing" className={buttonVariants({ size: "lg" })}>
+        <Link
+          href="/organizer/events"
+          className={buttonVariants({ size: "lg" })}
+        >
           Start hosting free
         </Link>
         <Link

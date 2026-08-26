@@ -1,4 +1,5 @@
-import Button from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
 
 const OrganizerFinalCta = () => {
   return (
@@ -11,7 +12,12 @@ const OrganizerFinalCta = () => {
           It takes about five minutes to list your first event and start
           selling tickets.
         </p>
-        <Button size="lg">Start hosting free</Button>
+        <Link
+          href="/organizer/events"
+          className={buttonVariants({ size: "lg" })}
+        >
+          Start hosting free
+        </Link>
       </div>
     </section>
   );
