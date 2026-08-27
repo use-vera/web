@@ -4,6 +4,7 @@ import {
   EmptyState,
   ErrorState,
 } from "@/components/organizer/organizer-primitives";
+import { Pagination } from "@/components/pagination";
 import Badge from "@/components/ui/badge";
 import Button, { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,6 +24,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+
+const PAGE_SIZE = 20;
 
 const FILTERS: { value: TicketStatusFilter; label: string }[] = [
   { value: "all", label: "All" },
@@ -64,12 +67,14 @@ const AttendeesPage = () => {
   const [status, setStatus] = useState<TicketStatusFilter>("all");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const ticketsQuery = useEventTickets(eventId, {
     status,
     search: debouncedSearch,
-    limit: 50,
+    page,
+    limit: PAGE_SIZE,
   });
   const refundMutation = useRefundTicket();
 
@@ -99,7 +104,10 @@ const AttendeesPage = () => {
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <OrganizerField
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
             placeholder="Search name, email or reference"
             aria-label="Search attendees"
             className="pl-10"
@@ -111,7 +119,10 @@ const AttendeesPage = () => {
             <button
               key={filter.value}
               type="button"
-              onClick={() => setStatus(filter.value)}
+              onClick={() => {
+                setStatus(filter.value);
+                setPage(1);
+              }}
               className={cn(
                 "inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-semibold transition-colors",
                 status === filter.value
@@ -252,11 +263,16 @@ const AttendeesPage = () => {
               </table>
             </div>
 
-            <div className="flex items-center justify-between bg-muted/60 px-5 py-3.5">
-              <span className="text-xs text-muted-foreground tabular-nums">
-                Showing {tickets.length.toLocaleString("en-NG")} of{" "}
-                {(ticketsQuery.data?.totalItems ?? 0).toLocaleString("en-NG")}
-              </span>
+            <div className="flex items-center justify-between bg-muted/60 px-5 py-2">
+              <Pagination
+                page={ticketsQuery.data?.page ?? 1}
+                totalPages={ticketsQuery.data?.totalPages ?? 1}
+                totalItems={ticketsQuery.data?.totalItems ?? 0}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+                noun="attendee"
+                className="px-0 py-1.5"
+              />
 
               {selected ? (
                 <div className="flex items-center gap-2.5">

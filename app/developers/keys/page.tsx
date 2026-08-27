@@ -30,10 +30,13 @@ import {
   type ApiKeyApi,
   type CreateApiKeyResponse,
 } from "@/lib/types/workspace";
+import { Pagination } from "@/components/pagination";
 import { cn } from "@/lib/utils";
 import { Loader2, MoreHorizontal, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
+const KEYS_PER_PAGE = 10;
 
 const MODE_STYLES: Record<ApiKeyApi["mode"], string> = {
   test: "bg-muted text-muted-foreground",
@@ -61,6 +64,12 @@ const ApiKeysPage = () => {
   const { workspace } = useCurrentWorkspace();
   const workspaceId = workspace?._id ?? null;
   const keysQuery = useApiKeys(workspaceId);
+  const [page, setPage] = useState(1);
+
+  /* The API returns every key for the workspace in one array, so paging is
+     done here rather than with a page parameter. */
+  const allKeys = keysQuery.data ?? [];
+  const visibleKeys = allKeys.slice((page - 1) * KEYS_PER_PAGE, page * KEYS_PER_PAGE);
   const revokeApiKey = useRevokeApiKey(workspaceId);
   const upgradeApiKeyToLive = useUpgradeApiKeyToLive(workspaceId);
 
@@ -124,7 +133,8 @@ const ApiKeysPage = () => {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
-        ) : keysQuery.data && keysQuery.data.length > 0 ? (
+        ) : allKeys.length > 0 ? (
+          <>
           <Table>
             <TableHeader>
               <TableRow>
@@ -138,7 +148,7 @@ const ApiKeysPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {keysQuery.data.map((key) => (
+              {visibleKeys.map((key) => (
                 <TableRow key={key._id}>
                   <TableCell className="font-semibold text-foreground">
                     <div className="flex items-center gap-2 text-sm">
@@ -226,6 +236,16 @@ const ApiKeysPage = () => {
               ))}
             </TableBody>
           </Table>
+            <Pagination
+              page={page}
+              totalPages={Math.max(1, Math.ceil(allKeys.length / KEYS_PER_PAGE))}
+              totalItems={allKeys.length}
+              pageSize={KEYS_PER_PAGE}
+              onPageChange={setPage}
+              noun="key"
+              className="border-t border-border"
+            />
+          </>
         ) : (
           <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
             <p className="text-sm font-semibold text-foreground">

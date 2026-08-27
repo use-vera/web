@@ -1,6 +1,6 @@
 "use client";
 
-import { LocationMap } from "@/components/organizer/location-map";
+import { LocationMap } from "@/components/location-map";
 import { OrganizerField } from "@/components/organizer/organizer-field";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";

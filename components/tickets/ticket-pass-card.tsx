@@ -26,6 +26,7 @@ const STATUS_LABEL: Record<MyTicketApi["status"], string> = {
   pending: "Awaiting payment",
   cancelled: "Cancelled",
   expired: "Expired",
+  refunded: "Refunded",
 };
 
 const TicketPassCard = ({ ticket }: TicketPassCardProps) => {

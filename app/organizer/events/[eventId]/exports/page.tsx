@@ -17,6 +17,7 @@ import {
   type ExportFormat,
   type ExportKind,
 } from "@/lib/types/organizer";
+import { Pagination } from "@/components/pagination";
 import { cn } from "@/lib/utils";
 import { ChevronDown, Download, FileText, Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -50,7 +51,8 @@ const ExportsPage = () => {
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const exportsQuery = useEventExports(eventId);
+  const [exportsPage, setExportsPage] = useState(1);
+  const exportsQuery = useEventExports(eventId, exportsPage);
   const createExport = useCreateEventExport(eventId);
   const previewQuery = useEventExportPreview(eventId, previewId);
 
@@ -307,6 +309,15 @@ const ExportsPage = () => {
             ))
           )}
         </div>
+        <Pagination
+          page={exportsQuery.data?.page ?? 1}
+          totalPages={exportsQuery.data?.totalPages ?? 1}
+          totalItems={exportsQuery.data?.totalItems ?? 0}
+          pageSize={10}
+          onPageChange={setExportsPage}
+          noun="export"
+          className="border-t border-border"
+        />
         <div className="bg-muted/60 px-5 py-3.5">
           <Eyebrow>Heads up</Eyebrow>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">

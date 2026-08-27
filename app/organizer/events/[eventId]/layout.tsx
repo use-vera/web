@@ -4,6 +4,7 @@ import { EventStatusBadge } from "@/components/organizer/event-status-badge";
 import { ErrorState } from "@/components/organizer/organizer-primitives";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrganizerEvent } from "@/lib/hooks/use-organizer";
+import { googleMapsDirectionsUrl } from "@/lib/maps";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, Clock, Loader2, MapPin, Ticket, Users } from "lucide-react";
 import Link from "next/link";
@@ -77,10 +78,21 @@ const EventLayout = ({ children }: { children: React.ReactNode }) => {
                     <EventStatusBadge event={event} />
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-3.5 text-[13px] text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
+                    <a
+                      href={
+                        googleMapsDirectionsUrl({
+                          latitude: event.latitude,
+                          longitude: event.longitude,
+                          address: event.address,
+                        }) ?? undefined
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                    >
                       <MapPin className="h-3.5 w-3.5" />
                       {event.address}
-                    </span>
+                    </a>
                     <span className="inline-flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5" />
                       {new Intl.DateTimeFormat("en-NG", {

@@ -152,10 +152,10 @@ export const useEventRatings = (eventId: string, limit = 20) =>
     enabled: Boolean(eventId),
   });
 
-export const useEventExports = (eventId: string) =>
+export const useEventExports = (eventId: string, page = 1) =>
   useQuery({
-    queryKey: organizerKeys.exports(eventId),
-    queryFn: () => organizerService.listEventExports(eventId, { limit: 20 }),
+    queryKey: [...organizerKeys.exports(eventId), page],
+    queryFn: () => organizerService.listEventExports(eventId, { page, limit: 10 }),
     enabled: Boolean(eventId),
   });
 

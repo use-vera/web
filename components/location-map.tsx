@@ -2,13 +2,17 @@
 
 import "leaflet/dist/leaflet.css";
 import type { Circle, Map as LeafletMap, Marker } from "leaflet";
+import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 
 interface LocationMapProps {
   latitude: number;
   longitude: number;
   radiusMeters: number;
-  onChange: (next: { latitude: number; longitude: number }) => void;
+  onChange?: (next: { latitude: number; longitude: number }) => void;
+  /** Read-only preview: no dragging, no click-to-move, no zoom controls. */
+  interactive?: boolean;
+  className?: string;
 }
 
 /**
@@ -25,18 +29,22 @@ export const LocationMap = ({
   longitude,
   radiusMeters,
   onChange,
+  interactive = true,
+  className,
 }: LocationMapProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<Marker | null>(null);
   const circleRef = useRef<Circle | null>(null);
   const onChangeRef = useRef(onChange);
+  const interactiveRef = useRef(interactive);
 
   /* The map is mounted once; keeping the latest callback in a ref lets its
      handlers stay bound without tearing the map down on every render. */
   useEffect(() => {
     onChangeRef.current = onChange;
-  }, [onChange]);
+    interactiveRef.current = interactive;
+  }, [onChange, interactive]);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +60,13 @@ export const LocationMap = ({
         center: [latitude, longitude],
         zoom: 15,
         attributionControl: true,
+        dragging: interactiveRef.current,
+        scrollWheelZoom: interactiveRef.current,
+        doubleClickZoom: interactiveRef.current,
+        boxZoom: interactiveRef.current,
+        keyboard: interactiveRef.current,
+        zoomControl: interactiveRef.current,
+        touchZoom: interactiveRef.current,
       });
 
       leaflet
@@ -74,7 +89,10 @@ export const LocationMap = ({
       });
 
       const marker = leaflet
-        .marker([latitude, longitude], { draggable: true, icon })
+        .marker([latitude, longitude], {
+          draggable: interactiveRef.current,
+          icon,
+        })
         .addTo(map);
 
       const circle = leaflet
@@ -89,14 +107,18 @@ export const LocationMap = ({
 
       marker.on("dragend", () => {
         const { lat, lng } = marker.getLatLng();
-        onChangeRef.current({ latitude: lat, longitude: lng });
+        onChangeRef.current?.({ latitude: lat, longitude: lng });
       });
 
       map.on("click", (event) => {
+        if (!interactiveRef.current) {
+          return;
+        }
+
         const { lat, lng } = event.latlng;
         marker.setLatLng([lat, lng]);
         circle.setLatLng([lat, lng]);
-        onChangeRef.current({ latitude: lat, longitude: lng });
+        onChangeRef.current?.({ latitude: lat, longitude: lng });
       });
 
       mapRef.current = map;
@@ -135,9 +157,21 @@ export const LocationMap = ({
   return (
     <div
       ref={containerRef}
-      role="application"
-      aria-label="Map. Click or drag the pin to set where the event happens."
-      className="h-[320px] w-full overflow-hidden rounded-md border border-border [&_.leaflet-container]:font-sans"
+      role={interactive ? "application" : "img"}
+      aria-label={
+        interactive
+          ? "Map. Click or drag the pin to set where the event happens."
+          : "Map showing where the event happens."
+      }
+      className={cn(
+        // `isolate` is load-bearing: Leaflet's panes and controls carry
+        // z-index 400–800 of their own, which would otherwise paint over
+        // anything lower in the same stacking context — dialogs (z-50) and
+        // the sticky header included. Isolating the container traps those
+        // z-indices inside it.
+        "isolate w-full overflow-hidden rounded-md border border-border [&_.leaflet-container]:font-sans",
+        className ?? "h-[320px]",
+      )}
     />
   );
 };

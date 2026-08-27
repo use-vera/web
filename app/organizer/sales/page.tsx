@@ -13,9 +13,12 @@ import { formatNairaAmount, formatNairaCompact } from "@/lib/format-currency";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { useOrganizerSales } from "@/lib/hooks/use-organizer";
 import { type TicketStatusFilter } from "@/lib/types/organizer";
+import { Pagination } from "@/components/pagination";
 import { cn } from "@/lib/utils";
 import { Loader2, Search, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
+
+const PAGE_SIZE = 20;
 
 const FILTERS: { value: TicketStatusFilter; label: string }[] = [
   { value: "all", label: "All" },
@@ -32,12 +35,14 @@ const eventNameOf = (eventId: unknown) =>
 const SalesPage = () => {
   const [status, setStatus] = useState<TicketStatusFilter>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const salesQuery = useOrganizerSales({
     status,
     search: debouncedSearch,
-    limit: 50,
+    page,
+    limit: PAGE_SIZE,
   });
 
   const sales = useMemo(
@@ -76,7 +81,10 @@ const SalesPage = () => {
             <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <OrganizerField
               value={search}
-              onChange={(input) => setSearch(input.target.value)}
+              onChange={(input) => {
+                setSearch(input.target.value);
+                setPage(1);
+              }}
               placeholder="Search name or reference"
               aria-label="Search sales"
               className="pl-10"
@@ -115,7 +123,10 @@ const SalesPage = () => {
             <button
               key={filter.value}
               type="button"
-              onClick={() => setStatus(filter.value)}
+              onClick={() => {
+                setStatus(filter.value);
+                setPage(1);
+              }}
               className={cn(
                 "inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-semibold transition-colors",
                 status === filter.value
@@ -228,6 +239,16 @@ const SalesPage = () => {
                   ))}
                 </tbody>
               </table>
+              <div className="border-t border-border bg-muted/60">
+                <Pagination
+                  page={salesQuery.data?.page ?? 1}
+                  totalPages={salesQuery.data?.totalPages ?? 1}
+                  totalItems={salesQuery.data?.totalItems ?? 0}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setPage}
+                  noun="ticket"
+                />
+              </div>
             </div>
           )}
         </Card>

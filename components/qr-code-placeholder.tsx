@@ -13,7 +13,7 @@ const QrCodePlaceholder = ({ className }: QrCodePlaceholderProps) => (
       alt="Scan to download"
       height={112}
       width={112}
-      className="w-full h-full border rounded-lg"
+      className="h-full w-full rounded-lg border object-contain"
     />
   </div>
 );

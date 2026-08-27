@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import {
   ChevronRight,
   Download,
+  ExternalLink,
   Megaphone,
   ScanLine,
   TriangleAlert,
@@ -253,7 +254,14 @@ const EventOverviewPage = () => {
         </div>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Link
+          href={`/events/${eventId}`}
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
+          <ExternalLink className="h-4 w-4" />
+          View public page
+        </Link>
         <Link
           href={`${base}/check-in`}
           className={cn(buttonVariants({ size: "sm" }))}

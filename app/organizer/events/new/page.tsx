@@ -1,7 +1,8 @@
 "use client";
 
 import { CategoryPicker } from "@/components/organizer/category-picker";
-import { ConfirmDialog } from "@/components/organizer/confirm-dialog";
+import { LocationMap } from "@/components/location-map";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { ImageUpload } from "@/components/organizer/image-upload";
 import {
   DEFAULT_LOCATION,
@@ -16,10 +17,12 @@ import {
   SectionLabel,
   Switch,
 } from "@/components/organizer/organizer-primitives";
+import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getApiErrorMessage } from "@/lib/api/error-message";
 import { formatNairaAmount, formatNairaCompact } from "@/lib/format-currency";
+import { useCategories } from "@/lib/hooks/use-categories";
 import { useCreateEvent } from "@/lib/hooks/use-organizer";
 import { NIGERIAN_STATES } from "@/lib/nigerian-states";
 import {
@@ -32,7 +35,19 @@ import {
 } from "@/lib/organizer-draft";
 import { type EventTicketCategoryPayload } from "@/lib/types/organizer";
 import { cn } from "@/lib/utils";
-import { Check, ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
+import {
+  CalendarClock,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  MapPin,
+  Plus,
+  Repeat,
+  Trash2,
+  TriangleAlert,
+  Users,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -130,6 +145,80 @@ const NewEventPage = () => {
   const leadPrice = Number(draft.tiers[0]?.priceNaira) || 0;
   const feeOnLead = Math.round((leadPrice * PLATFORM_FEE_PERCENT) / 100);
   const stepValid = validateStep(draft, step);
+
+  const categoriesQuery = useCategories();
+  const selectedCategoryNames = useMemo(
+    () =>
+      (categoriesQuery.data ?? [])
+        .filter((category) => draft.categoryIds.includes(category._id))
+        .map((category) => category.name),
+    [categoriesQuery.data, draft.categoryIds],
+  );
+
+  const cheapestTier = useMemo(
+    () =>
+      draft.tiers.reduce(
+        (lowest, tier) => Math.min(lowest, Number(tier.priceNaira) || 0),
+        Number.POSITIVE_INFINITY,
+      ),
+    [draft.tiers],
+  );
+
+  const dateTime = (value: string) =>
+    value
+      ? new Intl.DateTimeFormat("en-NG", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }).format(new Date(value))
+      : "Not set";
+
+  const startLabel = dateTime(draft.startsAt);
+  const endLabel = dateTime(draft.endsAt);
+
+  const repeatSummary =
+    draft.recurrenceType === "none"
+      ? "One-off"
+      : draft.recurrenceType === "weekly"
+        ? `Weekly on ${[...draft.recurrenceDays]
+            .sort((a, b) => a - b)
+            .map((day) => WEEKDAYS[day])
+            .join(", ")}`
+        : "Monthly";
+
+  /* Things that are legal but usually mistakes — surfaced before publish
+     rather than discovered after tickets are on sale. */
+  const warnings = useMemo(() => {
+    const found: string[] = [];
+
+    if (!draft.imageUrl) {
+      found.push("No cover image. Events with one get noticeably more views.");
+    }
+
+    if (!draft.description.trim()) {
+      found.push("No description yet.");
+    }
+
+    if (draft.categoryIds.length === 0) {
+      found.push("No categories picked, so it will be harder to discover.");
+    }
+
+    if (
+      draft.presaleEnabled &&
+      (!draft.presaleStartsAt || !draft.presaleEndsAt)
+    ) {
+      found.push("Presale is on but its window is incomplete.");
+    }
+
+    if (capacity > 0 && capacity < 10) {
+      found.push(`Capacity is only ${capacity}. Check your tier quantities.`);
+    }
+
+    return found;
+  }, [draft, capacity]);
 
   const updateTier = (
     index: number,
@@ -921,83 +1010,223 @@ const NewEventPage = () => {
                   Review &amp; publish
                 </h2>
                 <p className="mt-1.5 mb-6 text-sm text-muted-foreground">
-                  Publish puts it on sale straight away. Save it as a draft if
-                  you are not ready.
+                  Everything you have set, the way attendees will meet it.
+                  Publish puts it on sale straight away.
                 </p>
 
-                {draft.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={draft.imageUrl}
-                    alt=""
-                    className="mb-4 h-[180px] w-full rounded-md border border-border object-cover"
-                  />
-                ) : null}
-
-                <Card className="gap-0 py-0">
-                  {[
-                    ["Name", draft.name],
-                    [
-                      "Where",
-                      [draft.location.address, draft.location.state, draft.location.country]
-                        .filter(Boolean)
-                        .join(", "),
-                    ],
-                    [
-                      "When",
-                      draft.startsAt
-                        ? `${new Intl.DateTimeFormat("en-NG", {
-                            weekday: "short",
-                            day: "numeric",
-                            month: "short",
-                            hour: "numeric",
-                            minute: "2-digit",
-                            hour12: true,
-                          }).format(new Date(draft.startsAt))} · ${draft.timezone}`
-                        : "—",
-                    ],
-                    [
-                      "Repeats",
-                      draft.recurrenceType === "none"
-                        ? "One-off"
-                        : draft.recurrenceType === "weekly"
-                          ? `Weekly on ${draft.recurrenceDays
-                              .sort((a, b) => a - b)
-                              .map((day) => WEEKDAYS[day])
-                              .join(", ")}`
-                          : "Monthly",
-                    ],
-                    ["Capacity", `${capacity.toLocaleString("en-NG")} tickets`],
-                    [
-                      "Entry",
-                      draft.isPaid
-                        ? `Paid · ${draft.tiers.length} ${draft.tiers.length === 1 ? "tier" : "tiers"}`
-                        : "Free",
-                    ],
-                    [
-                      "Resale",
-                      draft.resaleEnabled
-                        ? `Allowed up to +${draft.resaleMaxMarkupPercent}%`
-                        : "Not allowed",
-                    ],
-                    [
-                      "Check-in radius",
-                      `${draft.location.geofenceRadiusMeters}m`,
-                    ],
-                  ].map(([key, value], index) => (
-                    <div key={String(key)}>
-                      {index > 0 ? <hr className="ticket-perforation" /> : null}
-                      <div className="flex items-baseline justify-between gap-6 px-5 py-3.5">
-                        <span className="shrink-0 text-[13px] text-muted-foreground">
-                          {key}
-                        </span>
-                        <span className="min-w-0 truncate text-right text-[13px] font-semibold">
-                          {value || "—"}
-                        </span>
-                      </div>
+                {/* How the event card reads in the feed */}
+                <Card className="gap-0 overflow-hidden py-0">
+                  {draft.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={draft.imageUrl}
+                      alt=""
+                      className="h-[220px] w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-[120px] items-center justify-center bg-muted text-xs text-muted-foreground">
+                      No cover image — it will show a placeholder in the feed
                     </div>
-                  ))}
+                  )}
+                  <div className="px-5 py-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xl font-bold tracking-[-0.01em]">
+                        {draft.name || "Untitled event"}
+                      </span>
+                      {draft.isPaid ? (
+                        <Badge>
+                          from {formatNairaAmount(cheapestTier)}
+                        </Badge>
+                      ) : (
+                        <Badge variant="solid">Free</Badge>
+                      )}
+                      {draft.recurrenceType !== "none" ? (
+                        <Badge variant="outline">
+                          <Repeat className="h-3 w-3" />
+                          {repeatSummary}
+                        </Badge>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5">
+                        <CalendarClock className="h-3.5 w-3.5" />
+                        {startLabel}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {[draft.location.address, draft.location.state]
+                          .filter(Boolean)
+                          .join(", ") || "No address set"}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 tabular-nums">
+                        <Users className="h-3.5 w-3.5" />
+                        {capacity.toLocaleString("en-NG")} capacity
+                      </span>
+                    </div>
+
+                    {draft.description ? (
+                      <p className="mt-3.5 text-[13px] leading-relaxed text-pretty text-muted-foreground">
+                        {draft.description}
+                      </p>
+                    ) : (
+                      <p className="mt-3.5 text-[13px] text-muted-foreground italic">
+                        No description yet. Events with one sell better.
+                      </p>
+                    )}
+
+                    {selectedCategoryNames.length > 0 ? (
+                      <div className="mt-3.5 flex flex-wrap gap-2">
+                        {selectedCategoryNames.map((name) => (
+                          <Badge key={name} variant="outline">
+                            {name}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </Card>
+
+                {/* Where, on the map, with the real check-in radius */}
+                <div className="mt-3.5">
+                  <SectionLabel
+                    hint={`Anyone scanning in has to be within ${draft.location.geofenceRadiusMeters}m of this pin.`}
+                  >
+                    Where it happens
+                  </SectionLabel>
+                  <LocationMap
+                    latitude={draft.location.latitude}
+                    longitude={draft.location.longitude}
+                    radiusMeters={draft.location.geofenceRadiusMeters}
+                    interactive={false}
+                    className="h-[240px]"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground tabular-nums">
+                    {draft.location.latitude.toFixed(5)},{" "}
+                    {draft.location.longitude.toFixed(5)}
+                    {draft.location.eventCenterId
+                      ? " · linked to a known venue"
+                      : ""}
+                  </p>
+                </div>
+
+                {/* Every tier, priced out */}
+                <div className="mt-5">
+                  <SectionLabel>Tickets</SectionLabel>
+                  <Card className="gap-0 py-0">
+                    {draft.tiers.map((tier, index) => (
+                      <div key={index}>
+                        {index > 0 ? <hr className="ticket-perforation" /> : null}
+                        <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+                          <div className="min-w-0">
+                            <div className="truncate text-[13px] font-semibold">
+                              {tier.name || "Untitled tier"}
+                            </div>
+                            <div className="text-xs text-muted-foreground tabular-nums">
+                              {Number(tier.quantity).toLocaleString("en-NG")}{" "}
+                              available
+                            </div>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <div className="text-[13px] font-semibold tabular-nums">
+                              {draft.isPaid
+                                ? formatNairaAmount(Number(tier.priceNaira) || 0)
+                                : "Free"}
+                            </div>
+                            <div className="text-xs text-muted-foreground tabular-nums">
+                              {formatNairaCompact(
+                                (Number(tier.quantity) || 0) *
+                                  (draft.isPaid
+                                    ? Number(tier.priceNaira) || 0
+                                    : 0),
+                              )}{" "}
+                              if it sells out
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </Card>
+                </div>
+
+                {/* The settings that are easy to get wrong */}
+                <div className="mt-5">
+                  <SectionLabel>Everything else</SectionLabel>
+                  <Card className="gap-0 py-0">
+                    {[
+                      ["Ends", endLabel],
+                      ["Timezone", draft.timezone],
+                      ["Repeats", repeatSummary],
+                      [
+                        "Fee",
+                        draft.isPaid
+                          ? draft.feeMode === "absorbed_by_organizer"
+                            ? `You cover the ${PLATFORM_FEE_PERCENT}%`
+                            : `Attendees cover the ${PLATFORM_FEE_PERCENT}%`
+                          : "No fee on free events",
+                      ],
+                      [
+                        "Sales open",
+                        draft.salesStartsAt
+                          ? new Intl.DateTimeFormat("en-NG", {
+                              day: "numeric",
+                              month: "short",
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            }).format(new Date(draft.salesStartsAt))
+                          : "As soon as it is published",
+                      ],
+                      [
+                        "Presale",
+                        draft.presaleEnabled
+                          ? `${draft.presaleQuantity || "?"} tickets${draft.presalePriceNaira ? ` at ${formatNairaAmount(Number(draft.presalePriceNaira))}` : ""}`
+                          : "Off",
+                      ],
+                      [
+                        "Resale",
+                        draft.resaleEnabled
+                          ? `Allowed up to +${draft.resaleMaxMarkupPercent}%${draft.resaleAllowBids ? ", bids on" : ", bids off"}`
+                          : "Not allowed",
+                      ],
+                      [
+                        "Check-in radius",
+                        `${draft.location.geofenceRadiusMeters}m`,
+                      ],
+                    ].map(([key, value], index) => (
+                      <div key={String(key)}>
+                        {index > 0 ? <hr className="ticket-perforation" /> : null}
+                        <div className="flex items-baseline justify-between gap-6 px-5 py-3">
+                          <span className="shrink-0 text-[13px] text-muted-foreground">
+                            {key}
+                          </span>
+                          <span className="min-w-0 text-right text-[13px] font-semibold">
+                            {value || "—"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </Card>
+                </div>
+
+                {warnings.length > 0 ? (
+                  <div className="mt-5 rounded-sm bg-muted/60 p-4">
+                    <span className="flex items-center gap-2 text-[13px] font-semibold">
+                      <TriangleAlert className="h-4 w-4 text-muted-foreground" />
+                      Worth a look before you publish
+                    </span>
+                    <ul className="mt-2.5 flex flex-col gap-1.5">
+                      {warnings.map((warning) => (
+                        <li
+                          key={warning}
+                          className="text-[13px] text-muted-foreground"
+                        >
+                          {warning}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </>
             ) : null}
           </div>

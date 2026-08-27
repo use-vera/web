@@ -14,10 +14,13 @@ import { formatNairaCompact } from "@/lib/format-currency";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { useMyEvents } from "@/lib/hooks/use-organizer";
 import { type EventStatusFilter } from "@/lib/types/organizer";
+import { Pagination } from "@/components/pagination";
 import { cn } from "@/lib/utils";
 import { CalendarDays, Loader2, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+
+const PAGE_SIZE = 20;
 
 const FILTERS: { value: EventStatusFilter; label: string }[] = [
   { value: "all", label: "All" },
@@ -29,9 +32,15 @@ const FILTERS: { value: EventStatusFilter; label: string }[] = [
 const OrganizerEventsPage = () => {
   const [status, setStatus] = useState<EventStatusFilter>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  const eventsQuery = useMyEvents({ status, search: debouncedSearch, limit: 50 });
+  const eventsQuery = useMyEvents({
+    status,
+    search: debouncedSearch,
+    page,
+    limit: PAGE_SIZE,
+  });
   const events = useMemo(
     () => eventsQuery.data?.items ?? [],
     [eventsQuery.data],
@@ -77,7 +86,10 @@ const OrganizerEventsPage = () => {
               <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <OrganizerField
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
                 placeholder="Search events"
                 aria-label="Search events"
                 className="pl-10"
@@ -140,7 +152,10 @@ const OrganizerEventsPage = () => {
             <button
               key={filter.value}
               type="button"
-              onClick={() => setStatus(filter.value)}
+              onClick={() => {
+                setStatus(filter.value);
+                setPage(1);
+              }}
               className={cn(
                 "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition-colors",
                 status === filter.value
@@ -194,6 +209,18 @@ const OrganizerEventsPage = () => {
           events.map((event) => <EventRow key={event._id} event={event} />)
         )}
       </div>
+
+      {!eventsQuery.isLoading && events.length > 0 ? (
+        <Pagination
+          page={eventsQuery.data?.page ?? 1}
+          totalPages={eventsQuery.data?.totalPages ?? 1}
+          totalItems={eventsQuery.data?.totalItems ?? 0}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+          noun="event"
+          className="px-8 pt-4"
+        />
+      ) : null}
     </div>
   );
 };

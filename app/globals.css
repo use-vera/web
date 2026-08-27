@@ -10,10 +10,13 @@
   --background: #f5f3ef;
   --foreground: #16150f;
 
-  --card: #ffffff;
+  /* Lifted off --background by lightness alone: same warm hue and chroma
+     (L .980 vs .965, C .006, H 84.6). Pure white dropped chroma to zero,
+     which read as a different material rather than a raised surface. */
+  --card: #faf8f4;
   --card-foreground: #16150f;
 
-  --popover: #ffffff;
+  --popover: #faf8f4;
   --popover-foreground: #16150f;
 
   --primary: #0fb26e;

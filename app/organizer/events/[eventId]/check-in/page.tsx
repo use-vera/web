@@ -1,9 +1,10 @@
 "use client";
 
+import { OrganizerField } from "@/components/organizer/organizer-field";
 import { Eyebrow, Meter } from "@/components/organizer/organizer-primitives";
+import { QrScanner } from "@/components/organizer/qr-scanner";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { OrganizerField } from "@/components/organizer/organizer-field";
 import { getApiErrorMessage } from "@/lib/api/error-message";
 import { clockLabel } from "@/lib/event-status";
 import {
@@ -42,8 +43,6 @@ const CheckInPage = () => {
   const [admittedDelta, setAdmittedDelta] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  /* A door runs hands-free: the field takes focus on mount so a hardware
-     scanner's keystrokes land in it without anyone clicking first. */
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -62,8 +61,9 @@ const CheckInPage = () => {
 
   const baseAdmitted = useMemo(
     () =>
-      (ticketsQuery.data?.items ?? []).filter((ticket) => ticket.status === "used")
-        .length,
+      (ticketsQuery.data?.items ?? []).filter(
+        (ticket) => ticket.status === "used",
+      ).length,
     [ticketsQuery.data],
   );
 
@@ -72,10 +72,8 @@ const CheckInPage = () => {
   const outside = Math.max(0, issued - admitted);
   const percent = issued > 0 ? Math.round((admitted / issued) * 100) : 0;
 
-  const submit = async (event_: React.FormEvent) => {
-    event_.preventDefault();
-
-    const trimmed = code.trim();
+  const admit = async (raw: string) => {
+    const trimmed = raw.trim();
 
     if (!trimmed) {
       return;
@@ -115,6 +113,11 @@ const CheckInPage = () => {
     }
   };
 
+  const submit = (formEvent: React.FormEvent) => {
+    formEvent.preventDefault();
+    void admit(code);
+  };
+
   const admittedNow = result && !result.alreadyUsed;
 
   return (
@@ -137,21 +140,10 @@ const CheckInPage = () => {
 
       <div className="flex items-stretch gap-3.5">
         <div className="flex w-[452px] shrink-0 flex-col gap-3">
-          <div className="ticket-dot-texture relative flex h-[300px] items-center justify-center overflow-hidden rounded-sm bg-[#16150f] outline outline-foreground/10 -outline-offset-1">
-            <div className="pointer-events-none absolute inset-7">
-              <span className="absolute top-0 left-0 h-9 w-9 rounded-tl-lg border-t-2 border-l-2 border-primary" />
-              <span className="absolute top-0 right-0 h-9 w-9 rounded-tr-lg border-t-2 border-r-2 border-primary" />
-              <span className="absolute bottom-0 left-0 h-9 w-9 rounded-bl-lg border-b-2 border-l-2 border-primary" />
-              <span className="absolute right-0 bottom-0 h-9 w-9 rounded-br-lg border-r-2 border-b-2 border-primary" />
-            </div>
-            <span
-              aria-hidden
-              className="absolute top-1/2 right-7 left-7 h-0.5 -translate-y-1/2 rounded-sm bg-primary shadow-[0_0_16px_2px_rgba(15,178,110,0.55)]"
-            />
-            <p className="absolute right-0 bottom-5 left-0 text-center text-xs font-medium text-[#93917f]">
-              Hold the QR inside the frame
-            </p>
-          </div>
+          <QrScanner
+            onDetect={(code) => void admit(code)}
+            disabled={checkIn.isPending}
+          />
 
           <form onSubmit={submit} className="flex gap-2">
             <OrganizerField
@@ -162,7 +154,7 @@ const CheckInPage = () => {
               aria-label="Ticket reference"
               autoComplete="off"
               spellCheck={false}
-              className="flex-1 font-mono"
+              className="flex-1 font-sans"
             />
             <Button
               type="submit"
@@ -349,7 +341,10 @@ const CheckInPage = () => {
                 </p>
               ) : (
                 history.map((entry) => (
-                  <div key={entry.id} className="flex items-center gap-3 py-2.5">
+                  <div
+                    key={entry.id}
+                    className="flex items-center gap-3 py-2.5"
+                  >
                     <span
                       className={cn(
                         "flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full",
@@ -372,7 +367,8 @@ const CheckInPage = () => {
                         {entry.tier}
                         {entry.detail ? (
                           <>
-                            {" "}&middot;{" "}
+                            {" "}
+                            &middot;{" "}
                             <span className="font-semibold text-destructive">
                               {entry.detail}
                             </span>

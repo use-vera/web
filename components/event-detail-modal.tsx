@@ -21,9 +21,11 @@ import {
   type EventTicketCategoryApi,
   type PublicEventApi,
 } from "@/lib/types/event";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
+  ArrowRight,
   Calendar,
   Loader2,
   Lock,
@@ -333,6 +335,18 @@ const EventDetailModalBody = ({
                     ? `Get ${quantity} ticket${quantity > 1 ? "s" : ""}`
                     : `Pay ${formatNaira(subtotal)}`}
               </Button>
+
+              {/* Sold-out tiers still have resale, which lives on the full
+                  event page along with everything else about the event. */}
+              <Link
+                href={`/events/${event._id}`}
+                className="flex h-11 items-center justify-center gap-1.5 rounded-full border border-border text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+              >
+                {event.remainingTickets <= 0
+                  ? "See resale and full details"
+                  : "Open full event page"}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
 
               {!sessionQuery.data?.user ? (
                 <p className="text-center text-xs text-muted-foreground">

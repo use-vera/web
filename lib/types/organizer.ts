@@ -70,6 +70,18 @@ export interface EventTicketApi {
   usedAt?: string | null;
   cancelledAt?: string | null;
   resaleStatus?: "none" | "listed" | "offer-accepted";
+  resalePriceNaira?: number | null;
+  resaleQuantity?: number | null;
+  resaleAllowBids?: boolean;
+  resaleListedAt?: string | null;
+  acceptedBidExpiresAt?: string | null;
+  openBidsCount?: number;
+  highestBidNaira?: number;
+  myBid?: {
+    amountNaira: number;
+    status: "open" | "accepted" | "rejected" | "expired" | "paid" | "withdrawn";
+    expiresAt?: string | null;
+  } | null;
   lastTransferredAt?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -265,4 +277,26 @@ export interface CancelEventResponse {
   event: OrganizerEventApi;
   affectedTicketCount: number;
   totalRefundNaira: number;
+}
+
+/* --- resale --- */
+
+export interface TicketResaleBidApi {
+  _id: string;
+  ticketId: string;
+  eventId: string;
+  sellerUserId: string | AuthUser;
+  bidderUserId: string | AuthUser;
+  amountNaira: number;
+  status: "open" | "accepted" | "rejected" | "expired" | "paid" | "withdrawn";
+  respondedAt?: string | null;
+  expiresAt?: string | null;
+  paidAt?: string | null;
+  createdAt: string;
+}
+
+export interface CreateResalePayload {
+  priceNaira: number;
+  quantity?: number;
+  allowBids?: boolean;
 }

@@ -75,6 +75,25 @@ export interface PublicEventApi {
     verified: boolean;
     tier: "trusted" | "elite" | null;
   } | null;
+  /* The detail endpoint spreads the whole event document, so these come
+     through on a single event even though the list projection is thinner. */
+  latitude?: number;
+  longitude?: number;
+  geofenceRadiusMeters?: number;
+  eventCenter?: EventCenterSummary | null;
+  friendsGoingCount?: number;
+  recurrence?: {
+    type: "none" | "weekly" | "monthly-day" | "monthly-weekday";
+    interval?: number;
+    daysOfWeek?: number[];
+    endsOn?: string | null;
+  };
+  resale?: {
+    enabled: boolean;
+    allowBids: boolean;
+    maxMarkupPercent: number;
+    bidWindowHours: number;
+  };
 }
 
 export interface EventRatingApi {
@@ -200,7 +219,7 @@ export interface MyTicketApi {
   unitPriceNaira: number;
   totalPriceNaira: number;
   currency: "NGN";
-  status: "pending" | "paid" | "cancelled" | "used" | "expired";
+  status: "pending" | "paid" | "cancelled" | "used" | "expired" | "refunded";
   attendeeName: string;
   attendeeEmail: string;
   ticketCode: string;
@@ -208,6 +227,14 @@ export interface MyTicketApi {
   paidAt?: string | null;
   usedAt?: string | null;
   cancelledAt?: string | null;
+  /* Resale fields — /events/tickets/me returns whole ticket documents, so
+     these are present on a ticket the owner has listed. */
+  resaleStatus?: "none" | "listed" | "offer-accepted";
+  resalePriceNaira?: number | null;
+  resaleQuantity?: number | null;
+  resaleAllowBids?: boolean;
+  openBidsCount?: number;
+  highestBidNaira?: number;
   createdAt: string;
 }
 
@@ -215,6 +242,13 @@ export interface MyTicketsQuery {
   page?: number;
   limit?: number;
   search?: string;
-  status?: "all" | "pending" | "paid" | "cancelled" | "used" | "expired";
+  status?:
+    | "all"
+    | "pending"
+    | "paid"
+    | "cancelled"
+    | "used"
+    | "expired"
+    | "refunded";
   purchaseBatchId?: string;
 }

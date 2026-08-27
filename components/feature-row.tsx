@@ -46,7 +46,7 @@ const FeatureRow = ({
               unoptimized
               width={480}
               height={480}
-              className="w-full max-w-sm"
+              className="h-auto w-full max-w-sm"
             />
           ) : variant ? (
             <PhoneMockup variant={variant} />

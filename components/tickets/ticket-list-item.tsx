@@ -24,6 +24,7 @@ const STATUS_LABEL: Record<MyTicketApi["status"], string> = {
   pending: "Awaiting payment",
   cancelled: "Cancelled",
   expired: "Expired",
+  refunded: "Refunded",
 };
 
 const STATUS_STYLES: Record<MyTicketApi["status"], string> = {
@@ -33,6 +34,7 @@ const STATUS_STYLES: Record<MyTicketApi["status"], string> = {
     "bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
   cancelled: "bg-red-500/10 text-red-700 dark:bg-red-400/10 dark:text-red-300",
   expired: "bg-muted text-muted-foreground",
+  refunded: "bg-red-500/10 text-red-700 dark:bg-red-400/10 dark:text-red-300",
 };
 
 const TicketListItem = ({ ticket, onSelect }: TicketListItemProps) => {

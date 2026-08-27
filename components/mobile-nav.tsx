@@ -2,6 +2,7 @@
 
 import { useAuthModal } from "@/components/auth/auth-modal-provider";
 import Button from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useLogout, useSession } from "@/lib/hooks/use-auth";
 import { navLinks } from "@/lib/nav-links";
 import { useActiveNavHref } from "@/lib/use-active-nav-href";
@@ -38,15 +39,30 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
     openAuthModal({ view: "sign-in" });
   };
 
+  const [confirmLogout, setConfirmLogout] = useState(false);
+
   const handleLogout = () => {
-    close();
     logout.mutate(undefined, {
-      onSuccess: () => router.push("/"),
+      onSuccess: () => {
+        setConfirmLogout(false);
+        close();
+        router.push("/");
+      },
     });
   };
 
   return (
     <div className="md:hidden">
+      <ConfirmDialog
+        open={confirmLogout}
+        onOpenChange={setConfirmLogout}
+        title="Sign out of Vera?"
+        description="Your tickets stay on your account — you will just need to sign back in to see them."
+        confirmLabel="Sign out"
+        cancelLabel="Stay signed in"
+        loading={logout.isPending}
+        onConfirm={handleLogout}
+      />
       <button
         type="button"
         aria-label={open ? "Close menu" : "Open menu"}
@@ -114,7 +130,7 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
                   {user ? (
                     <button
                       type="button"
-                      onClick={handleLogout}
+                      onClick={() => setConfirmLogout(true)}
                       className="flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-destructive hover:bg-secondary"
                     >
                       <LogOut className="h-4 w-4" />
