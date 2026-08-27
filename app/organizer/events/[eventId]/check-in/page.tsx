@@ -121,8 +121,8 @@ const CheckInPage = () => {
   const admittedNow = result && !result.alreadyUsed;
 
   return (
-    <div className="px-8 pt-5.5 pb-8">
-      <Card className="mb-3.5 flex-row items-center gap-7 px-5 py-4">
+    <div className="px-4 pt-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+      <Card className="mb-3.5 flex-col items-stretch gap-4 px-4 py-4 sm:flex-row sm:items-center sm:gap-7 sm:px-5">
         <div>
           <Eyebrow>Admitted</Eyebrow>
           <div className="mt-0.5 text-[26px] leading-tight font-bold tracking-[-0.02em] tabular-nums">
@@ -138,8 +138,8 @@ const CheckInPage = () => {
         </div>
       </Card>
 
-      <div className="flex items-stretch gap-3.5">
-        <div className="flex w-[452px] shrink-0 flex-col gap-3">
+      <div className="flex flex-col gap-3.5 lg:flex-row lg:items-stretch">
+        <div className="flex w-full lg:w-[452px] lg:shrink-0 flex-col gap-3">
           <QrScanner
             onDetect={(code) => void admit(code)}
             disabled={checkIn.isPending}
@@ -190,7 +190,7 @@ const CheckInPage = () => {
           {result ? (
             <div
               className={cn(
-                "rounded-sm px-5.5 pt-5 pb-6.5 outline outline-foreground/10 -outline-offset-1",
+                "rounded-sm px-4 pt-5 pb-6.5 outline outline-foreground/10 -outline-offset-1 sm:px-5.5",
                 admittedNow ? "bg-accent" : "bg-destructive/12",
               )}
             >
@@ -229,7 +229,7 @@ const CheckInPage = () => {
 
               {/* The tear: an admitted ticket splits along Vera's perforation,
                   the counterfoil kicked loose from the body. */}
-              <div className="mt-4.5 flex items-stretch">
+              <div className="mt-4.5 flex flex-col sm:flex-row sm:items-stretch">
                 <div className="min-w-0 flex-1 rounded-l-sm bg-card px-5 py-4.5 outline outline-foreground/10 -outline-offset-1">
                   <Eyebrow>{event?.name}</Eyebrow>
                   <div className="mt-1.5 text-[19px] font-bold tracking-[-0.01em]">
@@ -263,16 +263,19 @@ const CheckInPage = () => {
                   </div>
                 </div>
 
-                <div className="ticket-perforation-vertical relative shrink-0">
+                <div className="relative shrink-0">
+                  <hr className="ticket-perforation sm:hidden" />
+                  <div className="ticket-perforation-vertical hidden h-full sm:block" />
                   <span
                     className={cn(
-                      "absolute -top-2.5 -left-2.5 h-5 w-5 rounded-full",
+                      "absolute -left-2.5 h-5 w-5 rounded-full",
+                      "-top-2.5 sm:-top-2.5",
                       admittedNow ? "bg-accent" : "bg-destructive/12",
                     )}
                   />
                   <span
                     className={cn(
-                      "absolute -bottom-2.5 -left-2.5 h-5 w-5 rounded-full",
+                      "absolute -right-2.5 -top-2.5 h-5 w-5 rounded-full sm:-right-auto sm:-left-2.5 sm:top-auto sm:-bottom-2.5",
                       admittedNow ? "bg-accent" : "bg-destructive/12",
                     )}
                   />
@@ -280,11 +283,12 @@ const CheckInPage = () => {
 
                 <div
                   className={cn(
-                    "w-[186px] shrink-0 origin-left rounded-r-sm bg-card p-4.5 outline outline-foreground/10 -outline-offset-1",
+                    "w-full rounded-b-sm bg-card p-4.5 outline outline-foreground/10 -outline-offset-1",
+                    "sm:w-[186px] sm:shrink-0 sm:origin-left sm:rounded-r-sm sm:rounded-bl-none",
                     "shadow-[0_2px_4px_rgba(22,21,15,0.05),0_12px_32px_rgba(22,21,15,0.10)]",
                     "transition-transform duration-300 ease-out motion-reduce:transform-none",
                     admittedNow
-                      ? "translate-x-3.5 translate-y-2.5 rotate-[2.4deg]"
+                      ? "sm:translate-x-3.5 sm:translate-y-2.5 sm:rotate-[2.4deg]"
                       : "",
                   )}
                 >

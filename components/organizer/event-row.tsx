@@ -40,7 +40,7 @@ export const EventRow = ({ event }: { event: OrganizerEventApi }) => {
     <Card className="py-0">
       <Link
         href={`/organizer/events/${event._id}`}
-        className="flex items-stretch rounded-sm transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        className="flex flex-col rounded-sm transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus-visible:outline-none sm:flex-row sm:items-stretch"
       >
         <div className="flex min-w-0 flex-1 items-center gap-4 p-4">
           <div
@@ -77,9 +77,10 @@ export const EventRow = ({ event }: { event: OrganizerEventApi }) => {
           </div>
         </div>
 
-        <PerforationY />
+        <hr className="ticket-perforation sm:hidden" />
+        <PerforationY className="hidden sm:block" />
 
-        <div className="flex w-[236px] shrink-0 flex-col justify-center gap-2 py-4 pr-4 pl-5">
+        <div className="flex w-full flex-col justify-center gap-2 px-4 py-3.5 sm:w-[236px] sm:shrink-0 sm:py-4 sm:pr-4 sm:pl-5">
           {isDraft ? (
             <>
               <div className="text-[13px] text-muted-foreground">
@@ -112,7 +113,7 @@ export const EventRow = ({ event }: { event: OrganizerEventApi }) => {
           )}
         </div>
 
-        <div className="flex items-center pr-3 text-muted-foreground">
+        <div className="hidden items-center pr-3 text-muted-foreground sm:flex">
           <ChevronRight className="h-4 w-4" />
         </div>
       </Link>

@@ -226,7 +226,7 @@ export const ResaleMarketplace = ({
       ) : null}
 
       {openOffers.length > 0 ? (
-        <Card className="mb-3.5 flex-row items-center gap-4 px-[18px] py-3.5">
+        <Card className="mb-3.5 flex-col items-start gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-[18px]">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <Clock className="h-4 w-4" />
           </span>
@@ -244,7 +244,7 @@ export const ResaleMarketplace = ({
         </Card>
       ) : null}
 
-      <Card className="mb-3.5 flex-row items-center gap-4 px-[18px] py-3.5">
+      <Card className="mb-3.5 flex-col items-start gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-[18px]">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
           <Check className="h-4 w-4" strokeWidth={2.5} />
         </span>
@@ -277,7 +277,7 @@ export const ResaleMarketplace = ({
             const accepted = ticket.resaleStatus === "offer-accepted";
 
             return (
-              <Card key={ticket._id} className="flex-row items-stretch gap-0 py-0">
+              <Card key={ticket._id} className="flex-col gap-0 py-0 sm:flex-row sm:items-stretch">
                 <div className="min-w-0 flex-1 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[15px] font-semibold">
@@ -310,9 +310,10 @@ export const ResaleMarketplace = ({
                   </div>
                 </div>
 
-                <div className="ticket-perforation-vertical shrink-0" />
+                <hr className="ticket-perforation sm:hidden" />
+                <div className="ticket-perforation-vertical hidden shrink-0 sm:block" />
 
-                <div className="flex w-[230px] shrink-0 flex-col justify-center gap-2.5 py-4 pr-4 pl-5">
+                <div className="flex w-full flex-col justify-center gap-2.5 px-4 py-3.5 sm:w-[230px] sm:shrink-0 sm:py-4 sm:pr-4 sm:pl-5">
                   <div>
                     <div className="text-lg font-bold tracking-[-0.01em] tabular-nums">
                       {formatNairaAmount(price)}

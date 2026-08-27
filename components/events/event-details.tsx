@@ -186,7 +186,7 @@ export const EventDetails = ({
         }
       >
         <Card className="gap-0 overflow-hidden py-0">
-          <div className="flex items-start gap-4 px-5 py-4">
+          <div className="flex flex-wrap items-start gap-4 px-4 py-4 sm:flex-nowrap sm:px-5">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
               <MapPin className="h-[18px] w-[18px]" />
             </span>
@@ -208,7 +208,7 @@ export const EventDetails = ({
                 href={directionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ml-auto inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-border px-4 text-sm font-semibold transition-colors hover:bg-secondary"
+                className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-border px-4 text-sm font-semibold transition-colors hover:bg-secondary sm:ml-auto sm:h-10"
               >
                 <Navigation className="h-4 w-4" />
                 Open in Maps
@@ -269,7 +269,7 @@ export const EventDetails = ({
 
       {organizer ? (
         <Section title="Organizer">
-          <Card className="flex-row items-center gap-4 px-5 py-4">
+          <Card className="flex-col items-start gap-4 px-4 py-4 sm:flex-row sm:items-center sm:px-5">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-semibold text-muted-foreground outline outline-foreground/10 -outline-offset-1">
               {organizer.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element

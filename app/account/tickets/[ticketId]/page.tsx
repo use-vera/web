@@ -118,7 +118,7 @@ const TicketDetailPage = () => {
 
   if (ticketsQuery.isLoading) {
     return (
-      <div className="px-8 py-8">
+      <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <Skeleton className="h-[420px] w-full rounded-sm" />
       </div>
     );
@@ -137,7 +137,7 @@ const TicketDetailPage = () => {
 
   return (
     <div className="pb-8">
-      <header className="px-8 pt-7">
+      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
         <Link
           href="/account/tickets"
           className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -185,8 +185,8 @@ const TicketDetailPage = () => {
         ) : null}
       </header>
 
-      <div className="flex items-start gap-3.5 px-8 pt-6">
-        <div className="w-[380px] shrink-0">
+      <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start pt-5 sm:px-6 lg:px-8 lg:pt-6">
+        <div className="w-full lg:w-[380px] lg:shrink-0">
           <Card className="gap-0 py-0">
             <div className="p-5">
               <Eyebrow>{event?.name}</Eyebrow>

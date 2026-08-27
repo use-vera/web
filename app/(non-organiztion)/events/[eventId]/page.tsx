@@ -29,7 +29,7 @@ const EventPage = () => {
 
   if (eventQuery.isLoading) {
     return (
-      <main className="mx-auto w-full max-w-6xl px-6 py-8">
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
         <Skeleton className="h-[280px] w-full rounded-sm" />
         <Skeleton className="mt-6 h-10 w-96" />
       </main>
@@ -55,7 +55,7 @@ const EventPage = () => {
 
   return (
     <main className="flex flex-1 flex-col">
-      <div className="ticket-dot-texture relative h-[280px] shrink-0 bg-muted">
+      <div className="ticket-dot-texture relative h-[180px] shrink-0 bg-muted sm:h-[240px] lg:h-[280px]">
         {event.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -70,10 +70,10 @@ const EventPage = () => {
         )}
       </div>
 
-      <div className="mx-auto w-full max-w-6xl px-6 pb-10">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-10 sm:px-6">
         <div className="pt-6">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-3xl leading-tight font-bold tracking-[-0.02em]">
+            <h1 className="text-2xl leading-tight font-bold tracking-[-0.02em] sm:text-3xl">
               {event.name}
             </h1>
             {soldOut ? (
@@ -108,7 +108,7 @@ const EventPage = () => {
           </div>
         </div>
 
-        <nav className="mt-5 flex gap-6" aria-label="Event sections">
+        <nav className="mt-5 flex gap-6 overflow-x-auto" aria-label="Event sections">
           {(
             [
               ["details", "Details", null],
@@ -186,7 +186,7 @@ const EventPage = () => {
             )}
           </div>
 
-          <div className="w-[340px] shrink-0 sticky top-24">
+          <div className="w-full lg:sticky lg:top-24 lg:w-[340px] lg:shrink-0">
             <TicketPurchasePanel event={event} />
 
             <Card className="mt-3 flex-row items-start gap-3 p-4">

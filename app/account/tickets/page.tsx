@@ -26,7 +26,7 @@ const AccountTicketsPage = () => {
 
   return (
     <div className="pb-8">
-      <header className="px-8 pt-7">
+      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
         <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em]">
           Tickets
         </h1>
@@ -35,7 +35,7 @@ const AccountTicketsPage = () => {
         </p>
       </header>
 
-      <div className="flex flex-col gap-2.5 px-8 pt-6">
+      <div className="flex flex-col gap-2.5 px-4 pt-5 sm:px-6 lg:px-8 lg:pt-6">
         {ticketsQuery.isLoading ? (
           Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={index} className="h-[88px] w-full rounded-sm" />
@@ -136,7 +136,7 @@ const AccountTicketsPage = () => {
           pageSize={PAGE_SIZE}
           onPageChange={setPage}
           noun="ticket"
-          className="px-8 pt-4"
+          className="px-4 pt-4 sm:px-6 lg:px-4 sm:px-6 lg:px-8"
         />
       ) : null}
     </div>

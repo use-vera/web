@@ -4,7 +4,7 @@ import {
   EmptyState,
   ErrorState,
   Eyebrow,
-  PerforationY,
+  StatStrip,
 } from "@/components/organizer/organizer-primitives";
 import { Pagination } from "@/components/pagination";
 import Badge from "@/components/ui/badge";
@@ -52,30 +52,6 @@ const titleOf = (transaction: WalletTransactionApi) => {
   return eventName ? `${label} for ${eventName}` : label;
 };
 
-const Balance = ({
-  label,
-  kobo,
-  note,
-  strong,
-}: {
-  label: string;
-  kobo: number;
-  note: string;
-  strong?: boolean;
-}) => (
-  <div className="flex-1 px-5 py-[18px]">
-    <Eyebrow>{label}</Eyebrow>
-    <div
-      className={cn(
-        "mt-[5px] font-bold tracking-[-0.02em] tabular-nums",
-        strong ? "text-[28px]" : "text-[22px] text-muted-foreground",
-      )}
-    >
-      {formatNairaAmount(koboToNaira(kobo))}
-    </div>
-    <div className="mt-[3px] text-xs text-muted-foreground">{note}</div>
-  </div>
-);
 
 const PayoutsPage = () => {
   const [page, setPage] = useState(1);
@@ -91,8 +67,8 @@ const PayoutsPage = () => {
 
   return (
     <div className="pb-8">
-      <header className="px-8 pt-7">
-        <div className="flex items-start justify-between gap-6">
+      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div>
             <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em]">
               Payouts
@@ -112,7 +88,7 @@ const PayoutsPage = () => {
         </div>
       </header>
 
-      <div className="px-8 pt-5.5">
+      <div className="px-4 pt-5 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
         {walletQuery.isLoading ? (
           <Skeleton className="h-[104px] w-full rounded-sm" />
         ) : walletQuery.isError || !wallet ? (
@@ -121,37 +97,35 @@ const PayoutsPage = () => {
             onRetry={() => walletQuery.refetch()}
           />
         ) : (
-          <Card className="flex-row items-stretch gap-0 py-0">
-            <Balance
-              label="Available"
-              kobo={wallet.availableBalanceKobo}
-              note="ready to withdraw now"
-              strong
-            />
-            <PerforationY />
-            <Balance
-              label="Pending"
-              kobo={wallet.pendingBalanceKobo}
-              note="clears after each event"
-            />
-            <PerforationY />
-            <Balance
-              label="Reserved"
-              kobo={wallet.reservedBalanceKobo}
-              note="withdrawal in flight"
-            />
-            <PerforationY />
-            <Balance
-              label="Owing"
-              kobo={wallet.owingBalanceKobo}
-              note="refunds to recover"
-            />
-          </Card>
+          <StatStrip
+            cells={[
+              {
+                label: "Available",
+                value: formatNairaAmount(koboToNaira(wallet.availableBalanceKobo)),
+                note: "ready to withdraw now",
+              },
+              {
+                label: "Pending",
+                value: formatNairaAmount(koboToNaira(wallet.pendingBalanceKobo)),
+                note: "clears after each event",
+              },
+              {
+                label: "Reserved",
+                value: formatNairaAmount(koboToNaira(wallet.reservedBalanceKobo)),
+                note: "withdrawal in flight",
+              },
+              {
+                label: "Owing",
+                value: formatNairaAmount(koboToNaira(wallet.owingBalanceKobo)),
+                note: "refunds to recover",
+              },
+            ]}
+          />
         )}
       </div>
 
       {account ? (
-        <div className="px-8 pt-3.5">
+        <div className="px-4 pt-3.5 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
           <Card className="flex-row items-center gap-4 px-5 py-3.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
               <Check className="h-[17px] w-[17px]" strokeWidth={2.5} />
@@ -171,7 +145,7 @@ const PayoutsPage = () => {
           </Card>
         </div>
       ) : accountQuery.isLoading ? null : (
-        <div className="px-8 pt-3.5">
+        <div className="px-4 pt-3.5 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
           <Card className="flex-row items-center gap-4 px-5 py-3.5">
             <div className="min-w-0 flex-1 text-[13px] text-muted-foreground">
               No payout account yet. Add one before you can withdraw.
@@ -187,7 +161,7 @@ const PayoutsPage = () => {
       )}
 
       {wallet ? (
-        <div className="flex gap-8 px-8 pt-5">
+        <div className="flex gap-8 px-4 pt-5 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
           {[
             ["Lifetime sales", wallet.lifetimeGrossSalesKobo, false],
             ["Platform fees", wallet.lifetimePlatformFeesKobo, true],
@@ -205,7 +179,7 @@ const PayoutsPage = () => {
         </div>
       ) : null}
 
-      <div className="px-8 pt-6">
+      <div className="px-4 pt-5 sm:px-6 lg:px-8 lg:pt-6">
         <Card className="gap-0 py-0">
           <div className="flex items-center justify-between px-5 py-4">
             <div className="text-base leading-snug font-semibold">
@@ -256,9 +230,9 @@ const PayoutsPage = () => {
                   return (
                     <div
                       key={transaction._id}
-                      className="flex items-center gap-3.5 py-3"
+                      className="flex flex-wrap items-center gap-x-3.5 gap-y-2 py-3"
                     >
-                      <div className="w-[150px] shrink-0">
+                      <div className="order-1 shrink-0 sm:w-[150px]">
                         <Badge
                           variant={
                             transaction.type === "ticket_sale"
@@ -269,7 +243,7 @@ const PayoutsPage = () => {
                           {TYPE_LABELS[transaction.type]}
                         </Badge>
                       </div>
-                      <div className="min-w-0 flex-1">
+                      <div className="order-3 min-w-0 basis-full sm:order-2 sm:basis-auto sm:flex-1">
                         <div className="truncate text-[13px] font-semibold">
                           {titleOf(transaction)}
                         </div>
@@ -282,12 +256,12 @@ const PayoutsPage = () => {
                           }).format(new Date(transaction.createdAt))}
                         </div>
                       </div>
-                      <Badge variant="outline" className="capitalize">
+                      <Badge variant="outline" className="order-2 capitalize sm:order-3">
                         {transaction.bucket}
                       </Badge>
                       <span
                         className={cn(
-                          "w-[120px] shrink-0 text-right text-sm font-bold tabular-nums",
+                          "order-2 ml-auto shrink-0 text-right text-sm font-bold tabular-nums sm:order-4 sm:ml-0 sm:w-[120px]",
                           isCredit && "text-accent-foreground",
                         )}
                       >

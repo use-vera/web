@@ -266,7 +266,7 @@ const NewEventPage = () => {
         onConfirm={() => router.push("/organizer/events")}
       />
 
-      <header className="flex items-center justify-between px-8 py-5">
+      <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
         <div className="flex items-center gap-3.5">
           <button
             type="button"
@@ -330,9 +330,11 @@ const NewEventPage = () => {
 
       <hr className="ticket-perforation" />
 
-      <div className="flex min-h-0 flex-1">
-        <aside className="w-[280px] shrink-0 px-6 py-8">
-          <div className="flex flex-col gap-0.5">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <aside className="w-full border-b border-border px-4 py-3 lg:w-[280px] lg:shrink-0 lg:border-b-0 lg:px-6 lg:py-8">
+          {/* Horizontal on a phone so the form starts near the top; the next
+              step peeks past the edge so the row reads as scrollable. */}
+          <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:px-0 lg:pb-0">
             {STEPS.map((label, index) => {
               const done = index < step;
               const now = index === step;
@@ -344,7 +346,7 @@ const NewEventPage = () => {
                   disabled={index > step}
                   onClick={() => setStep(index)}
                   className={cn(
-                    "flex h-10 items-center gap-3 rounded-sm px-3 text-left transition-colors",
+                    "flex h-11 shrink-0 items-center gap-2.5 rounded-sm px-3 text-left transition-colors lg:h-10 lg:w-full lg:shrink lg:gap-3",
                     now && "bg-muted",
                     index > step ? "cursor-default" : "cursor-pointer",
                   )}
@@ -377,8 +379,8 @@ const NewEventPage = () => {
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 gap-7 py-8 pr-8 pl-2">
-          <div className="min-w-0 max-w-[700px] flex-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-7 px-4 py-6 sm:px-6 lg:flex-row lg:py-8 lg:pr-8 lg:pl-2">
+          <div className="min-w-0 w-full lg:max-w-[700px] lg:flex-1">
             {step === 0 ? (
               <>
                 <h2 className="text-[22px] leading-tight font-bold tracking-[-0.02em]">
@@ -469,7 +471,7 @@ const NewEventPage = () => {
                     />
                   </label>
 
-                  <div className="flex gap-4">
+                  <div className="flex flex-col gap-4 sm:flex-row">
                     <div className="flex-1">
                       <SectionLabel>Country</SectionLabel>
                       <OrganizerField
@@ -521,7 +523,7 @@ const NewEventPage = () => {
                   Doors open, doors close, and whether it happens again.
                 </p>
 
-                <div className="flex gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row">
                   <label className="flex-1">
                     <SectionLabel>Starts</SectionLabel>
                     <OrganizerField
@@ -677,40 +679,55 @@ const NewEventPage = () => {
 
                 <div className="flex flex-col gap-2">
                   {draft.tiers.map((tier, index) => (
-                    <Card key={index} className="flex-row items-center gap-3 px-4 py-3.5">
-                      <OrganizerField
-                        value={tier.name}
-                        onChange={(input) =>
-                          updateTier(index, { name: input.target.value })
-                        }
-                        placeholder="Tier name"
-                        aria-label={`Tier ${index + 1} name`}
-                        className="h-10 min-w-0 flex-1"
-                        maxLength={60}
-                      />
-                      <OrganizerField
-                        value={String(tier.quantity)}
-                        onChange={(input) =>
-                          updateTier(index, {
-                            quantity: Number(input.target.value) || 0,
-                          })
-                        }
-                        aria-label={`Tier ${index + 1} quantity`}
-                        inputMode="numeric"
-                        className="h-10 w-[100px] shrink-0 text-right tabular-nums"
-                      />
-                      {draft.isPaid ? (
+                    <Card key={index} className="flex-col items-stretch gap-2.5 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-3">
+                      <label className="flex items-center gap-3 sm:contents">
+                        <span className="w-20 shrink-0 text-xs font-semibold text-muted-foreground sm:hidden">
+                          Name
+                        </span>
                         <OrganizerField
-                          value={String(tier.priceNaira ?? 0)}
+                          value={tier.name}
+                          onChange={(input) =>
+                            updateTier(index, { name: input.target.value })
+                          }
+                          placeholder="Tier name"
+                          aria-label={`Tier ${index + 1} name`}
+                          className="h-10 min-w-0 flex-1"
+                          maxLength={60}
+                        />
+                      </label>
+                      <label className="flex items-center gap-3 sm:contents">
+                        <span className="w-20 shrink-0 text-xs font-semibold text-muted-foreground sm:hidden">
+                          Quantity
+                        </span>
+                        <OrganizerField
+                          value={String(tier.quantity)}
                           onChange={(input) =>
                             updateTier(index, {
-                              priceNaira: Number(input.target.value) || 0,
+                              quantity: Number(input.target.value) || 0,
                             })
                           }
-                          aria-label={`Tier ${index + 1} price in naira`}
+                          aria-label={`Tier ${index + 1} quantity`}
                           inputMode="numeric"
-                          className="h-10 w-[120px] shrink-0 text-right tabular-nums"
+                          className="h-10 w-full text-right tabular-nums sm:w-[100px] sm:shrink-0"
                         />
+                      </label>
+                      {draft.isPaid ? (
+                        <label className="flex items-center gap-3 sm:contents">
+                          <span className="w-20 shrink-0 text-xs font-semibold text-muted-foreground sm:hidden">
+                            Price ₦
+                          </span>
+                          <OrganizerField
+                            value={String(tier.priceNaira ?? 0)}
+                            onChange={(input) =>
+                              updateTier(index, {
+                                priceNaira: Number(input.target.value) || 0,
+                              })
+                            }
+                            aria-label={`Tier ${index + 1} price in naira`}
+                            inputMode="numeric"
+                            className="h-10 w-full text-right tabular-nums sm:w-[120px] sm:shrink-0"
+                          />
+                        </label>
                       ) : null}
                       {draft.tiers.length > 1 ? (
                         <button
@@ -762,7 +779,7 @@ const NewEventPage = () => {
                         Who covers the {PLATFORM_FEE_PERCENT}% Vera fee?
                       </SectionLabel>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row">
                       {[
                         {
                           mode: "absorbed_by_organizer" as const,
@@ -889,7 +906,7 @@ const NewEventPage = () => {
                         <>
                           <hr className="ticket-perforation" />
                           <div className="flex flex-col gap-4 px-4 py-4">
-                            <div className="flex gap-4">
+                            <div className="flex flex-col gap-4 sm:flex-row">
                               <label className="flex-1">
                                 <SectionLabel>Presale opens</SectionLabel>
                                 <OrganizerField
@@ -911,7 +928,7 @@ const NewEventPage = () => {
                                 />
                               </label>
                             </div>
-                            <div className="flex gap-4">
+                            <div className="flex flex-col gap-4 sm:flex-row">
                               <label className="flex-1">
                                 <SectionLabel>How many</SectionLabel>
                                 <OrganizerField
@@ -1232,7 +1249,7 @@ const NewEventPage = () => {
           </div>
 
           {step === 3 || step === 4 ? (
-            <div className="w-[308px] shrink-0">
+            <div className="w-full lg:w-[308px] lg:shrink-0">
               <Card className="sticky top-8 gap-0 py-0">
                 <div className="px-4 py-4">
                   <Eyebrow>If it sells out</Eyebrow>

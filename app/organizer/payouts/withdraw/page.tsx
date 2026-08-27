@@ -87,7 +87,7 @@ const WithdrawPage = () => {
 
   return (
     <div className="pb-8">
-      <header className="px-8 pt-7">
+      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
         <Link
           href="/organizer/payouts"
           className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -103,8 +103,8 @@ const WithdrawPage = () => {
         </p>
       </header>
 
-      <div className="flex items-start gap-3.5 px-8 pt-6">
-        <div className="min-w-0 max-w-[640px] flex-1">
+      <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start pt-5 sm:px-6 lg:px-8 lg:pt-6">
+        <div className="min-w-0 w-full lg:max-w-[640px] lg:flex-1">
           <Card className="gap-0 py-0">
             <div className="p-5">
               <SectionLabel>How much</SectionLabel>
@@ -220,7 +220,7 @@ const WithdrawPage = () => {
               </div>
               <hr className="ticket-perforation" />
               <div className="p-5">
-                <div className="flex gap-3.5">
+                <div className="flex flex-col gap-3.5 sm:flex-row">
                   <label className="flex-1">
                     <SectionLabel>Bank</SectionLabel>
                     <div className="relative">
@@ -300,7 +300,7 @@ const WithdrawPage = () => {
           ) : null}
         </div>
 
-        <div className="w-[360px] shrink-0">
+        <div className="w-full lg:w-[360px] lg:shrink-0">
           <Card className="gap-0 py-0">
             <div className="p-5">
               <Eyebrow>Withdrawing</Eyebrow>

@@ -73,7 +73,7 @@ const PaymentsPage = () => {
 
   return (
     <div className="pb-8">
-      <header className="px-8 pt-7">
+      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
         <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em]">
           Payments
         </h1>
@@ -82,7 +82,7 @@ const PaymentsPage = () => {
         </p>
       </header>
 
-      <div className="px-8 pt-5.5">
+      <div className="px-4 pt-5 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
         <div className="inline-flex gap-1 rounded-full bg-muted p-1">
           {FILTERS.map((filter) => (
             <button
@@ -105,7 +105,7 @@ const PaymentsPage = () => {
         </div>
       </div>
 
-      <div className="px-8 pt-4">
+      <div className="px-4 pt-4 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
         <Card className="gap-0 py-0">
           {attemptsQuery.isLoading ? (
             <div className="p-5">
@@ -126,7 +126,7 @@ const PaymentsPage = () => {
             />
           ) : (
             <>
-              <div className="overflow-x-auto">
+              <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full table-fixed border-collapse">
                   <thead>
                     <tr className="border-b border-border">
@@ -183,6 +183,43 @@ const PaymentsPage = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              <div className="lg:hidden">
+                {attempts.map((attempt) => (
+                  <div
+                    key={attempt._id}
+                    className="flex flex-col gap-2.5 border-b border-border/60 p-4 last:border-0"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold">
+                          {whatOf(attempt)}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          {KIND_LABELS[attempt.kind]}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums">
+                        {formatNairaAmount(koboToNaira(attempt.amountKobo))}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge status={attempt.status} />
+                      <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                        {new Intl.DateTimeFormat("en-NG", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }).format(new Date(attempt.createdAt))}
+                      </span>
+                    </div>
+                    <span className="font-mono text-[11px] break-all text-muted-foreground">
+                      {attempt.reference}
+                    </span>
+                  </div>
+                ))}
               </div>
               <div className="border-t border-border bg-muted/60">
                 <Pagination

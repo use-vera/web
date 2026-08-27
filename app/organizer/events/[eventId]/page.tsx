@@ -2,8 +2,7 @@
 
 import {
   Meter,
-  PerforationY,
-  StatCell,
+  StatStrip,
 } from "@/components/organizer/organizer-primitives";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -83,7 +82,7 @@ const EventOverviewPage = () => {
 
   if (eventQuery.isLoading || !event) {
     return (
-      <div className="flex flex-col gap-3.5 px-8 py-6">
+      <div className="flex flex-col gap-3.5 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         <Skeleton className="h-[92px] w-full rounded-sm" />
         <Skeleton className="h-[280px] w-full rounded-sm" />
       </div>
@@ -98,38 +97,36 @@ const EventOverviewPage = () => {
   const daysToDoors = daysUntil(event.nextOccurrenceAt);
 
   return (
-    <div className="flex flex-col gap-3.5 px-8 py-6 pb-8">
-      <Card className="flex-row items-stretch gap-0 py-0">
-        <StatCell
-          label="Tickets issued"
-          value={sold.toLocaleString("en-NG")}
-          note={`${remaining.toLocaleString("en-NG")} left of ${capacity.toLocaleString("en-NG")}`}
-        />
-        <PerforationY />
-        <StatCell
-          label="Gross sales"
-          value={formatNairaCompact(derived.gross)}
-          note="from tickets loaded here"
-        />
-        <PerforationY />
-        <StatCell
-          label="Admitted"
-          value={derived.admitted.toLocaleString("en-NG")}
-          note={
-            daysToDoors > 0
-              ? `doors open in ${daysToDoors} ${daysToDoors === 1 ? "day" : "days"}`
-              : "doors are open"
-          }
-        />
-        <PerforationY />
-        <StatCell
-          label="On resale"
-          value={derived.listed.toLocaleString("en-NG")}
-          note="listed by buyers"
-        />
-      </Card>
+    <div className="flex flex-col gap-3.5 px-4 py-5 sm:px-6 lg:px-8 lg:py-6 pb-8">
+      <StatStrip
+        cells={[
+          {
+            label: "Tickets issued",
+            value: sold.toLocaleString("en-NG"),
+            note: `${remaining.toLocaleString("en-NG")} left of ${capacity.toLocaleString("en-NG")}`,
+          },
+          {
+            label: "Gross sales",
+            value: formatNairaCompact(derived.gross),
+            note: "from tickets loaded here",
+          },
+          {
+            label: "Admitted",
+            value: derived.admitted.toLocaleString("en-NG"),
+            note:
+              daysToDoors > 0
+                ? `doors open in ${daysToDoors} ${daysToDoors === 1 ? "day" : "days"}`
+                : "doors are open",
+          },
+          {
+            label: "On resale",
+            value: derived.listed.toLocaleString("en-NG"),
+            note: "listed by buyers",
+          },
+        ]}
+      />
 
-      <div className="flex items-stretch gap-3.5">
+      <div className="flex flex-col gap-3.5 lg:flex-row lg:items-stretch">
         <Card className="min-w-0 flex-1 gap-0 py-0">
           <div className="flex items-baseline justify-between px-5 py-4">
             <div>
@@ -162,7 +159,7 @@ const EventOverviewPage = () => {
           </div>
         </Card>
 
-        <Card className="w-[360px] shrink-0 gap-0 py-0">
+        <Card className="w-full lg:w-[360px] lg:shrink-0 gap-0 py-0">
           <div className="px-5 py-4">
             <div className="text-base leading-snug font-semibold">
               Before doors open

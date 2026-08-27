@@ -1,8 +1,7 @@
 "use client";
 
 import {
-  PerforationY,
-  StatCell,
+  StatStrip,
 } from "@/components/organizer/organizer-primitives";
 import { SalesBarChart } from "@/components/organizer/sales-bar-chart";
 import { Card } from "@/components/ui/card";
@@ -71,7 +70,7 @@ const InsightsPage = () => {
 
   if (eventQuery.isLoading || !event) {
     return (
-      <div className="flex flex-col gap-3.5 px-8 py-6">
+      <div className="flex flex-col gap-3.5 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         <Skeleton className="h-[92px] w-full rounded-sm" />
         <Skeleton className="h-[260px] w-full rounded-sm" />
       </div>
@@ -83,32 +82,31 @@ const InsightsPage = () => {
   const sellThrough = capacity > 0 ? Math.round((sold / capacity) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-3.5 px-8 py-5.5 pb-8">
-      <Card className="flex-row items-stretch gap-0 py-0">
-        <StatCell
-          label="Sell-through"
-          value={`${sellThrough}%`}
-          note={`${sold.toLocaleString("en-NG")} of ${capacity.toLocaleString("en-NG")}`}
-        />
-        <PerforationY />
-        <StatCell
-          label="Average spend"
-          value={formatNairaAmount(derived.averageSpend)}
-          note="per ticket sold"
-        />
-        <PerforationY />
-        <StatCell
-          label="Rating"
-          value={(ratings?.averageRating ?? 0).toFixed(1)}
-          note={`from ${(ratings?.ratingsCount ?? 0).toLocaleString("en-NG")} attendees`}
-        />
-        <PerforationY />
-        <StatCell
-          label="Checked in"
-          value={`${derived.checkInRate}%`}
-          note="of tickets loaded here"
-        />
-      </Card>
+    <div className="flex flex-col gap-3.5 px-4 py-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+      <StatStrip
+        cells={[
+          {
+            label: "Sell-through",
+            value: `${sellThrough}%`,
+            note: `${sold.toLocaleString("en-NG")} of ${capacity.toLocaleString("en-NG")}`,
+          },
+          {
+            label: "Average spend",
+            value: formatNairaAmount(derived.averageSpend),
+            note: "per ticket sold",
+          },
+          {
+            label: "Rating",
+            value: (ratings?.averageRating ?? 0).toFixed(1),
+            note: `from ${(ratings?.ratingsCount ?? 0).toLocaleString("en-NG")} attendees`,
+          },
+          {
+            label: "Checked in",
+            value: `${derived.checkInRate}%`,
+            note: "of tickets loaded here",
+          },
+        ]}
+      />
 
       <Card className="gap-0 py-0">
         <div className="flex items-baseline justify-between px-5 py-4">
@@ -131,8 +129,8 @@ const InsightsPage = () => {
         </div>
       </Card>
 
-      <div className="flex items-stretch gap-3.5">
-        <Card className="w-[420px] shrink-0 gap-0 py-0">
+      <div className="flex flex-col gap-3.5 lg:flex-row lg:items-stretch">
+        <Card className="w-full lg:w-[420px] lg:shrink-0 gap-0 py-0">
           <div className="px-5 py-4">
             <div className="text-base leading-snug font-semibold">
               How the night landed

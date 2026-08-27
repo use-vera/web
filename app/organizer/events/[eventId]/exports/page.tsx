@@ -95,7 +95,7 @@ const ExportsPage = () => {
   const preview = previewQuery.data;
 
   return (
-    <div className="flex items-start gap-3.5 px-8 py-5.5 pb-8">
+    <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start py-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
       <div className="flex min-w-0 flex-1 flex-col gap-3.5">
         <Card className="gap-0 py-0">
           <div className="px-5 py-4">
@@ -109,7 +109,7 @@ const ExportsPage = () => {
           <hr className="ticket-perforation" />
 
           <div className="px-5 py-4.5">
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <label className="flex-1">
                 <span className="mb-2 block text-[13px] font-semibold">
                   Who to include
@@ -246,7 +246,7 @@ const ExportsPage = () => {
         ) : null}
       </div>
 
-      <Card className="w-[392px] shrink-0 gap-0 py-0">
+      <Card className="w-full lg:w-[392px] lg:shrink-0 gap-0 py-0">
         <div className="px-5 py-4">
           <div className="text-base leading-snug font-semibold">
             Recent exports

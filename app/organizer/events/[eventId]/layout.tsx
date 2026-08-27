@@ -39,7 +39,7 @@ const EventLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div>
-      <header className="px-8 pt-6">
+      <header className="px-4 pt-5 sm:px-6 lg:px-8 lg:pt-6">
         <Link
           href="/organizer/events"
           className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -50,7 +50,7 @@ const EventLayout = ({ children }: { children: React.ReactNode }) => {
 
         <div className="mt-3.5 flex items-start justify-between gap-6">
           <div className="flex min-w-0 gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-muted text-muted-foreground outline outline-foreground/10 -outline-offset-1">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-muted sm:h-16 sm:w-16 text-muted-foreground outline outline-foreground/10 -outline-offset-1">
               {event?.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -71,8 +71,8 @@ const EventLayout = ({ children }: { children: React.ReactNode }) => {
                 </>
               ) : (
                 <>
-                  <div className="flex items-center gap-2.5">
-                    <h1 className="truncate text-2xl leading-tight font-bold tracking-[-0.02em]">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h1 className="text-xl leading-tight font-bold tracking-[-0.02em] sm:truncate sm:text-2xl">
                       {event.name}
                     </h1>
                     <EventStatusBadge event={event} />
@@ -119,7 +119,10 @@ const EventLayout = ({ children }: { children: React.ReactNode }) => {
           ) : null}
         </div>
 
-        <nav className="mt-5 flex gap-6" aria-label="Event sections">
+        <nav
+          className="-mx-4 mt-5 flex gap-6 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
+          aria-label="Event sections"
+        >
           {TABS.map((tab) => {
             const href = tab.segment ? `${base}/${tab.segment}` : base;
             const isActive = pathname === href;
@@ -130,7 +133,7 @@ const EventLayout = ({ children }: { children: React.ReactNode }) => {
                 href={href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "border-b-2 pb-3 text-sm transition-colors",
+                  "shrink-0 border-b-2 pb-3 text-sm whitespace-nowrap transition-colors",
                   isActive
                     ? "border-primary font-semibold text-foreground"
                     : "border-transparent font-medium text-muted-foreground hover:text-foreground",

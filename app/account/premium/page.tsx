@@ -110,7 +110,7 @@ const PremiumPage = () => {
 
   return (
     <div className="pb-8">
-      <header className="px-8 pt-7">
+      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
         <div className="flex items-center gap-2.5">
           <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em]">
             Vera Premium
@@ -128,12 +128,12 @@ const PremiumPage = () => {
       </header>
 
       {subscriptionQuery.isLoading ? (
-        <div className="px-8 pt-6">
+        <div className="px-4 pt-5 sm:px-6 lg:px-8 lg:pt-6">
           <Skeleton className="h-[420px] w-full rounded-sm" />
         </div>
       ) : (
-        <div className="flex items-start gap-3.5 px-8 pt-6">
-          <div className="flex min-w-0 flex-1 gap-3.5">
+        <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start pt-5 sm:px-6 lg:px-8 lg:pt-6">
+          <div className="flex min-w-0 flex-1 flex-col gap-3.5 sm:flex-row">
             <Card className="flex-1 gap-0 py-0">
               <div className="p-5">
                 <div className="flex items-center justify-between">
@@ -196,7 +196,7 @@ const PremiumPage = () => {
             </Card>
           </div>
 
-          <div className="w-[340px] shrink-0">
+          <div className="w-full lg:w-[340px] lg:shrink-0">
             <Card className="gap-0 py-0">
               <div className="p-5">
                 <Eyebrow>{isActive ? "Your subscription" : "Upgrade"}</Eyebrow>

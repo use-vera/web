@@ -54,6 +54,41 @@ export const StatCell = ({
   </div>
 );
 
+/**
+ * A row of headline numbers. Four cells across is unreadable on a phone, so
+ * below lg it becomes a two-column grid with hairline dividers and the
+ * perforations only appear once the cells sit side by side.
+ */
+export const StatStrip = ({
+  cells,
+}: {
+  cells: { label: string; value: ReactNode; note?: ReactNode }[];
+}) => (
+  <div className="grid grid-cols-2 overflow-hidden rounded-sm bg-card shadow-[inset_0_0_0_1px_var(--hairline)] lg:flex lg:items-stretch">
+    {cells.map((cell, index) => (
+      <div
+        key={cell.label}
+        className={cn(
+          "flex-1 px-4 py-4 sm:px-5 sm:py-[18px]",
+          /* Grid gutters on mobile; the tear line takes over at lg. */
+          index % 2 === 0 && "border-r border-border lg:border-r-0",
+          index < cells.length - 2 && "border-b border-border lg:border-b-0",
+          index > 0 &&
+            "lg:bg-[repeating-linear-gradient(to_bottom,var(--border)_0,var(--border)_8px,transparent_8px,transparent_16px)] lg:bg-[length:1px_100%] lg:bg-left lg:bg-no-repeat lg:pl-5",
+        )}
+      >
+        <Eyebrow>{cell.label}</Eyebrow>
+        <div className="mt-[5px] text-xl font-bold tracking-[-0.02em] tabular-nums sm:text-2xl">
+          {cell.value}
+        </div>
+        {cell.note ? (
+          <div className="mt-[3px] text-xs text-muted-foreground">{cell.note}</div>
+        ) : null}
+      </div>
+    ))}
+  </div>
+);
+
 export const Meter = ({
   percent,
   className,

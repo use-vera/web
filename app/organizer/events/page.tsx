@@ -71,8 +71,8 @@ const OrganizerEventsPage = () => {
 
   return (
     <div className="pb-8">
-      <header className="px-8 pt-7">
-        <div className="flex items-start justify-between gap-6">
+      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div>
             <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em]">
               Events
@@ -81,8 +81,8 @@ const OrganizerEventsPage = () => {
               Everything you have put on, and everything still selling.
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <div className="relative w-[260px]">
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+            <div className="relative w-full sm:w-[260px]">
               <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <OrganizerField
                 value={search}
@@ -107,7 +107,7 @@ const OrganizerEventsPage = () => {
       </header>
 
       {totals.liveCount > 0 ? (
-        <div className="flex gap-8 px-8 pt-5">
+        <div className="flex gap-8 px-4 pt-5 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
           <div>
             <Eyebrow>Tickets sold</Eyebrow>
             <div className="mt-1 text-[22px] font-bold tracking-[-0.01em] tabular-nums">
@@ -146,7 +146,7 @@ const OrganizerEventsPage = () => {
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between px-8 pt-6 pb-3.5">
+      <div className="flex items-center justify-between px-4 pt-5 sm:px-6 lg:px-8 lg:pt-6 pb-3.5">
         <div className="inline-flex gap-1 rounded-full bg-muted p-1">
           {FILTERS.map((filter) => (
             <button
@@ -172,7 +172,7 @@ const OrganizerEventsPage = () => {
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-2.5 px-8">
+      <div className="flex flex-col gap-2.5 px-4 sm:px-6 lg:px-8">
         {eventsQuery.isLoading ? (
           Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={index} className="h-[88px] w-full rounded-sm" />
@@ -218,7 +218,7 @@ const OrganizerEventsPage = () => {
           pageSize={PAGE_SIZE}
           onPageChange={setPage}
           noun="event"
-          className="px-8 pt-4"
+          className="px-4 pt-4 sm:px-6 lg:px-4 sm:px-6 lg:px-8"
         />
       ) : null}
     </div>

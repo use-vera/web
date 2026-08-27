@@ -62,7 +62,7 @@ const PromotePage = () => {
 
   if (eventQuery.isLoading || !event) {
     return (
-      <div className="px-8 py-6">
+      <div className="px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         <Skeleton className="h-[400px] w-full rounded-sm" />
       </div>
     );
@@ -78,7 +78,7 @@ const PromotePage = () => {
     ticketPrice > 0 ? Math.ceil(total / ticketPrice) : null;
 
   return (
-    <div className="flex items-start gap-3.5 px-8 py-5.5 pb-8">
+    <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start py-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
       <div className="min-w-0 flex-1">
         <h2 className="text-xl leading-tight font-bold tracking-[-0.02em]">
           Put this in front of more people
@@ -129,7 +129,7 @@ const PromotePage = () => {
           min={isoDate(new Date())}
           onChange={(input) => setStartDate(input.target.value)}
           aria-label="First day to feature this event"
-          className="max-w-[240px]"
+          className="w-full sm:max-w-[240px]"
         />
 
         <span className="mt-5.5 mb-2 block text-[13px] font-semibold">
@@ -219,7 +219,7 @@ const PromotePage = () => {
         </Card>
       </div>
 
-      <div className="flex w-[392px] shrink-0 flex-col gap-3">
+      <div className="flex w-full lg:w-[392px] lg:shrink-0 flex-col gap-3">
         <Card className="gap-0 py-0">
           <div className="px-5 py-4.5">
             <Eyebrow>Featured on the home feed</Eyebrow>

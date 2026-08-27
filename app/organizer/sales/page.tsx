@@ -67,8 +67,8 @@ const SalesPage = () => {
 
   return (
     <div className="pb-8">
-      <header className="px-8 pt-7">
-        <div className="flex items-start justify-between gap-6">
+      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div>
             <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em]">
               Sales
@@ -77,7 +77,7 @@ const SalesPage = () => {
               Every ticket sold across your events.
             </p>
           </div>
-          <div className="relative w-[260px] shrink-0">
+          <div className="relative w-full sm:w-[260px] sm:shrink-0">
             <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <OrganizerField
               value={search}
@@ -93,7 +93,7 @@ const SalesPage = () => {
         </div>
       </header>
 
-      <div className="flex gap-8 px-8 pt-5">
+      <div className="flex gap-8 px-4 pt-5 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
         <div>
           <Eyebrow>Gross</Eyebrow>
           <div className="mt-1 text-[22px] font-bold tracking-[-0.01em] tabular-nums">
@@ -117,7 +117,7 @@ const SalesPage = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-8 pt-6 pb-3.5">
+      <div className="flex items-center justify-between px-4 pt-5 sm:px-6 lg:px-8 lg:pt-6 pb-3.5">
         <div className="inline-flex gap-1 rounded-full bg-muted p-1">
           {FILTERS.map((filter) => (
             <button
@@ -143,7 +143,7 @@ const SalesPage = () => {
         ) : null}
       </div>
 
-      <div className="px-8">
+      <div className="px-4 sm:px-6 lg:px-8">
         <Card className="gap-0 py-0">
           {salesQuery.isLoading ? (
             <div className="p-5">
@@ -167,7 +167,8 @@ const SalesPage = () => {
               }
             />
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="hidden overflow-x-auto lg:block">
               <table className="w-full table-fixed border-collapse">
                 <thead>
                   <tr className="border-b border-border">
@@ -239,17 +240,67 @@ const SalesPage = () => {
                   ))}
                 </tbody>
               </table>
-              <div className="border-t border-border bg-muted/60">
-                <Pagination
-                  page={salesQuery.data?.page ?? 1}
-                  totalPages={salesQuery.data?.totalPages ?? 1}
-                  totalItems={salesQuery.data?.totalItems ?? 0}
-                  pageSize={PAGE_SIZE}
-                  onPageChange={setPage}
-                  noun="ticket"
-                />
-              </div>
             </div>
+
+            <div className="lg:hidden">
+              {sales.map((ticket) => (
+                <div
+                  key={ticket._id}
+                  className="flex flex-col gap-2.5 border-b border-border/60 p-4 last:border-0"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">
+                        {ticket.attendeeName}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {eventNameOf(ticket.eventId)}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-sm font-semibold tabular-nums">
+                      {formatNairaAmount(ticket.totalPriceNaira)}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant={
+                        ticket.status === "used"
+                          ? "solid"
+                          : ticket.status === "paid"
+                            ? "default"
+                            : "outline"
+                      }
+                      className="capitalize"
+                    >
+                      {ticket.status}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {ticket.ticketCategoryName || "General"}
+                    </span>
+                    <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                      {ticket.paidAt
+                        ? new Intl.DateTimeFormat("en-NG", {
+                            day: "numeric",
+                            month: "short",
+                          }).format(new Date(ticket.paidAt))
+                        : "—"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-border bg-muted/60">
+              <Pagination
+                page={salesQuery.data?.page ?? 1}
+                totalPages={salesQuery.data?.totalPages ?? 1}
+                totalItems={salesQuery.data?.totalItems ?? 0}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+                noun="ticket"
+              />
+            </div>
+            </>
           )}
         </Card>
       </div>

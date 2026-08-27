@@ -98,9 +98,9 @@ const AttendeesPage = () => {
   };
 
   return (
-    <div className="px-8 pt-5.5 pb-8">
-      <div className="mb-4.5 flex items-center gap-2.5">
-        <div className="relative w-full max-w-[360px]">
+    <div className="px-4 pt-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+      <div className="mb-4.5 flex flex-wrap items-center gap-2.5">
+        <div className="relative w-full sm:max-w-[360px]">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <OrganizerField
             value={search}
@@ -135,7 +135,7 @@ const AttendeesPage = () => {
           ))}
         </div>
 
-        <div className="ml-auto flex shrink-0 gap-2">
+        <div className="flex gap-2 sm:ml-auto sm:shrink-0">
           <Link
             href={`/organizer/events/${eventId}/exports`}
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
@@ -177,7 +177,7 @@ const AttendeesPage = () => {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div className="hidden overflow-x-auto lg:block">
               <table className="w-full table-fixed border-collapse">
                 <thead>
                   <tr className="border-b border-border">
@@ -263,7 +263,57 @@ const AttendeesPage = () => {
               </table>
             </div>
 
-            <div className="flex items-center justify-between bg-muted/60 px-5 py-2">
+            <div className="lg:hidden">
+              {tickets.map((ticket) => (
+                <button
+                  key={ticket._id}
+                  type="button"
+                  onClick={() =>
+                    setSelectedId((current) =>
+                      current === ticket._id ? null : ticket._id,
+                    )
+                  }
+                  aria-pressed={selectedId === ticket._id}
+                  className={cn(
+                    "flex w-full flex-col gap-2.5 border-b border-border/60 p-4 text-left transition-colors last:border-0",
+                    selectedId === ticket._id ? "bg-muted" : "active:bg-muted/50",
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground outline outline-foreground/10 -outline-offset-1">
+                      {ticket.attendeeName
+                        .split(" ")
+                        .map((part) => part[0])
+                        .slice(0, 2)
+                        .join("")}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">
+                        {ticket.attendeeName}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {ticket.attendeeEmail}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-sm font-semibold tabular-nums">
+                      {formatNairaAmount(ticket.totalPriceNaira)}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge status={ticket.status} />
+                    <span className="text-xs text-muted-foreground">
+                      {ticket.ticketCategoryName || "General"}
+                    </span>
+                    <span className="ml-auto font-mono text-[11px] text-muted-foreground">
+                      {ticket.ticketCode}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/60 px-4 py-2 sm:px-5">
               <Pagination
                 page={ticketsQuery.data?.page ?? 1}
                 totalPages={ticketsQuery.data?.totalPages ?? 1}
