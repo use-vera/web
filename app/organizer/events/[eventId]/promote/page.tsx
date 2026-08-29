@@ -13,6 +13,7 @@ import {
   useInitializeEventFeature,
   useOrganizerEvent,
 } from "@/lib/hooks/use-organizer";
+import { cloudinaryVariant } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 import { Check, Megaphone, Ticket, TrendingUp, TriangleAlert } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -179,7 +180,7 @@ const PromotePage = () => {
                 {event.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={event.imageUrl}
+                    src={cloudinaryVariant(event.imageUrl, "thumb")}
                     alt=""
                     className="h-full w-full object-cover"
                   />

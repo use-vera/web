@@ -14,7 +14,7 @@ import {
 /**
  * The browser's built-in barcode reader. It ships in Chromium (Chrome, Edge,
  * Android Chrome) and is absent in Safari and Firefox, so support is probed
- * rather than assumed — where it is missing the door falls back to the
+ * rather than assumed, where it is missing the door falls back to the
  * hardware scanner and manual entry, which work everywhere.
  */
 interface DetectedBarcode {

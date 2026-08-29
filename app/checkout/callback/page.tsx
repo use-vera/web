@@ -14,7 +14,7 @@ const CheckoutCallbackPage = () => {
       <CheckCircle2 className="h-10 w-10 text-primary" />
       <h1 className="text-xl font-bold text-foreground">Payment received</h1>
       <p className="max-w-xs text-sm text-muted-foreground">
-        You can close this tab — we&apos;re finishing up in the original
+        You can close this tab. We&apos;re finishing up in the original
         window.
       </p>
     </main>

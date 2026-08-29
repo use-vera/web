@@ -53,7 +53,7 @@ interface SandboxRequestPanelProps {
 
 /**
  * Owns everything that needs to reset when the selected endpoint changes
- * (form values, in-flight/response state) — mounted with key={endpoint.id}
+ * (form values, in-flight/response state). Mounted with key={endpoint.id}
  * by the parent so switching endpoints reinitializes via lazy useState
  * initializers instead of an effect that resets state.
  */
@@ -126,7 +126,7 @@ const SandboxRequestPanel = ({
       setResponse({ status: res.status, ok: res.ok, durationMs, body });
     } catch {
       setSendError(
-        "The request failed to send — check the API base URL and that the backend is reachable.",
+        "The request failed to send. Check the API base URL and that the backend is reachable.",
       );
     } finally {
       setSending(false);

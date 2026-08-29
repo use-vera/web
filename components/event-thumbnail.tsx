@@ -1,5 +1,6 @@
 "use client";
 
+import { cloudinaryVariant, type ImageVariant } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 import { Ticket } from "lucide-react";
 import Image from "next/image";
@@ -10,12 +11,14 @@ interface EventThumbnailProps {
   alt?: string;
   className?: string;
   iconClassName?: string;
+  /** Which Cloudinary derivation to request. Cards are 16:9 by default. */
+  variant?: ImageVariant;
 }
 
 /**
  * next/image throws (rather than firing onError) for hosts outside
- * next.config.ts's remotePatterns, so unrecognized hosts — e.g. stray local
- * upload URLs in seed data — must be filtered out before render, not caught.
+ * next.config.ts's remotePatterns, so unrecognized hosts. E.g. stray local
+ * upload URLs in seed data. Must be filtered out before render, not caught.
  */
 const isOptimizableImageUrl = (url: string) => {
   try {
@@ -30,9 +33,10 @@ const EventThumbnail = ({
   alt = "",
   className,
   iconClassName,
+  variant = "card",
 }: EventThumbnailProps) => {
   // Keyed to the url itself (not a plain boolean) so a component reused
-  // across changing imageUrls — e.g. a rotating carousel — doesn't keep
+  // across changing imageUrls. E.g. a rotating carousel, which doesn't keep
   // showing the fallback for every image after just one of them fails.
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const hasFailed = failedUrl === imageUrl;
@@ -41,7 +45,7 @@ const EventThumbnail = ({
     return (
       <div className={cn("relative overflow-hidden", className)}>
         <Image
-          src={imageUrl}
+          src={cloudinaryVariant(imageUrl, variant) ?? imageUrl}
           alt={alt}
           fill
           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"

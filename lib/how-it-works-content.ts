@@ -40,12 +40,12 @@ export const HOW_IT_WORKS_FAQS: HowItWorksFaq[] = [
   {
     question: "How do I know a ticket is real?",
     answer:
-      "Every ticket on Vera is a unique QR code tied to your account and generated at the point of sale. It can't be screenshotted and reused — the gate scanner marks it used the moment you walk in.",
+      "Every ticket on Vera is a unique QR code tied to your account and generated at the point of sale. It can't be screenshotted and reused. The gate scanner marks it used the moment you walk in.",
   },
   {
     question: "Can I resell a ticket if I can't go anymore?",
     answer:
-      "Yes. List it from your ticket screen and it goes into that event's resale marketplace, capped at face value — no scalper pricing, and the buyer gets a fresh verified ticket.",
+      "Yes. List it from your ticket screen and it goes into that event's resale marketplace, capped at face value. No scalper pricing, and the buyer gets a fresh verified ticket.",
   },
   {
     question: "What happens if an event is cancelled?",
@@ -60,7 +60,7 @@ export const HOW_IT_WORKS_FAQS: HowItWorksFaq[] = [
   {
     question: "Do I need a ticket to see an event's moments?",
     answer:
-      "No — public event feeds are open to everyone. You only need a ticket to unlock that event's group chat.",
+      "No. Public event feeds are open to everyone. You only need a ticket to unlock that event's group chat.",
   },
   {
     question: "What if I bought the wrong ticket tier?",

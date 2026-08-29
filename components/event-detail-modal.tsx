@@ -4,9 +4,9 @@ import SignInView from "@/components/auth/sign-in-view";
 import SignUpView from "@/components/auth/sign-up-view";
 import EventThumbnail from "@/components/event-thumbnail";
 import PerforatedDivider from "@/components/perforated-divider";
-import TicketPassCard from "@/components/tickets/ticket-pass-card";
+import { PurchaseSuccess } from "@/components/tickets/purchase-success";
 import Badge from "@/components/ui/badge";
-import Button from "@/components/ui/button";
+import Button, { buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getEventPurchasability, isEventLive } from "@/lib/event-status";
 import { formatNaira } from "@/lib/format-currency";
@@ -21,7 +21,6 @@ import {
   type EventTicketCategoryApi,
   type PublicEventApi,
 } from "@/lib/types/event";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -35,6 +34,7 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -122,7 +122,7 @@ const EventDetailModalBody = ({
       } catch {
         if (attempt === 7) {
           toast.error(
-            "We couldn't confirm your payment yet. Check your tickets shortly — if you were charged, it will show up.",
+            "We couldn't confirm your payment yet. Check your tickets shortly. If you were charged, it will show up.",
           );
           setStep("detail");
           return;
@@ -387,19 +387,23 @@ const EventDetailModalBody = ({
               Loading your ticket{quantity > 1 ? "s" : ""}…
             </p>
           </div>
+        ) : purchasedTickets.length > 0 ? (
+          <PurchaseSuccess tickets={purchasedTickets} onDone={onClose} />
         ) : (
-          <div className="flex flex-col gap-4 p-6">
-            {purchasedTickets.length > 1 ? (
-              <p className="text-center text-sm font-semibold text-foreground">
-                You got {purchasedTickets.length} tickets — each one has its
-                own code below.
-              </p>
-            ) : null}
-            <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
-              {purchasedTickets.map((ticket) => (
-                <TicketPassCard key={ticket._id} ticket={ticket} />
-              ))}
-            </div>
+          /* Paid, but the tickets have not materialised yet. Say so plainly
+             rather than showing an empty success screen. */
+          <div className="flex flex-col items-center gap-3 p-6 py-16 text-center">
+            <p className="text-sm font-semibold">Payment received</p>
+            <p className="max-w-xs text-sm text-muted-foreground">
+              Your tickets are still being issued. They will appear under My
+              tickets in a moment.
+            </p>
+            <Link
+              href="/account/tickets"
+              className={cn(buttonVariants({ size: "sm" }), "mt-2")}
+            >
+              Go to my tickets
+            </Link>
           </div>
         )
       ) : null}

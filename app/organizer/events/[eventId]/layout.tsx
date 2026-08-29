@@ -5,8 +5,19 @@ import { ErrorState } from "@/components/organizer/organizer-primitives";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrganizerEvent } from "@/lib/hooks/use-organizer";
 import { googleMapsDirectionsUrl } from "@/lib/maps";
+import { cloudinaryVariant } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Clock, Loader2, MapPin, Ticket, Users } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  ArrowLeft,
+  Clock,
+  Globe,
+  Loader2,
+  MapPin,
+  Pencil,
+  Ticket,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 
@@ -54,7 +65,7 @@ const EventLayout = ({ children }: { children: React.ReactNode }) => {
               {event?.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={event.imageUrl}
+                  src={cloudinaryVariant(event.imageUrl, "thumb")}
                   alt=""
                   className="h-full w-full object-cover"
                 />
@@ -114,9 +125,29 @@ const EventLayout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
 
-          {eventQuery.isFetching && !eventQuery.isLoading ? (
-            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
-          ) : null}
+          <div className="flex shrink-0 items-center gap-2">
+            {eventQuery.isFetching && !eventQuery.isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : null}
+            {event ? (
+              <Link
+                href={`/organizer/pages/${eventId}`}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              >
+                <Globe className="h-4 w-4" />
+                Page
+              </Link>
+            ) : null}
+            {event ? (
+              <Link
+                href={`/organizer/events/${eventId}/edit`}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              >
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         <nav

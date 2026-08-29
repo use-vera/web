@@ -8,15 +8,21 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SalesBarChart } from "@/components/organizer/sales-bar-chart";
 import { buildDailySeries } from "@/lib/organizer-series";
+import { getApiErrorMessage } from "@/lib/api/error-message";
 import { daysUntil } from "@/lib/event-status";
 import { formatNairaCompact } from "@/lib/format-currency";
-import { useEventTickets, useOrganizerEvent } from "@/lib/hooks/use-organizer";
-import { buttonVariants } from "@/components/ui/button";
+import {
+  useEventTickets,
+  useOrganizerEvent,
+  useUpdateEvent,
+} from "@/lib/hooks/use-organizer";
+import Button, { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   ChevronRight,
   Download,
   ExternalLink,
+  Globe,
   Megaphone,
   ScanLine,
   TriangleAlert,
@@ -24,25 +30,38 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
+import { toast } from "sonner";
 
-const NEXT_STEPS = [
+const NEXT_STEPS: {
+  icon: typeof ScanLine;
+  title: string;
+  description: string;
+  href: (eventId: string) => string;
+}[] = [
   {
     icon: ScanLine,
     title: "Scan people in at the door",
     description: "Open door mode when doors open",
-    segment: "check-in",
+    href: (id) => `/organizer/events/${id}/check-in`,
   },
   {
     icon: Download,
     title: "Build the guest list",
     description: "Export attendees as CSV",
-    segment: "exports",
+    href: (id) => `/organizer/events/${id}/exports`,
   },
   {
     icon: Megaphone,
     title: "Feature this event",
     description: "Put it in front of more people",
-    segment: "promote",
+    href: (id) => `/organizer/events/${id}/promote`,
+  },
+  {
+    icon: Globe,
+    title: "Build a page for it",
+    description: "Your own address at vera.tickets",
+    /* Outside the event's tab chrome. It is a full-screen editor. */
+    href: (id) => `/organizer/pages/${id}`,
   },
 ];
 
@@ -53,14 +72,25 @@ const EventOverviewPage = () => {
 
   /**
    * Admissions and refunds aren't summarised by the backend, so the overview
-   * reads them off one page of tickets. It is a sample, not the full ledger —
-   * the attendees tab is the authoritative list.
+   * reads them off one page of tickets. It is a sample, not the full ledger.
+   * The attendees tab is the authoritative list.
    */
   const ticketsQuery = useEventTickets(eventId, { limit: 50 });
   const tickets = useMemo(
     () => ticketsQuery.data?.items ?? [],
     [ticketsQuery.data],
   );
+
+  const publishEvent = useUpdateEvent(eventId);
+
+  const publish = async () => {
+    try {
+      await publishEvent.mutateAsync({ status: "published" });
+      toast.success("Event published. It is on sale now");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Couldn't publish that event"));
+    }
+  };
 
   const derived = useMemo(() => {
     const admitted = tickets.filter((ticket) => ticket.status === "used").length;
@@ -97,7 +127,29 @@ const EventOverviewPage = () => {
   const daysToDoors = daysUntil(event.nextOccurrenceAt);
 
   return (
-    <div className="flex flex-col gap-3.5 px-4 py-5 sm:px-6 lg:px-8 lg:py-6 pb-8">
+    <div className="flex flex-col gap-3.5 px-4 py-5 pb-8 sm:px-6 lg:px-8 lg:py-6">
+      {event.status === "draft" ? (
+        <Card className="flex-col items-start gap-4 border-0 bg-accent p-5 shadow-[inset_0_0_0_2px_var(--primary)] sm:flex-row sm:items-center">
+          <div className="min-w-0 flex-1">
+            <div className="text-base font-semibold text-accent-foreground">
+              This event is still a draft
+            </div>
+            <p className="mt-1 text-[13px] leading-relaxed text-pretty text-accent-foreground/85">
+              Nobody can find it, open it, or buy a ticket until you publish.
+              Everything is already set up. Publishing puts it on sale
+              straight away.
+            </p>
+          </div>
+          <Button
+            className="shrink-0"
+            loading={publishEvent.isPending}
+            onClick={publish}
+          >
+            Publish event
+          </Button>
+        </Card>
+      ) : null}
+
       <StatStrip
         cells={[
           {
@@ -172,8 +224,8 @@ const EventOverviewPage = () => {
           <div className="flex flex-col px-3 py-1.5">
             {NEXT_STEPS.map((step) => (
               <Link
-                key={step.segment}
-                href={`${base}/${step.segment}`}
+                key={step.title}
+                href={step.href(eventId)}
                 className="flex items-center gap-3 rounded-sm px-2 py-3 transition-colors hover:bg-muted/60"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -252,13 +304,17 @@ const EventOverviewPage = () => {
       </Card>
 
       <div className="flex justify-end gap-2">
-        <Link
-          href={`/events/${eventId}`}
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-        >
-          <ExternalLink className="h-4 w-4" />
-          View public page
-        </Link>
+        {/* The public route only serves published events, so a draft's link
+            would 404. */}
+        {event.status === "published" ? (
+          <Link
+            href={`/events/${eventId}`}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            <ExternalLink className="h-4 w-4" />
+            View public page
+          </Link>
+        ) : null}
         <Link
           href={`${base}/check-in`}
           className={cn(buttonVariants({ size: "sm" }))}

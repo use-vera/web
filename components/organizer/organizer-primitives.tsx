@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { TriangleAlert } from "lucide-react";
 import { type ReactNode } from "react";
 
 /**
@@ -147,6 +148,38 @@ export const ErrorState = ({
     ) : null}
   </div>
 );
+
+/** Inline problem text for one field. Renders nothing when there is none. */
+export const FieldError = ({ message }: { message?: string }) =>
+  message ? (
+    <p className="mt-1.5 flex items-start gap-1.5 text-[13px] font-medium text-destructive">
+      <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+      {message}
+    </p>
+  ) : null;
+
+/** A summary of everything still wrong on this step. */
+export const IssueSummary = ({ messages }: { messages: string[] }) =>
+  messages.length === 0 ? null : (
+    <div className="mb-6 rounded-sm bg-destructive/10 p-4">
+      <p className="flex items-center gap-2 text-[13px] font-semibold text-destructive">
+        <TriangleAlert className="h-4 w-4 shrink-0" />
+        {messages.length === 1
+          ? "One thing to fix before continuing"
+          : `${messages.length} things to fix before continuing`}
+      </p>
+      <ul className="mt-2 flex flex-col gap-1 pl-6">
+        {messages.map((message) => (
+          <li
+            key={message}
+            className="list-disc text-[13px] leading-relaxed text-destructive/90"
+          >
+            {message}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 
 export const Switch = ({
   checked,

@@ -13,6 +13,8 @@ import { useState } from "react";
 
 interface TicketPassCardProps {
   ticket: MyTicketApi;
+  /** Off when the container explains it once for a set of tickets. */
+  showGuidance?: boolean;
 }
 
 const resolveEvent = (
@@ -29,7 +31,10 @@ const STATUS_LABEL: Record<MyTicketApi["status"], string> = {
   refunded: "Refunded",
 };
 
-const TicketPassCard = ({ ticket }: TicketPassCardProps) => {
+const TicketPassCard = ({
+  ticket,
+  showGuidance = true,
+}: TicketPassCardProps) => {
   const [copied, setCopied] = useState(false);
   const event = resolveEvent(ticket.eventId);
   const isUsed = ticket.status === "used";
@@ -121,6 +126,7 @@ const TicketPassCard = ({ ticket }: TicketPassCardProps) => {
           </span>
         </button>
 
+        {showGuidance ? (
         <p className="text-center text-xs text-muted-foreground">
           {isUsed
             ? "This ticket has already been used and cannot be checked in again."
@@ -128,6 +134,7 @@ const TicketPassCard = ({ ticket }: TicketPassCardProps) => {
               ? "This ticket is no longer valid for entry."
               : "Present this code at the entrance, or share the ticket ID if scanning isn't possible."}
         </p>
+        ) : null}
       </div>
     </div>
   );

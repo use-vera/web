@@ -29,8 +29,8 @@ const FILTERS: { value: TicketStatusFilter; label: string }[] = [
 
 const eventNameOf = (eventId: unknown) =>
   typeof eventId === "string" || !eventId
-    ? "—"
-    : (eventId as { name?: string }).name || "—";
+    ? "-"
+    : (eventId as { name?: string }).name || "-";
 
 const SalesPage = () => {
   const [status, setStatus] = useState<TicketStatusFilter>("all");
@@ -218,7 +218,7 @@ const SalesPage = () => {
                               day: "numeric",
                               month: "short",
                             }).format(new Date(ticket.paidAt))
-                          : "—"}
+                          : "-"}
                       </td>
                       <td className="px-2 py-3.5">
                         <Badge
@@ -283,7 +283,7 @@ const SalesPage = () => {
                             day: "numeric",
                             month: "short",
                           }).format(new Date(ticket.paidAt))
-                        : "—"}
+                        : "-"}
                     </span>
                   </div>
                 </div>

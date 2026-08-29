@@ -85,7 +85,7 @@ const DevelopersOverviewPage = () => {
                   Create an API key
                 </Link>{" "}
                 with the scopes your integration needs. Copy the secret key
-                somewhere safe — it&apos;s shown only once.
+                somewhere safe. It&apos;s shown only once.
               </span>
             </li>
             <li className="flex gap-3">

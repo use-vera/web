@@ -49,6 +49,35 @@ export const useCreateEvent = () => {
   });
 };
 
+export const useUpdateEvent = (eventId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: Partial<CreateEventPayload>) =>
+      organizerService.updateEvent(eventId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["organizer"] });
+    },
+  });
+};
+
+export const useDeleteEvent = (eventId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => organizerService.deleteEvent(eventId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["organizer", "events"] });
+    },
+  });
+};
+
+export const useNotifyAttendees = (eventId: string) =>
+  useMutation({
+    mutationFn: (message: string) =>
+      organizerService.postEventMessage(eventId, message),
+  });
+
 export const useCancelEvent = (eventId: string) => {
   const queryClient = useQueryClient();
 
@@ -101,7 +130,7 @@ export const useRefundTicket = () => {
 
 /**
  * Door scanning. Deliberately not invalidating the whole attendee list on every
- * scan — a busy door would refetch hundreds of rows per second. The check-in
+ * scan. A busy door would refetch hundreds of rows per second. The check-in
  * screen keeps its own running tally from each response instead.
  */
 export const useCheckInTicket = () =>

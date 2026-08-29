@@ -1,28 +1,29 @@
 "use client";
 
-import { OrganizerField } from "@/components/organizer/organizer-field";
+import { AmountField } from "@/components/organizer/amount-field";
 import {
   ErrorState,
   Eyebrow,
   SectionLabel,
   Switch,
 } from "@/components/organizer/organizer-primitives";
+import TicketQrCode from "@/components/tickets/ticket-qr-code";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getApiErrorMessage } from "@/lib/api/error-message";
-import TicketQrCode from "@/components/tickets/ticket-qr-code";
 import { formatNairaAmount } from "@/lib/format-currency";
-import { googleMapsDirectionsUrl } from "@/lib/maps";
 import { useEvent } from "@/lib/hooks/use-events";
-import { useMyTickets } from "@/lib/hooks/use-tickets";
 import {
   useCancelResaleListing,
   useListTicketForResale,
   useResaleBids,
   useRespondToBid,
 } from "@/lib/hooks/use-resale";
+import { useMyTickets } from "@/lib/hooks/use-tickets";
+import { googleMapsDirectionsUrl } from "@/lib/maps";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, ArrowRight, Navigation } from "lucide-react";
 import Link from "next/link";
@@ -31,13 +32,23 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const PLATFORM_FEE_PERCENT = 5;
-/* Only used until the event loads — the event carries its own ceiling. */
+/* Only used until the event loads. The event carries its own ceiling. */
 const FALLBACK_MARKUP_PERCENT = 25;
 
 const bidderName = (bidderUserId: unknown) =>
   typeof bidderUserId === "string" || !bidderUserId
     ? "A Vera user"
-    : (bidderUserId as { fullName?: string }).fullName || "A Vera user";
+    : (bidderUserId as { fullName?: string }).fullName || "VU";
+
+const bidderCredentials = (bidderUserId: unknown) =>
+  typeof bidderUserId === "string" || !bidderUserId
+    ? "A Vera user"
+    : (bidderUserId as { fullName?: string }).fullName?.[0] || "VU";
+
+const bidderProfileImage = (bidderUserId: unknown) =>
+  typeof bidderUserId === "string" || !bidderUserId
+    ? "VU"
+    : (bidderUserId as { avatarUrl?: string }).avatarUrl || "VU";
 
 const TicketDetailPage = () => {
   const { ticketId } = useParams<{ ticketId: string }>();
@@ -81,9 +92,7 @@ const TicketDetailPage = () => {
   const faceValue = Number(ticket?.unitPriceNaira ?? 0);
   const ceiling = Math.round(faceValue * (1 + markupPercent / 100));
   const listedPrice = Number(ticket?.resalePriceNaira ?? 0);
-  const netOfFee = Math.round(
-    listedPrice * (1 - PLATFORM_FEE_PERCENT / 100),
-  );
+  const netOfFee = Math.round(listedPrice * (1 - PLATFORM_FEE_PERCENT / 100));
 
   const priceNaira = Number(price) || 0;
   const priceValid = priceNaira > 0 && priceNaira <= ceiling;
@@ -287,21 +296,31 @@ const TicketDetailPage = () => {
                 <div className="px-5 py-1 pb-2.5">
                   {bidsQuery.isLoading ? (
                     Array.from({ length: 3 }).map((_, index) => (
-                      <Skeleton key={index} className="my-3 h-11 w-full rounded-md" />
+                      <Skeleton
+                        key={index}
+                        className="my-3 h-11 w-full rounded-md"
+                      />
                     ))
                   ) : bids.length === 0 ? (
                     <p className="py-8 text-center text-[13px] text-muted-foreground">
-                      No offers yet. Buyers can still buy outright at your price.
+                      No offers yet. Buyers can still buy outright at your
+                      price.
                     </p>
                   ) : (
                     bids.map((bid) => (
-                      <div key={bid._id} className="flex items-center gap-3 py-3">
+                      <div
+                        key={bid._id}
+                        className="flex items-center gap-3 py-3"
+                      >
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-                          {bidderName(bid.bidderUserId)
-                            .split(" ")
-                            .map((part) => part[0])
-                            .slice(0, 2)
-                            .join("")}
+                          <Avatar>
+                            <AvatarImage
+                              src={bidderProfileImage(bid?.bidderUserId)}
+                            />
+                            <AvatarFallback>
+                              {bidderCredentials(bid?.bidderUserId)}
+                            </AvatarFallback>
+                          </Avatar>
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 text-[13px] font-semibold">
@@ -370,14 +389,12 @@ const TicketDetailPage = () => {
                   >
                     Your price
                   </SectionLabel>
-                  <OrganizerField
+                  <AmountField
                     value={price}
-                    inputMode="numeric"
-                    placeholder={String(faceValue)}
-                    className="max-w-[240px] tabular-nums"
-                    onChange={(input) =>
-                      setPrice(input.target.value.replace(/[^0-9]/g, ""))
-                    }
+                    onValueChange={setPrice}
+                    prefix="₦"
+                    placeholder={faceValue.toLocaleString("en-NG")}
+                    className="w-full sm:max-w-[240px]"
                   />
                 </label>
 
@@ -392,7 +409,9 @@ const TicketDetailPage = () => {
                     You receive{" "}
                     <span className="font-semibold text-foreground">
                       {formatNairaAmount(
-                        Math.round(priceNaira * (1 - PLATFORM_FEE_PERCENT / 100)),
+                        Math.round(
+                          priceNaira * (1 - PLATFORM_FEE_PERCENT / 100),
+                        ),
                       )}
                     </span>{" "}
                     after the {PLATFORM_FEE_PERCENT}% fee.
@@ -405,7 +424,8 @@ const TicketDetailPage = () => {
                       Accept offers
                     </span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
-                      Buyers can propose a lower price you choose to take or leave.
+                      Buyers can propose a lower price you choose to take or
+                      leave.
                     </span>
                   </div>
                   <Switch

@@ -26,7 +26,7 @@ const AuthModal = ({
   onAuthenticated,
 }: AuthModalProps) => {
   // "upcoming" only excludes events that have already *ended*, so it still
-  // includes ones currently in progress — filter those out here since this
+  // includes ones currently in progress. Filter those out here since this
   // panel is meant to preview what's coming up next, not what's live now.
   const eventsQuery = useEvents({ filter: "upcoming", sort: "dateAsc", limit: 10 });
   const events = (eventsQuery.data?.items ?? [])

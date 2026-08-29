@@ -36,7 +36,7 @@ const DocsToc = ({ topLinks, groups }: DocsTocProps) => {
 
     // The docs page scrolls its own region (app/developers/layout.tsx opts
     // this <main> out of the app-wide Lenis smooth-scroll and uses native
-    // overflow-y-auto instead) — the observer's root has to be that
+    // overflow-y-auto instead). The observer's root has to be that
     // element, not the default viewport, or it never fires.
     const root = document.querySelector<HTMLElement>("[data-lenis-prevent]");
 
@@ -58,7 +58,7 @@ const DocsToc = ({ topLinks, groups }: DocsTocProps) => {
         root,
         // Treat a section as "active" once it's crossed just below the
         // scroll-mt-24 offset used for anchor landing, rather than only
-        // once it's fully in view — biases the window toward the top of
+        // once it's fully in view. Biases the window toward the top of
         // the scroll region.
         rootMargin: "-96px 0px -70% 0px",
         threshold: 0,
@@ -80,7 +80,7 @@ const DocsToc = ({ topLinks, groups }: DocsTocProps) => {
 
     // scrollIntoView respects scroll-margin-top (scroll-mt-24 on every
     // section) and correctly targets the nearest scrollable ancestor on
-    // its own — exactly "land on the section, with padding at the top".
+    // its own. Exactly "land on the section, with padding at the top".
     target.scrollIntoView({ behavior: "smooth", block: "start" });
     window.history.replaceState(null, "", `#${id}`);
     setActiveId(id);

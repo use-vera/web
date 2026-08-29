@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 
 // Single source of truth on the backend is
-// backend/src/validations/category.validation.js's CATEGORY_ICON_KEYS —
-// this map must be kept in sync with it manually. A key with no entry here
+// backend/src/validations/category.validation.js's CATEGORY_ICON_KEYS.
+// This map must be kept in sync with it manually. A key with no entry here
 // falls back to "other" so a stale client never crashes on an unrecognized
 // key added later.
 export const CATEGORY_ICON_KEYS = [

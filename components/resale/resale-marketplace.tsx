@@ -1,8 +1,11 @@
 "use client";
 
-import { EmptyState, ErrorState } from "@/components/organizer/organizer-primitives";
+import {
+  EmptyState,
+  ErrorState,
+} from "@/components/organizer/organizer-primitives";
 import { ReservedForYou } from "@/components/resale/reserved-for-you";
-import { OrganizerField } from "@/components/organizer/organizer-field";
+import { AmountField } from "@/components/organizer/amount-field";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,11 +22,15 @@ import { type EventTicketApi } from "@/lib/types/organizer";
 import { Check, Clock, Ticket, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const sellerName = (ticket: EventTicketApi) =>
   typeof ticket.buyerUserId === "string"
     ? "A Vera user"
     : ticket.buyerUserId.fullName;
+
+const sellerImage = (ticket: EventTicketApi) =>
+  typeof ticket.buyerUserId === "string" ? "VU" : ticket.buyerUserId.avatarUrl;
 
 const BidDialog = ({
   ticket,
@@ -60,25 +67,22 @@ const BidDialog = ({
           </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
             {ticket?.ticketCategoryName || "Ticket"} · listed at{" "}
-            {formatNairaAmount(ticket?.resalePriceNaira ?? 0)}. The seller has to
-            accept before you pay.
+            {formatNairaAmount(ticket?.resalePriceNaira ?? 0)}. The seller has
+            to accept before you pay.
           </p>
 
           <label className="mt-5 block">
             <span className="mb-2 block text-[13px] font-semibold">
               Your offer
             </span>
-            <OrganizerField
+            <AmountField
               value={amount}
-              inputMode="numeric"
+              onValueChange={setAmount}
+              prefix="₦"
               placeholder="0"
-              className="tabular-nums"
-              onChange={(input) =>
-                setAmount(input.target.value.replace(/[^0-9]/g, ""))
-              }
             />
             <span className="mt-1.5 block text-xs text-muted-foreground tabular-nums">
-              Up to {formatNairaAmount(ceiling)} — the resale ceiling for this
+              Up to {formatNairaAmount(ceiling)}. The resale ceiling for this
               event.
             </span>
           </label>
@@ -148,7 +152,11 @@ export const ResaleMarketplace = ({
         return;
       }
 
-      const popup = window.open(authorizationUrl, "_blank", "width=480,height=720");
+      const popup = window.open(
+        authorizationUrl,
+        "_blank",
+        "width=480,height=720",
+      );
 
       const poll = window.setInterval(() => {
         if (popup?.closed) {
@@ -161,7 +169,7 @@ export const ResaleMarketplace = ({
               paymentAttemptId: session.paymentAttemptId ?? undefined,
             })
             .then(() => {
-              toast.success("Ticket is yours — check My tickets");
+              toast.success("Ticket is yours. Check My tickets");
               onRetry();
             })
             .catch((error) =>
@@ -190,7 +198,10 @@ export const ResaleMarketplace = ({
 
   if (isError) {
     return (
-      <ErrorState message="Couldn't load the resale listings." onRetry={onRetry} />
+      <ErrorState
+        message="Couldn't load the resale listings."
+        onRetry={onRetry}
+      />
     );
   }
 
@@ -199,7 +210,9 @@ export const ResaleMarketplace = ({
   const reserved = listings.filter(
     (ticket) => ticket.myBid?.status === "accepted",
   );
-  const openOffers = listings.filter((ticket) => ticket.myBid?.status === "open");
+  const openOffers = listings.filter(
+    (ticket) => ticket.myBid?.status === "open",
+  );
   const browsable = listings.filter(
     (ticket) => ticket.myBid?.status !== "accepted",
   );
@@ -277,7 +290,10 @@ export const ResaleMarketplace = ({
             const accepted = ticket.resaleStatus === "offer-accepted";
 
             return (
-              <Card key={ticket._id} className="flex-col gap-0 py-0 sm:flex-row sm:items-stretch">
+              <Card
+                key={ticket._id}
+                className="flex-col gap-0 py-0 sm:flex-row sm:items-stretch"
+              >
                 <div className="min-w-0 flex-1 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[15px] font-semibold">
@@ -295,13 +311,17 @@ export const ResaleMarketplace = ({
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-3.5 text-[13px] text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-semibold">
-                        {sellerName(ticket)
-                          .split(" ")
-                          .map((part) => part[0])
-                          .slice(0, 2)
-                          .join("")}
-                      </span>
+                      <Avatar>
+                        <AvatarImage src={sellerImage(ticket)} />
+                        <AvatarFallback>
+                          {sellerName(ticket)
+                            .split(" ")
+                            .map((part) => part[0])
+                            .slice(0, 2)
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+
                       {sellerName(ticket)}
                     </span>
                     <span className="tabular-nums">

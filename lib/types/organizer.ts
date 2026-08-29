@@ -8,7 +8,7 @@ import { type AuthUser } from "@/lib/types/auth";
 /**
  * Organizer-side shapes. These mirror the real backend contracts the mobile
  * app already consumes (see shared/services/types.ts) rather than a
- * web-specific reinterpretation of them — the same endpoints serve both.
+ * web-specific reinterpretation of them. The same endpoints serve both.
  */
 
 export type OrganizerEventApi = PublicEventApi;
@@ -199,6 +199,9 @@ export interface EventTicketCategoryPayload {
   description?: string;
   quantity: number;
   priceNaira?: number;
+  /** Empty string means "no bound". Converted to null on the way out. */
+  availableFrom?: string | null;
+  availableUntil?: string | null;
 }
 
 export interface EventRecurrencePayload {

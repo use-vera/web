@@ -41,7 +41,7 @@ interface DashboardShellProps {
 
 /**
  * The one dashboard layout. /organizer and /account are the same chrome with
- * different nav — keeping it in a single component means a change to the
+ * different nav. Keeping it in a single component means a change to the
  * sidebar, the tear divider or the scroll behaviour lands in both by
  * construction rather than by remembering to.
  */
@@ -173,7 +173,7 @@ export const DashboardShell = ({
           data-lenis-prevent
           className="flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:h-screen lg:overflow-y-auto lg:pb-0"
         >
-          {/* Mobile top bar — the sidebar's identity block, which is hidden
+          {/* Mobile top bar. The sidebar's identity block, which is hidden
               below lg. Settings lives here because the bottom bar is reserved
               for the three primary destinations. */}
           <div className="sticky top-0 z-30 flex items-center gap-2.5 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-sm lg:hidden">
@@ -206,7 +206,7 @@ export const DashboardShell = ({
           {children}
         </main>
 
-        {/* Bottom tab bar — three destinations, thumb-reachable, mirroring the
+        {/* Bottom tab bar, three destinations, thumb-reachable, mirroring the
             Expo app's own navigation so the two platforms feel like one product. */}
         <nav
           aria-label="Sections"

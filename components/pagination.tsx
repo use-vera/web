@@ -15,7 +15,7 @@ interface PaginationProps {
 }
 
 /**
- * Numbered pages with an ellipsis, rather than infinite scroll — an organizer
+ * Numbered pages with an ellipsis, rather than infinite scroll. An organizer
  * looking for one attendee among a thousand needs to be able to go back to
  * where they were.
  */

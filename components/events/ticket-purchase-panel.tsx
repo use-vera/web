@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Check, Loader2, Minus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const MAX_PER_PURCHASE = 10;
@@ -28,11 +28,20 @@ const sleep = (ms: number) =>
 type Step = "picking" | "awaiting-payment" | "verifying";
 
 /**
- * Checkout for the full event page. Mirrors the modal's flow — tier, quantity,
+ * Checkout for the full event page. Mirrors the modal's flow. Tier, quantity,
  * Paystack popup, then verify with retry because the webhook and the popup
- * close race each other — but laid out for a page rather than a dialog.
+ * close race each other, but laid out for a page rather than a dialog.
  */
-export const TicketPurchasePanel = ({ event }: { event: PublicEventApi }) => {
+export const TicketPurchasePanel = ({
+  event,
+  initialTierId,
+}: {
+  event: PublicEventApi;
+  /* Set when someone arrived from a published landing page having already
+     picked a tier there. Landing on "General" after clicking "VIP" reads as
+     the link being broken. */
+  initialTierId?: string;
+}) => {
   const router = useRouter();
   const { openAuthModal } = useAuthModal();
   const sessionQuery = useSession();
@@ -40,11 +49,33 @@ export const TicketPurchasePanel = ({ event }: { event: PublicEventApi }) => {
   const verify = useVerifyTicketPayment();
 
   const tiers = event.ticketCategories ?? [];
+  /* The server marks each tier's window state; only open ones are buyable. */
+  const sellableTiers = tiers.filter((tier) => tier.onSale !== false);
+  const requested = initialTierId
+    ? (tiers.find((tier) => tier._id === initialTierId) ?? null)
+    : null;
   const [selectedTier, setSelectedTier] = useState<EventTicketCategoryApi | null>(
-    tiers[0] ?? null,
+    /* A requested tier that has since closed still wins the selection, so the
+       panel explains why it cannot be bought rather than silently swapping it. */
+    requested ?? sellableTiers[0] ?? tiers[0] ?? null,
   );
   const [quantity, setQuantity] = useState(1);
   const [step, setStep] = useState<Step>("picking");
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  /* On a phone this panel sits below the whole event page. Someone who pressed
+     "Get tickets" on a landing page asked for checkout, not the top of an
+     article, so bring it to them. Once, and only when they asked. */
+  useEffect(() => {
+    if (!requested) {
+      return;
+    }
+
+    rootRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    /* Deliberately mount-only: re-running on selection changes would yank the
+       page while someone is picking a different tier. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isFree = !event.isPaid;
   const unitPrice = isFree
@@ -65,14 +96,14 @@ export const TicketPurchasePanel = ({ event }: { event: PublicEventApi }) => {
     for (let attempt = 0; attempt < 8; attempt += 1) {
       try {
         await verify.mutateAsync({ ticketId, reference });
-        toast.success("Ticket confirmed — it's in your account");
+        toast.success("Ticket confirmed. It's in your account");
         setStep("picking");
         router.push("/account/tickets");
         return;
       } catch {
         if (attempt === 7) {
           toast.error(
-            "We couldn't confirm your payment yet. Check your tickets shortly — if you were charged, it will show up.",
+            "We couldn't confirm your payment yet. Check your tickets shortly. If you were charged, it will show up.",
           );
           setStep("picking");
           return;
@@ -92,7 +123,7 @@ export const TicketPurchasePanel = ({ event }: { event: PublicEventApi }) => {
       });
 
       if (!result.requiresPayment) {
-        toast.success("Ticket confirmed — it's in your account");
+        toast.success("Ticket confirmed. It's in your account");
         router.push("/account/tickets");
         return;
       }
@@ -156,7 +187,7 @@ export const TicketPurchasePanel = ({ event }: { event: PublicEventApi }) => {
   }
 
   return (
-    <Card className="gap-0 py-0">
+    <Card ref={rootRef} id="buy" className="gap-0 py-0">
       <div className="p-[18px]">
         <span className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground/70">
           Straight from the organizer
@@ -181,18 +212,25 @@ export const TicketPurchasePanel = ({ event }: { event: PublicEventApi }) => {
             <div className="flex flex-col gap-2">
               {tiers.map((tier) => {
                 const selected = selectedTier?._id === tier._id;
+                const closed = tier.onSale === false;
+                const opensAt = tier.availableFrom
+                  ? new Date(tier.availableFrom)
+                  : null;
 
                 return (
                   <button
                     key={tier._id}
                     type="button"
                     aria-pressed={selected}
+                    disabled={closed}
                     onClick={() => setSelectedTier(tier)}
                     className={cn(
-                      "flex cursor-pointer items-center gap-3 rounded-md p-3 text-left transition-colors",
-                      selected
-                        ? "bg-accent shadow-[inset_0_0_0_2px_var(--primary)]"
-                        : "shadow-[inset_0_0_0_1px_var(--border)] hover:bg-muted/50",
+                      "flex items-center gap-3 rounded-md p-3 text-left transition-colors",
+                      closed
+                        ? "cursor-not-allowed opacity-55 shadow-[inset_0_0_0_1px_var(--border)]"
+                        : selected
+                          ? "cursor-pointer bg-accent shadow-[inset_0_0_0_2px_var(--primary)]"
+                          : "cursor-pointer shadow-[inset_0_0_0_1px_var(--border)] hover:bg-muted/50",
                     )}
                   >
                     <span
@@ -217,7 +255,17 @@ export const TicketPurchasePanel = ({ event }: { event: PublicEventApi }) => {
                         {tier.name}
                       </span>
                       <span className="block text-xs text-muted-foreground tabular-nums">
-                        {tier.quantity.toLocaleString("en-NG")} released
+                        {closed && tier.availabilityState === "upcoming" && opensAt
+                          ? `Opens ${new Intl.DateTimeFormat("en-NG", {
+                              day: "numeric",
+                              month: "short",
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            }).format(opensAt)}`
+                          : closed
+                            ? "No longer on sale"
+                            : `${tier.quantity.toLocaleString("en-NG")} released`}
                       </span>
                     </span>
                     <span
@@ -289,7 +337,12 @@ export const TicketPurchasePanel = ({ event }: { event: PublicEventApi }) => {
 
         <Button
           className="w-full"
-          disabled={!purchasable || busy}
+          disabled={
+            !purchasable ||
+            busy ||
+            (tiers.length > 0 && sellableTiers.length === 0) ||
+            selectedTier?.onSale === false
+          }
           loading={initialize.isPending}
           onClick={handleBuy}
         >

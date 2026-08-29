@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export const proxy = async (
   request: NextRequest,
-  method: "get" | "post" | "patch" | "delete",
+  method: "get" | "post" | "put" | "patch" | "delete",
   path: string,
   options: { forwardQuery?: boolean; body?: unknown } = {},
 ) => {

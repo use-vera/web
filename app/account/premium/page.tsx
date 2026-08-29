@@ -210,7 +210,7 @@ const PremiumPage = () => {
               <hr className="ticket-perforation" />
               <div className="flex flex-col gap-2.5 px-5 py-4">
                 {[
-                  ["Renews", "Manually — you decide"],
+                  ["Renews", "Manually, you decide"],
                   [
                     isActive ? "Active until" : "Next charge",
                     isActive && subscription?.premiumExpiresAt

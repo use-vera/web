@@ -84,11 +84,11 @@ export const EventRow = ({ event }: { event: OrganizerEventApi }) => {
           {isDraft ? (
             <>
               <div className="text-[13px] text-muted-foreground">
-                Not on sale yet
+                Not published yet
               </div>
               <div className="h-1 rounded-full bg-muted" />
               <div className="text-xs text-muted-foreground">
-                Finish setup to publish
+                Open it to publish and start selling
               </div>
             </>
           ) : (

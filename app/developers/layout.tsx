@@ -139,7 +139,7 @@ const DevelopersLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="ticket-perforation-vertical hidden shrink-0 sm:block" />
 
       {/* The page runs Lenis (see SmoothScrollProvider), which hijacks wheel
-          events globally for smooth-scrolling the *window* — but this portal
+          events globally for smooth-scrolling the *window*, but this portal
           scrolls its own nested region instead (so the sidebar stays fixed),
           and the window has nothing to scroll here. Without this attribute
           Lenis intercepts the wheel input and tries to scroll the window,

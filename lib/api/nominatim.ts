@@ -1,8 +1,8 @@
 import { type GeocodeResult } from "@/lib/types/organizer";
 
 /**
- * OpenStreetMap's geocoder. Called from Route Handlers only — never the
- * browser — so the identifying User-Agent their usage policy requires is
+ * OpenStreetMap's geocoder. Called from Route Handlers only. Never the
+ * browser, so the identifying User-Agent their usage policy requires is
  * actually sent, and so a viewer's coordinates reach OSM from our server
  * rather than from their IP.
  */

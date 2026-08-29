@@ -20,8 +20,15 @@ export interface EventCenterSummary {
 export interface EventTicketCategoryApi {
   _id: string;
   name: string;
+  description?: string;
   priceNaira: number;
   quantity: number;
+  /** Per-tier sale window. Null on a side means no bound. */
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  /** Derived server-side so clients don't re-implement the window rules. */
+  onSale?: boolean;
+  availabilityState?: "open" | "upcoming" | "closed";
 }
 
 export interface CategoryApi {
@@ -161,8 +168,8 @@ export interface TicketPurchaseResponse {
     barcodeValue: string;
     status: "pending" | "paid" | "cancelled" | "used" | "expired";
   };
-  // Every ticket created in this purchase (quantity > 1 issues one row —
-  // and one distinct scannable code — per seat, not one row with a
+  // Every ticket created in this purchase (quantity > 1 issues one row.
+  // And one distinct scannable code. Per seat, not one row with a
   // quantity field). Combined with purchaseBatchId, lets the UI fetch and
   // show every code, not just this primary one.
   ticketIds: string[];
@@ -227,7 +234,7 @@ export interface MyTicketApi {
   paidAt?: string | null;
   usedAt?: string | null;
   cancelledAt?: string | null;
-  /* Resale fields — /events/tickets/me returns whole ticket documents, so
+  /* Resale fields. /events/tickets/me returns whole ticket documents, so
      these are present on a ticket the owner has listed. */
   resaleStatus?: "none" | "listed" | "offer-accepted";
   resalePriceNaira?: number | null;

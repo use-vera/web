@@ -1,3 +1,4 @@
+import Link from "next/link";
 import DocsToc from "@/components/developers/docs-toc";
 import EndpointDocBlock from "@/components/developers/endpoint-doc";
 import Badge from "@/components/ui/badge";
@@ -38,7 +39,7 @@ const DevelopersDocsPage = () => {
         </h1>
         <p className="mt-3 max-w-xl text-base text-muted-foreground">
           Everything you need to sell tickets from your own site or app, check
-          attendees in, and manage refunds — all over one REST API.
+          attendees in, and manage refunds, all over one REST API.
         </p>
 
         <section
@@ -49,12 +50,12 @@ const DevelopersDocsPage = () => {
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             Every request needs an <code>Authorization: Bearer</code> header
             with an API key from your{" "}
-            <a
+            <Link
               href="/developers/keys"
               className="font-semibold text-foreground underline underline-offset-2"
             >
               API keys
-            </a>{" "}
+            </Link>{" "}
             page.
           </p>
           <div className="mt-4 flex flex-col gap-5 text-sm text-muted-foreground">

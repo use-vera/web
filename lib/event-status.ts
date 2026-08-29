@@ -63,7 +63,7 @@ export const isEventLive = (event: PublicEventApi) => {
   return startsAtMs <= now && now < endsAtMs;
 };
 
-/** Strictly future — excludes events that have already started (unlike "live"). */
+/** Strictly future. Excludes events that have already started (unlike "live"). */
 export const isEventStrictlyUpcoming = (event: PublicEventApi) => {
   const startsAtMs = Date.parse(event.nextOccurrenceAt || event.startsAt || "");
   return Number.isFinite(startsAtMs) && startsAtMs > Date.now();
@@ -74,12 +74,14 @@ export type OrganizerEventBadge =
   | "cancelled"
   | "ended"
   | "sold-out"
-  | "live";
+  | "live"
+  | "scheduled"
+  | "on-sale";
 
 /**
  * What the organizer's own list should call an event. Only draft/published/
  * cancelled are stored, so "ended" and "sold out" are derived here rather than
- * read off the record — and the clock reads stay out of component render, as
+ * read off the record, and the clock reads stay out of component render, as
  * with the other helpers in this file.
  */
 export const getOrganizerEventBadge = (
@@ -99,7 +101,18 @@ export const getOrganizerEventBadge = (
     return "ended";
   }
 
-  return Number(event.remainingTickets || 0) <= 0 ? "sold-out" : "live";
+  /* "Live" means the doors are open right now. Not merely published. A
+     published event that starts next month is "On sale", and one whose sale
+     window has not opened is "Scheduled". */
+  if (isEventLive(event)) {
+    return "live";
+  }
+
+  if (Number(event.remainingTickets || 0) <= 0) {
+    return "sold-out";
+  }
+
+  return event.salePhase === "upcoming" ? "scheduled" : "on-sale";
 };
 
 /** Whole days from now until `iso`, rounded up. Negative once it has passed. */

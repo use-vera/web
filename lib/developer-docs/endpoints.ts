@@ -43,7 +43,7 @@ export interface EndpointDoc {
 
 /**
  * Single source of truth for both the API documentation page and the
- * sandbox's endpoint picker/form — every /v1 endpoint from Vera's Phase 1
+ * sandbox's endpoint picker/form, every /v1 endpoint from Vera's Phase 1
  * Developer Platform API lives here exactly once.
  */
 export const ENDPOINTS: EndpointDoc[] = [
@@ -161,7 +161,7 @@ export const ENDPOINTS: EndpointDoc[] = [
       { name: "eventId", type: "string", required: true, description: "The event to buy tickets for." },
       { name: "quantity", type: "number", required: false, description: "Number of tickets, 1-10 (default 1)." },
       { name: "ticketCategoryId", type: "string", required: false, description: "Ticket type id, if the event has categories." },
-      { name: "customerEmail", type: "string", required: true, description: "The buyer's email — used to find or create their Vera account." },
+      { name: "customerEmail", type: "string", required: true, description: "The buyer's email. Used to find or create their Vera account." },
       { name: "customerName", type: "string", required: false, description: "The buyer's name." },
       { name: "successUrl", type: "string", required: false, description: "Where to send the buyer after a successful payment." },
       { name: "cancelUrl", type: "string", required: false, description: "Where to send the buyer if they cancel." },
@@ -389,7 +389,7 @@ export const ENDPOINTS: EndpointDoc[] = [
     scope: "tickets:checkin",
     summary: "Check in a ticket",
     description:
-      "Marks a ticket as used at the door. Safe to call twice — a second check-in on an already-used ticket returns alreadyCheckedIn: true instead of erroring.",
+      "Marks a ticket as used at the door. Safe to call twice. A second check-in on an already-used ticket returns alreadyCheckedIn: true instead of erroring.",
     bodyParams: [
       { name: "code", type: "string", required: true, description: "The scanned ticket code or barcode value." },
       { name: "eventId", type: "string", required: false, description: "Restrict check-in to this event." },

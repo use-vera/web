@@ -92,7 +92,7 @@ const MomentsCollage = () => {
           Real moments, not stock photos.
         </h2>
         <p className="text-base text-muted-foreground">
-          Every post in Vera is from someone who was actually there — no curated
+          Every post in Vera is from someone who was actually there. No curated
           grid, just what happened.
         </p>
       </div>

@@ -12,7 +12,7 @@ interface EventCardCompactProps {
 }
 
 /**
- * A dense, thumbnail-left row — used in search results and the near-me list,
+ * A dense, thumbnail-left row. Used in search results and the near-me list,
  * where several results need to be scannable at once. The main browse grid
  * keeps the larger EventCard; this is deliberately not a full-page redesign.
  */

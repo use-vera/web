@@ -233,7 +233,7 @@ const ExportsPage = () => {
                             key={column}
                             className="px-2 py-3 text-[13px] whitespace-nowrap"
                           >
-                            {String(row[column] ?? "—")}
+                            {String(row[column] ?? "-")}
                           </td>
                         ))}
                       </tr>

@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import * as React from "react";
 
 /**
- * The Developer Portal's form field — rounded-md to match AuthField (the
+ * The Developer Portal's form field. Rounded-md to match AuthField (the
  * app's real input convention for actual form fields), not the shared
  * Input component's rounded-full, which is a deliberate one-off reserved
  * for the events search bar.

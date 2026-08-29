@@ -11,13 +11,13 @@ const normalizeQuery = (query?: EventListQuery) => ({
   ticketType: query?.ticketType ?? "all",
   country: query?.country ?? "",
   // category is a strict ObjectId regex on the backend (unlike country's
-  // permissive free-text string) — undefined omits the param entirely,
+  // permissive free-text string). Undefined omits the param entirely,
   // where an empty string would be sent as `category=` and fail validation.
   category: query?.category || undefined,
   nearLat: query?.nearLat ?? undefined,
   nearLng: query?.nearLng ?? undefined,
   nearRadiusKm: query?.nearRadiusKm ?? undefined,
-  // from/to are dateStringSchema on the backend — same empty-string-fails
+  // from/to are dateStringSchema on the backend. Same empty-string-fails
   // reasoning as category above.
   from: query?.from || undefined,
   to: query?.to || undefined,
@@ -33,7 +33,7 @@ export const useEvents = (query?: EventListQuery, enabled = true) => {
   });
 };
 
-// Paginated "Load more" browsing — TanStack Query owns the accumulated
+// Paginated "Load more" browsing. TanStack Query owns the accumulated
 // pages itself (via `pages`/`fetchNextPage`), so callers never need to
 // hand-roll a merged-rows state or a "reset page on filter change" effect;
 // changing `query` changes the cache key, which resets to page 1 for free.

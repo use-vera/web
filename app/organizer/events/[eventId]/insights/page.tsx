@@ -54,7 +54,7 @@ const InsightsPage = () => {
     [series],
   );
 
-  /* Distribution is counted from the ratings actually loaded — the backend
+  /* Distribution is counted from the ratings actually loaded. The backend
      returns the list plus an average, not a pre-bucketed histogram. */
   const distribution = useMemo(() => {
     const buckets = [5, 4, 3, 2, 1].map((stars) => ({

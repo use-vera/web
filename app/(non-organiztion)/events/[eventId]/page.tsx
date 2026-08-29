@@ -9,15 +9,18 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEvent } from "@/lib/hooks/use-events";
 import { useResaleMarketplace } from "@/lib/hooks/use-resale";
+import { cloudinaryVariant } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 import { Clock, MapPin, Ticket, TriangleAlert, Users } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 type Tab = "details" | "resale";
 
 const EventPage = () => {
   const { eventId } = useParams<{ eventId: string }>();
+  /* Published landing pages link straight to a tier: /events/:id?tier=… */
+  const requestedTier = useSearchParams().get("tier") ?? undefined;
   const [tab, setTab] = useState<Tab>("details");
 
   const eventQuery = useEvent(eventId);
@@ -47,7 +50,7 @@ const EventPage = () => {
   }
 
   const faceValue = event.ticketPriceNaira || 0;
-  /* The event's own resale policy — the backend default is 25%, but an
+  /* The event's own resale policy. The backend default is 25%, but an
      organizer can set their own ceiling per event. */
   const markupPercent = event.resale?.maxMarkupPercent ?? 25;
   const ceiling = Math.round(faceValue * (1 + markupPercent / 100));
@@ -59,7 +62,7 @@ const EventPage = () => {
         {event.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={event.imageUrl}
+            src={cloudinaryVariant(event.imageUrl, "hero")}
             alt=""
             className="h-full w-full object-cover"
           />
@@ -187,7 +190,7 @@ const EventPage = () => {
           </div>
 
           <div className="w-full lg:sticky lg:top-24 lg:w-[340px] lg:shrink-0">
-            <TicketPurchasePanel event={event} />
+            <TicketPurchasePanel event={event} initialTierId={requestedTier} />
 
             <Card className="mt-3 flex-row items-start gap-3 p-4">
               <TriangleAlert className="mt-px h-4 w-4 shrink-0 text-muted-foreground" />

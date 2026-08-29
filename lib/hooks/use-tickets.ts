@@ -19,7 +19,7 @@ export const useMyTickets = (query?: MyTicketsQuery) => {
 };
 
 /**
- * Paginated (not capped at a single page like useMyTickets) — accumulates
+ * Paginated (not capped at a single page like useMyTickets). Accumulates
  * pages via TanStack Query's own cache rather than a manual
  * useEffect+setState merge, since this repo's lint rules disallow setting
  * state synchronously inside an effect.
@@ -43,7 +43,7 @@ export const useMyTicketsInfinite = (
 
 /**
  * Fetches every ticket from one purchase (quantity > 1 issues one row per
- * seat, each with its own code) — used by the post-checkout success step
+ * seat, each with its own code). Used by the post-checkout success step
  * to show all codes, not just the primary ticket the purchase/verify
  * response itself carries.
  */

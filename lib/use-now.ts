@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 /**
  * A ticking clock as an external store. The snapshot is cached in module
  * scope and only replaced by the interval, because useSyncExternalStore
- * requires a stable getSnapshot — returning Date.now() directly would
+ * requires a stable getSnapshot. Returning Date.now() directly would
  * change on every call and loop.
  *
  * One interval is shared by every subscriber and stops when the last one

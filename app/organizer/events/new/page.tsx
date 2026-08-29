@@ -1,5 +1,6 @@
 "use client";
 
+import { AmountField } from "@/components/organizer/amount-field";
 import { CategoryPicker } from "@/components/organizer/category-picker";
 import { LocationMap } from "@/components/location-map";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -14,6 +15,8 @@ import {
 } from "@/components/organizer/organizer-field";
 import {
   Eyebrow,
+  FieldError,
+  IssueSummary,
   SectionLabel,
   Switch,
 } from "@/components/organizer/organizer-primitives";
@@ -24,16 +27,17 @@ import { getApiErrorMessage } from "@/lib/api/error-message";
 import { formatNairaAmount, formatNairaCompact } from "@/lib/format-currency";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { useCreateEvent } from "@/lib/hooks/use-organizer";
-import { NIGERIAN_STATES } from "@/lib/nigerian-states";
+import { COUNTRIES, subdivisionLabel, subdivisionsFor } from "@/lib/countries";
 import {
   capacityOf,
   draftToPayload,
   grossIfSoldOut,
   PLATFORM_FEE_PERCENT,
-  validateStep,
+  getStepIssues,
   type EventDraft,
 } from "@/lib/organizer-draft";
 import { type EventTicketCategoryPayload } from "@/lib/types/organizer";
+import { cloudinaryVariant } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 import {
   CalendarClock,
@@ -47,6 +51,7 @@ import {
   TriangleAlert,
   Users,
   X,
+  Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -55,6 +60,14 @@ import { toast } from "sonner";
 const STEPS = ["Basics", "Where", "When", "Tickets", "Review"] as const;
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** datetime-local wants local wall-clock, not an ISO instant. */
+const todayLocal = () => {
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, "0");
+
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+};
 
 const TIMEZONES = [
   "Africa/Lagos",
@@ -79,13 +92,16 @@ const emptyDraft = (): EventDraft => ({
   recurrenceEndsOn: "",
   isPaid: true,
   feeMode: "absorbed_by_organizer",
-  tiers: [{ name: "General admission", quantity: 100, priceNaira: 5000 }],
+  tiers: [
+    {
+      name: "General admission",
+      quantity: 100,
+      priceNaira: 5000,
+      availableFrom: "",
+      availableUntil: "",
+    },
+  ],
   salesStartsAt: "",
-  presaleEnabled: false,
-  presaleStartsAt: "",
-  presaleEndsAt: "",
-  presaleQuantity: "",
-  presalePriceNaira: "",
   resaleEnabled: true,
   resaleAllowBids: true,
   resaleMaxMarkupPercent: 25,
@@ -127,6 +143,7 @@ const NewEventPage = () => {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<EventDraft>(emptyDraft);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [showIssues, setShowIssues] = useState(false);
 
   const set = <K extends keyof EventDraft>(key: K, value: EventDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
@@ -144,7 +161,15 @@ const NewEventPage = () => {
   const fee = Math.round((gross * PLATFORM_FEE_PERCENT) / 100);
   const leadPrice = Number(draft.tiers[0]?.priceNaira) || 0;
   const feeOnLead = Math.round((leadPrice * PLATFORM_FEE_PERCENT) / 100);
-  const stepValid = validateStep(draft, step);
+  /* Issues are computed continuously, but only shown once the organizer has
+     tried to move on. Nagging about an empty field they have not reached
+     yet is noise, not help. */
+  const issues = useMemo(() => getStepIssues(draft, step), [draft, step]);
+  const stepValid = issues.length === 0;
+  const issueFor = (field: string) =>
+    showIssues
+      ? issues.find((issue) => issue.field === field)?.message
+      : undefined;
 
   const categoriesQuery = useCategories();
   const selectedCategoryNames = useMemo(
@@ -189,7 +214,7 @@ const NewEventPage = () => {
             .join(", ")}`
         : "Monthly";
 
-  /* Things that are legal but usually mistakes — surfaced before publish
+  /* Things that are legal but usually mistakes. Surfaced before publish
      rather than discovered after tickets are on sale. */
   const warnings = useMemo(() => {
     const found: string[] = [];
@@ -206,11 +231,14 @@ const NewEventPage = () => {
       found.push("No categories picked, so it will be harder to discover.");
     }
 
-    if (
-      draft.presaleEnabled &&
-      (!draft.presaleStartsAt || !draft.presaleEndsAt)
-    ) {
-      found.push("Presale is on but its window is incomplete.");
+    if (draft.tiers.some((tier) => tier.availableFrom || tier.availableUntil)) {
+      const staggered = draft.tiers.filter((tier) => tier.availableFrom).length;
+
+      if (staggered === draft.tiers.length && draft.tiers.length > 1) {
+        found.push(
+          "Every tier opens later. None is on sale the moment you publish.",
+        );
+      }
     }
 
     if (capacity > 0 && capacity < 10) {
@@ -219,6 +247,46 @@ const NewEventPage = () => {
 
     return found;
   }, [draft, capacity]);
+
+  const hasEarlyTier = draft.tiers.some((tier) => Boolean(tier.availableFrom));
+
+  /**
+   * Creates the early-bird pattern already filled in. A smaller, cheaper
+   * batch that stops selling before the event. Seeing it built is a faster
+   * explanation than any label, and every value stays editable.
+   */
+  const addEarlyBirdTier = () => {
+    const lead = draft.tiers[0];
+    const leadPriceNaira = Number(lead?.priceNaira) || 0;
+    const leadQuantity = Number(lead?.quantity) || 0;
+
+    /* Closes a week before doors, or leaves it open if there is no date yet. */
+    const closesAt = draft.startsAt
+      ? (() => {
+          const date = new Date(draft.startsAt);
+          date.setDate(date.getDate() - 7);
+          const pad = (value: number) => String(value).padStart(2, "0");
+
+          return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+            date.getDate(),
+          )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        })()
+      : "";
+
+    setDraft((current) => ({
+      ...current,
+      tiers: [
+        {
+          name: "Early bird",
+          quantity: Math.max(1, Math.round(leadQuantity * 0.25)) || 50,
+          priceNaira: leadPriceNaira ? Math.round(leadPriceNaira * 0.8) : 0,
+          availableFrom: todayLocal(),
+          availableUntil: closesAt,
+        },
+        ...current.tiers,
+      ],
+    }));
+  };
 
   const updateTier = (
     index: number,
@@ -232,6 +300,20 @@ const NewEventPage = () => {
     }));
 
   const submit = async (status: "draft" | "published") => {
+    /* Publishing runs the whole form, not just the current step. A problem
+       left behind on step 2 would otherwise only surface as a server error. */
+    if (status === "published") {
+      const allIssues = [0, 1, 2, 3].flatMap((index) =>
+        getStepIssues(draft, index),
+      );
+
+      if (allIssues.length > 0) {
+        setShowIssues(true);
+        toast.error(allIssues.map((issue) => issue.message).join("\n"));
+        return;
+      }
+    }
+
     try {
       const created = await createEvent.mutateAsync(
         draftToPayload(draft, status),
@@ -243,9 +325,7 @@ const NewEventPage = () => {
     }
   };
 
-  const isNigeria = draft.location.country
-    .toLowerCase()
-    .includes("nigeria");
+  const subdivisions = subdivisionsFor(draft.location.country);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -256,9 +336,12 @@ const NewEventPage = () => {
         description={
           <>
             This event has not been created yet, so everything you have filled
-            in — the location, {draft.tiers.length === 1 ? "your ticket tier" : `all ${draft.tiers.length} ticket tiers`}
-            {draft.imageUrl ? ", the cover image" : ""} — will be lost. Save it
-            as a draft instead to come back to it later.
+            in will be lost. The location,{" "}
+            {draft.tiers.length === 1
+              ? "your ticket tier"
+              : `all ${draft.tiers.length} ticket tiers`}
+            {draft.imageUrl ? ", the cover image" : ""}. Save it as a draft
+            instead to come back to it later.
           </>
         }
         confirmLabel="Discard this event"
@@ -292,7 +375,10 @@ const NewEventPage = () => {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => setStep((current) => current - 1)}
+              onClick={() => {
+                setShowIssues(false);
+                setStep((current) => current - 1);
+              }}
             >
               Back
             </Button>
@@ -300,8 +386,15 @@ const NewEventPage = () => {
           {step < STEPS.length - 1 ? (
             <Button
               size="sm"
-              disabled={!stepValid}
-              onClick={() => setStep((current) => current + 1)}
+              onClick={() => {
+                if (!stepValid) {
+                  setShowIssues(true);
+                  return;
+                }
+
+                setShowIssues(false);
+                setStep((current) => current + 1);
+              }}
             >
               Continue
               <ChevronRight className="h-4 w-4" />
@@ -361,7 +454,11 @@ const NewEventPage = () => {
                         "text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
                     )}
                   >
-                    {done ? <Check className="h-3 w-3" strokeWidth={3} /> : index + 1}
+                    {done ? (
+                      <Check className="h-3 w-3" strokeWidth={3} />
+                    ) : (
+                      index + 1
+                    )}
                   </span>
                   <span
                     className={cn(
@@ -380,7 +477,10 @@ const NewEventPage = () => {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col gap-7 px-4 py-6 sm:px-6 lg:flex-row lg:py-8 lg:pr-8 lg:pl-2">
-          <div className="min-w-0 w-full lg:max-w-[700px] lg:flex-1">
+          <div className="w-full min-w-0 lg:max-w-[700px] lg:flex-1">
+            <IssueSummary
+              messages={showIssues ? issues.map((issue) => issue.message) : []}
+            />
             {step === 0 ? (
               <>
                 <h2 className="text-[22px] leading-tight font-bold tracking-[-0.02em]">
@@ -398,11 +498,13 @@ const NewEventPage = () => {
                       onChange={(input) => set("name", input.target.value)}
                       placeholder="Afrobeats Night Lagos"
                       maxLength={140}
+                      aria-invalid={Boolean(issueFor("name"))}
                     />
+                    <FieldError message={issueFor("name")} />
                   </label>
 
                   <div>
-                    <SectionLabel hint="Landscape images look best — this is the first thing people see.">
+                    <SectionLabel hint="Landscape images look best, this is the first thing people see.">
                       Cover image
                     </SectionLabel>
                     <ImageUpload
@@ -419,7 +521,9 @@ const NewEventPage = () => {
                     </SectionLabel>
                     <OrganizerTextarea
                       value={draft.description}
-                      onChange={(input) => set("description", input.target.value)}
+                      onChange={(input) =>
+                        set("description", input.target.value)
+                      }
                       rows={5}
                       maxLength={1200}
                       placeholder="Who is playing, what the night looks like, anything people should turn up knowing."
@@ -468,33 +572,42 @@ const NewEventPage = () => {
                       }
                       placeholder="Muri Okunola Park, Victoria Island"
                       maxLength={300}
+                      aria-invalid={Boolean(issueFor("address"))}
+                    />
+                    <FieldError
+                      message={issueFor("address") ?? issueFor("location")}
                     />
                   </label>
 
                   <div className="flex flex-col gap-4 sm:flex-row">
                     <div className="flex-1">
                       <SectionLabel>Country</SectionLabel>
-                      <OrganizerField
+                      <Select
+                        label="Country"
                         value={draft.location.country}
-                        onChange={(input) =>
+                        onChange={(next) =>
                           set("location", {
                             ...draft.location,
-                            country: input.target.value,
+                            country: next,
+                            /* The old subdivision belongs to the old country. */
+                            state: "",
                           })
                         }
-                        placeholder="Nigeria"
+                        options={[...COUNTRIES]}
                       />
                     </div>
                     <div className="flex-1">
-                      <SectionLabel>State</SectionLabel>
-                      {isNigeria ? (
+                      <SectionLabel>
+                        {subdivisionLabel(draft.location.country)}
+                      </SectionLabel>
+                      {subdivisions ? (
                         <Select
-                          label="State"
+                          label={subdivisionLabel(draft.location.country)}
                           value={draft.location.state}
                           onChange={(next) =>
                             set("location", { ...draft.location, state: next })
                           }
-                          options={NIGERIAN_STATES}
+                          options={subdivisions}
                         />
                       ) : (
                         <OrganizerField
@@ -505,7 +618,7 @@ const NewEventPage = () => {
                               state: input.target.value,
                             })
                           }
-                          placeholder="State or region"
+                          placeholder={subdivisionLabel(draft.location.country)}
                         />
                       )}
                     </div>
@@ -530,7 +643,9 @@ const NewEventPage = () => {
                       type="datetime-local"
                       value={draft.startsAt}
                       onChange={(input) => set("startsAt", input.target.value)}
+                      aria-invalid={Boolean(issueFor("startsAt"))}
                     />
+                    <FieldError message={issueFor("startsAt")} />
                   </label>
                   <label className="flex-1">
                     <SectionLabel>Ends</SectionLabel>
@@ -538,17 +653,11 @@ const NewEventPage = () => {
                       type="datetime-local"
                       value={draft.endsAt}
                       onChange={(input) => set("endsAt", input.target.value)}
+                      aria-invalid={Boolean(issueFor("endsAt"))}
                     />
+                    <FieldError message={issueFor("endsAt")} />
                   </label>
                 </div>
-
-                {draft.startsAt &&
-                draft.endsAt &&
-                new Date(draft.endsAt) <= new Date(draft.startsAt) ? (
-                  <p className="mt-3 text-[13px] font-semibold text-destructive">
-                    The end time has to be after the start time.
-                  </p>
-                ) : null}
 
                 <div className="mt-5 max-w-[320px]">
                   <SectionLabel hint="Times above are read in this zone.">
@@ -603,7 +712,9 @@ const NewEventPage = () => {
                               set(
                                 "recurrenceDays",
                                 selected
-                                  ? draft.recurrenceDays.filter((d) => d !== index)
+                                  ? draft.recurrenceDays.filter(
+                                      (d) => d !== index,
+                                    )
                                   : [...draft.recurrenceDays, index],
                               )
                             }
@@ -619,6 +730,7 @@ const NewEventPage = () => {
                         );
                       })}
                     </div>
+                    <FieldError message={issueFor("recurrenceDays")} />
                   </div>
                 ) : null}
 
@@ -669,66 +781,94 @@ const NewEventPage = () => {
                   ))}
                 </div>
 
-                <div className="mb-2.5 flex items-center justify-between">
-                  <span className="text-[13px] font-semibold">Ticket tiers</span>
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[13px] font-semibold">
+                    Ticket tiers
+                  </span>
                   <span className="text-xs text-muted-foreground tabular-nums">
                     {capacity.toLocaleString("en-NG")} tickets &middot;{" "}
                     {draft.tiers.length} of 12
                   </span>
                 </div>
+                <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">
+                  Each tier can go on sale at its own time. That is how you run
+                  an early bird or a presale. Price it lower or higher than the
+                  main ticket; that part is up to you.
+                </p>
 
                 <div className="flex flex-col gap-2">
+                  {/* Column headings so "100" and "5,000" are never ambiguous. */}
+                  <div className="hidden gap-3 px-4 sm:flex">
+                    <span className="flex-1 text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
+                      Tier name
+                    </span>
+                    <span className="w-[100px] shrink-0 text-right text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
+                      Tickets
+                    </span>
+                    {draft.isPaid ? (
+                      <span className="w-[120px] shrink-0 text-right text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
+                        Price (₦)
+                      </span>
+                    ) : null}
+                    {draft.tiers.length > 1 ? (
+                      <span className="w-6 shrink-0" />
+                    ) : null}
+                  </div>
+
                   {draft.tiers.map((tier, index) => (
-                    <Card key={index} className="flex-col items-stretch gap-2.5 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-3">
+                    <Card
+                      key={index}
+                      className="flex-col items-stretch gap-2.5 px-4 py-3.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3"
+                    >
                       <label className="flex items-center gap-3 sm:contents">
-                        <span className="w-20 shrink-0 text-xs font-semibold text-muted-foreground sm:hidden">
-                          Name
+                        <span className="w-24 shrink-0 text-xs font-semibold text-muted-foreground sm:hidden">
+                          Tier name
                         </span>
                         <OrganizerField
                           value={tier.name}
                           onChange={(input) =>
                             updateTier(index, { name: input.target.value })
                           }
-                          placeholder="Tier name"
+                          placeholder="General admission"
                           aria-label={`Tier ${index + 1} name`}
                           className="h-10 min-w-0 flex-1"
                           maxLength={60}
+                          aria-invalid={Boolean(issueFor(`tier.${index}.name`))}
                         />
                       </label>
+
                       <label className="flex items-center gap-3 sm:contents">
-                        <span className="w-20 shrink-0 text-xs font-semibold text-muted-foreground sm:hidden">
-                          Quantity
+                        <span className="w-24 shrink-0 text-xs font-semibold text-muted-foreground sm:hidden">
+                          Tickets
                         </span>
-                        <OrganizerField
-                          value={String(tier.quantity)}
-                          onChange={(input) =>
-                            updateTier(index, {
-                              quantity: Number(input.target.value) || 0,
-                            })
+                        <AmountField
+                          value={tier.quantity}
+                          onValueChange={(digits) =>
+                            updateTier(index, { quantity: Number(digits) || 0 })
                           }
-                          aria-label={`Tier ${index + 1} quantity`}
-                          inputMode="numeric"
-                          className="h-10 w-full text-right tabular-nums sm:w-[100px] sm:shrink-0"
+                          aria-label={`Tier ${index + 1} number of tickets`}
+                          className="h-10 w-full text-right sm:w-[100px] sm:shrink-0"
                         />
                       </label>
+
                       {draft.isPaid ? (
                         <label className="flex items-center gap-3 sm:contents">
-                          <span className="w-20 shrink-0 text-xs font-semibold text-muted-foreground sm:hidden">
-                            Price ₦
+                          <span className="w-24 shrink-0 text-xs font-semibold text-muted-foreground sm:hidden">
+                            Price (₦)
                           </span>
-                          <OrganizerField
-                            value={String(tier.priceNaira ?? 0)}
-                            onChange={(input) =>
+                          <AmountField
+                            value={tier.priceNaira ?? 0}
+                            onValueChange={(digits) =>
                               updateTier(index, {
-                                priceNaira: Number(input.target.value) || 0,
+                                priceNaira: Number(digits) || 0,
                               })
                             }
                             aria-label={`Tier ${index + 1} price in naira`}
-                            inputMode="numeric"
-                            className="h-10 w-full text-right tabular-nums sm:w-[120px] sm:shrink-0"
+                            className="h-10 w-full text-right sm:w-[120px] sm:shrink-0"
                           />
                         </label>
                       ) : null}
+
                       {draft.tiers.length > 1 ? (
                         <button
                           type="button"
@@ -741,33 +881,130 @@ const NewEventPage = () => {
                               ),
                             }))
                           }
-                          className="shrink-0 cursor-pointer p-1 text-muted-foreground transition-colors hover:text-destructive"
+                          className="shrink-0 cursor-pointer self-end p-1 text-muted-foreground transition-colors hover:text-destructive sm:self-auto"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       ) : null}
+
+                      {/* A tier that opens or closes on its own schedule is
+                          what "early bird" and "presale" both really are. */}
+                      <div className="w-full border-t border-border pt-3 sm:hidden" />
+                      <div className="flex w-full flex-col gap-2.5 sm:mt-2.5 sm:w-full sm:border-t sm:border-border sm:pt-3">
+                        {tier.availableFrom || tier.availableUntil ? (
+                          <div className="flex flex-col gap-2.5">
+                            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-[11px] font-semibold text-accent-foreground">
+                              <Zap className="h-3 w-3" />
+                              Sells on its own schedule
+                            </span>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                              <label className="flex-1">
+                                <span className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                                  On sale from
+                                </span>
+                                <OrganizerField
+                                  type="datetime-local"
+                                  value={tier.availableFrom ?? ""}
+                                  onChange={(input) =>
+                                    updateTier(index, {
+                                      availableFrom: input.target.value,
+                                    })
+                                  }
+                                  className="h-10"
+                                />
+                              </label>
+                              <label className="flex-1">
+                                <span className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                                  Until
+                                </span>
+                                <OrganizerField
+                                  type="datetime-local"
+                                  value={tier.availableUntil ?? ""}
+                                  onChange={(input) =>
+                                    updateTier(index, {
+                                      availableUntil: input.target.value,
+                                    })
+                                  }
+                                  className="h-10"
+                                  aria-invalid={Boolean(
+                                    issueFor(`tier.${index}.availableUntil`),
+                                  )}
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateTier(index, {
+                                    availableFrom: "",
+                                    availableUntil: "",
+                                  })
+                                }
+                                className="h-10 shrink-0 cursor-pointer text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                              >
+                                Always on sale
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateTier(index, {
+                                /* Opens now, closes when the organizer says. */
+                                availableFrom:
+                                  draft.salesStartsAt || todayLocal(),
+                                availableUntil: "",
+                              })
+                            }
+                            className="w-fit cursor-pointer text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            + Sell this tier early or for a limited time
+                          </button>
+                        )}
+                        <FieldError
+                          message={issueFor(`tier.${index}.availableUntil`)}
+                        />
+                      </div>
                     </Card>
                   ))}
                 </div>
 
                 {draft.tiers.length < 12 ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2.5"
-                    onClick={() =>
-                      setDraft((current) => ({
-                        ...current,
-                        tiers: [
-                          ...current.tiers,
-                          { name: "", quantity: 100, priceNaira: 0 },
-                        ],
-                      }))
-                    }
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add a tier
-                  </Button>
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setDraft((current) => ({
+                          ...current,
+                          tiers: [
+                            ...current.tiers,
+                            {
+                              name: "",
+                              quantity: 100,
+                              priceNaira: 0,
+                              availableFrom: "",
+                              availableUntil: "",
+                            },
+                          ],
+                        }))
+                      }
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add a tier
+                    </Button>
+
+                    {!hasEarlyTier ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={addEarlyBirdTier}
+                      >
+                        <Zap className="h-4 w-4" />
+                        Add an early-bird tier
+                      </Button>
+                    ) : null}
+                  </div>
                 ) : null}
 
                 {draft.isPaid && leadPrice > 0 ? (
@@ -787,7 +1024,11 @@ const NewEventPage = () => {
                           rows: [
                             ["Attendee pays", formatNairaAmount(leadPrice)],
                             ["Vera fee", `−${formatNairaAmount(feeOnLead)}`],
-                            ["You receive", formatNairaAmount(leadPrice - feeOnLead), true],
+                            [
+                              "You receive",
+                              formatNairaAmount(leadPrice - feeOnLead),
+                              true,
+                            ],
                           ],
                           foot: "Cleaner pricing. The number on the flyer is the number they pay.",
                         },
@@ -795,7 +1036,10 @@ const NewEventPage = () => {
                           mode: "passed_to_attendee" as const,
                           title: "Attendee covers it",
                           rows: [
-                            ["Attendee pays", formatNairaAmount(leadPrice + feeOnLead)],
+                            [
+                              "Attendee pays",
+                              formatNairaAmount(leadPrice + feeOnLead),
+                            ],
                             ["Vera fee", `−${formatNairaAmount(feeOnLead)}`],
                             ["You receive", formatNairaAmount(leadPrice), true],
                           ],
@@ -826,7 +1070,10 @@ const NewEventPage = () => {
                                 )}
                               >
                                 {selected ? (
-                                  <Check className="h-2.5 w-2.5" strokeWidth={4} />
+                                  <Check
+                                    className="h-2.5 w-2.5"
+                                    strokeWidth={4}
+                                  />
                                 ) : null}
                               </span>
                               <span
@@ -886,79 +1133,6 @@ const NewEventPage = () => {
                       />
                     </div>
 
-                    <Card className="mt-4 gap-0 py-0">
-                      <div className="flex items-center justify-between px-4 py-3.5">
-                        <div>
-                          <span className="block text-sm font-semibold">
-                            Run a presale
-                          </span>
-                          <span className="mt-0.5 block text-xs text-muted-foreground">
-                            A cheaper batch before general sale opens.
-                          </span>
-                        </div>
-                        <Switch
-                          checked={draft.presaleEnabled}
-                          onChange={(next) => set("presaleEnabled", next)}
-                          label="Run a presale"
-                        />
-                      </div>
-                      {draft.presaleEnabled ? (
-                        <>
-                          <hr className="ticket-perforation" />
-                          <div className="flex flex-col gap-4 px-4 py-4">
-                            <div className="flex flex-col gap-4 sm:flex-row">
-                              <label className="flex-1">
-                                <SectionLabel>Presale opens</SectionLabel>
-                                <OrganizerField
-                                  type="datetime-local"
-                                  value={draft.presaleStartsAt}
-                                  onChange={(input) =>
-                                    set("presaleStartsAt", input.target.value)
-                                  }
-                                />
-                              </label>
-                              <label className="flex-1">
-                                <SectionLabel>Presale closes</SectionLabel>
-                                <OrganizerField
-                                  type="datetime-local"
-                                  value={draft.presaleEndsAt}
-                                  onChange={(input) =>
-                                    set("presaleEndsAt", input.target.value)
-                                  }
-                                />
-                              </label>
-                            </div>
-                            <div className="flex flex-col gap-4 sm:flex-row">
-                              <label className="flex-1">
-                                <SectionLabel>How many</SectionLabel>
-                                <OrganizerField
-                                  value={draft.presaleQuantity}
-                                  onChange={(input) =>
-                                    set("presaleQuantity", input.target.value)
-                                  }
-                                  inputMode="numeric"
-                                  placeholder="200"
-                                  className="tabular-nums"
-                                />
-                              </label>
-                              <label className="flex-1">
-                                <SectionLabel>Presale price</SectionLabel>
-                                <OrganizerField
-                                  value={draft.presalePriceNaira}
-                                  onChange={(input) =>
-                                    set("presalePriceNaira", input.target.value)
-                                  }
-                                  inputMode="numeric"
-                                  placeholder="3500"
-                                  className="tabular-nums"
-                                />
-                              </label>
-                            </div>
-                          </div>
-                        </>
-                      ) : null}
-                    </Card>
-
                     <Card className="mt-3 gap-0 py-0">
                       <div className="flex items-center justify-between px-4 py-3.5">
                         <div>
@@ -991,7 +1165,10 @@ const NewEventPage = () => {
                                       "resaleMaxMarkupPercent",
                                       Math.min(
                                         100,
-                                        Math.max(0, Number(input.target.value) || 0),
+                                        Math.max(
+                                          0,
+                                          Number(input.target.value) || 0,
+                                        ),
                                       ),
                                     )
                                   }
@@ -999,7 +1176,9 @@ const NewEventPage = () => {
                                   aria-label="Maximum resale markup percent"
                                   className="h-10 w-20 text-right tabular-nums"
                                 />
-                                <span className="text-[13px] font-semibold">%</span>
+                                <span className="text-[13px] font-semibold">
+                                  %
+                                </span>
                               </span>
                             </label>
                             <div className="flex items-center justify-between gap-4">
@@ -1008,7 +1187,9 @@ const NewEventPage = () => {
                               </span>
                               <Switch
                                 checked={draft.resaleAllowBids}
-                                onChange={(next) => set("resaleAllowBids", next)}
+                                onChange={(next) =>
+                                  set("resaleAllowBids", next)
+                                }
                                 label="Accept resale bids"
                               />
                             </div>
@@ -1036,13 +1217,13 @@ const NewEventPage = () => {
                   {draft.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={draft.imageUrl}
+                      src={cloudinaryVariant(draft.imageUrl, "card")}
                       alt=""
                       className="h-[220px] w-full object-cover"
                     />
                   ) : (
                     <div className="flex h-[120px] items-center justify-center bg-muted text-xs text-muted-foreground">
-                      No cover image — it will show a placeholder in the feed
+                      No cover image. It will show a placeholder in the feed
                     </div>
                   )}
                   <div className="px-5 py-4">
@@ -1051,9 +1232,7 @@ const NewEventPage = () => {
                         {draft.name || "Untitled event"}
                       </span>
                       {draft.isPaid ? (
-                        <Badge>
-                          from {formatNairaAmount(cheapestTier)}
-                        </Badge>
+                        <Badge>from {formatNairaAmount(cheapestTier)}</Badge>
                       ) : (
                         <Badge variant="solid">Free</Badge>
                       )}
@@ -1133,7 +1312,9 @@ const NewEventPage = () => {
                   <Card className="gap-0 py-0">
                     {draft.tiers.map((tier, index) => (
                       <div key={index}>
-                        {index > 0 ? <hr className="ticket-perforation" /> : null}
+                        {index > 0 ? (
+                          <hr className="ticket-perforation" />
+                        ) : null}
                         <div className="flex items-center justify-between gap-4 px-5 py-3.5">
                           <div className="min-w-0">
                             <div className="truncate text-[13px] font-semibold">
@@ -1142,12 +1323,20 @@ const NewEventPage = () => {
                             <div className="text-xs text-muted-foreground tabular-nums">
                               {Number(tier.quantity).toLocaleString("en-NG")}{" "}
                               available
+                              {tier.availableUntil
+                                ? ` · until ${new Intl.DateTimeFormat("en-NG", {
+                                    day: "numeric",
+                                    month: "short",
+                                  }).format(new Date(tier.availableUntil))}`
+                                : ""}
                             </div>
                           </div>
                           <div className="shrink-0 text-right">
                             <div className="text-[13px] font-semibold tabular-nums">
                               {draft.isPaid
-                                ? formatNairaAmount(Number(tier.priceNaira) || 0)
+                                ? formatNairaAmount(
+                                    Number(tier.priceNaira) || 0,
+                                  )
                                 : "Free"}
                             </div>
                             <div className="text-xs text-muted-foreground tabular-nums">
@@ -1195,10 +1384,10 @@ const NewEventPage = () => {
                           : "As soon as it is published",
                       ],
                       [
-                        "Presale",
-                        draft.presaleEnabled
-                          ? `${draft.presaleQuantity || "?"} tickets${draft.presalePriceNaira ? ` at ${formatNairaAmount(Number(draft.presalePriceNaira))}` : ""}`
-                          : "Off",
+                        "Early access",
+                        hasEarlyTier
+                          ? `${draft.tiers.filter((tier) => tier.availableFrom).length} of ${draft.tiers.length} tiers sell on their own schedule`
+                          : "All tiers go on sale together",
                       ],
                       [
                         "Resale",
@@ -1212,13 +1401,15 @@ const NewEventPage = () => {
                       ],
                     ].map(([key, value], index) => (
                       <div key={String(key)}>
-                        {index > 0 ? <hr className="ticket-perforation" /> : null}
+                        {index > 0 ? (
+                          <hr className="ticket-perforation" />
+                        ) : null}
                         <div className="flex items-baseline justify-between gap-6 px-5 py-3">
                           <span className="shrink-0 text-[13px] text-muted-foreground">
                             {key}
                           </span>
                           <span className="min-w-0 text-right text-[13px] font-semibold">
-                            {value || "—"}
+                            {value || "-"}
                           </span>
                         </div>
                       </div>
@@ -1265,7 +1456,10 @@ const NewEventPage = () => {
                 <hr className="ticket-perforation" />
                 <div className="flex flex-col gap-2.5 px-4 py-4">
                   {draft.tiers.map((tier, index) => (
-                    <div key={index} className="flex justify-between text-[13px]">
+                    <div
+                      key={index}
+                      className="flex justify-between text-[13px]"
+                    >
                       <span className="min-w-0 truncate text-muted-foreground">
                         {tier.name || "Untitled"} &times; {tier.quantity}
                       </span>

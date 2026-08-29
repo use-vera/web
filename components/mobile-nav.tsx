@@ -57,7 +57,7 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
         open={confirmLogout}
         onOpenChange={setConfirmLogout}
         title="Sign out of Vera?"
-        description="Your tickets stay on your account — you will just need to sign back in to see them."
+        description="Your tickets stay on your account. You will just need to sign back in to see them."
         confirmLabel="Sign out"
         cancelLabel="Stay signed in"
         loading={logout.isPending}

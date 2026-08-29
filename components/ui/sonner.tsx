@@ -8,6 +8,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme="light"
       className="toaster group"
       position="top-center"
+      /* Validation errors list one field per line, so newlines must survive. */
+      toastOptions={{
+        classNames: { description: "whitespace-pre-line", title: "whitespace-pre-line" },
+      }}
       style={
         {
           "--normal-bg": "var(--popover)",

@@ -1,25 +1,18 @@
 "use client";
 
+import { ImageCropper } from "@/components/organizer/image-cropper";
 import Button from "@/components/ui/button";
 import { getApiErrorMessage } from "@/lib/api/error-message";
 import { useUploadImage } from "@/lib/hooks/use-organizer";
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
-const MAX_BYTES = 5 * 1024 * 1024;
-
-const readAsDataUri = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Couldn't read that file"));
-    reader.readAsDataURL(file);
-  });
+const MAX_BYTES = 10 * 1024 * 1024;
 
 /**
  * The backend takes a base64 data URI and stores it on Cloudinary, so the file
- * is read in the browser and posted as text — there is no multipart endpoint.
+ * is read in the browser and posted as text. There is no multipart endpoint.
  */
 export const ImageUpload = ({
   value,
@@ -30,8 +23,21 @@ export const ImageUpload = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadImage();
+  const [pendingSrc, setPendingSrc] = useState<string | null>(null);
 
-  const pick = async (file: File | undefined) => {
+  /* The object URL is created here, in an event handler, and revoked when the
+     cropper closes. The cropper itself only reads it. */
+  const closeCropper = () => {
+    setPendingSrc((current) => {
+      if (current) {
+        URL.revokeObjectURL(current);
+      }
+
+      return null;
+    });
+  };
+
+  const pick = (file: File | undefined) => {
     if (!file) {
       return;
     }
@@ -42,13 +48,20 @@ export const ImageUpload = ({
     }
 
     if (file.size > MAX_BYTES) {
-      toast.error("Images need to be under 5MB");
+      toast.error("Images need to be under 10MB");
       return;
     }
 
+    setPendingSrc(URL.createObjectURL(file));
+  };
+
+  /* The cropper hands back a 16:9 JPEG data URI, already sized for upload.
+     The original never leaves the browser. */
+  const uploadCrop = async (dataUri: string) => {
     try {
-      const asset = await upload.mutateAsync(await readAsDataUri(file));
+      const asset = await upload.mutateAsync(dataUri);
       onChange(asset.url);
+      closeCropper();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Couldn't upload that image"));
     }
@@ -61,7 +74,18 @@ export const ImageUpload = ({
         type="file"
         accept="image/*"
         className="sr-only"
-        onChange={(event) => void pick(event.target.files?.[0])}
+        onChange={(event) => {
+          pick(event.target.files?.[0]);
+          /* Allow re-picking the same file after a cancel. */
+          event.target.value = "";
+        }}
+      />
+
+      <ImageCropper
+        src={pendingSrc}
+        isUploading={upload.isPending}
+        onCancel={closeCropper}
+        onCropped={(dataUri) => void uploadCrop(dataUri)}
       />
 
       {value ? (
@@ -70,7 +94,7 @@ export const ImageUpload = ({
           <img
             src={value}
             alt="Event cover"
-            className="h-[200px] w-full object-cover"
+            className="aspect-[16/9] w-full object-cover"
           />
           <div className="absolute right-3 bottom-3 flex gap-2">
             <Button
@@ -99,7 +123,7 @@ export const ImageUpload = ({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={upload.isPending}
-          className="flex h-[200px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background transition-colors hover:border-primary hover:bg-muted/40 disabled:cursor-wait"
+          className="flex aspect-[16/9] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background transition-colors hover:border-primary hover:bg-muted/40 disabled:cursor-wait"
         >
           {upload.isPending ? (
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -110,7 +134,7 @@ export const ImageUpload = ({
             {upload.isPending ? "Uploading…" : "Add a cover image"}
           </span>
           <span className="text-xs text-muted-foreground">
-            JPG or PNG, up to 5MB. This is the first thing people see.
+            JPG or PNG, up to 10MB. Cropped to 16:9 so it fits everywhere.
           </span>
         </button>
       )}

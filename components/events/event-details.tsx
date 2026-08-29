@@ -142,7 +142,7 @@ export const EventDetails = ({
                 {longDate(event.nextOccurrenceAt)}
               </div>
               <div className="mt-0.5 text-[13px] text-muted-foreground">
-                {time(event.nextOccurrenceAt)} — {time(event.nextOccurrenceEndsAt)}
+                {time(event.nextOccurrenceAt)} to {time(event.nextOccurrenceEndsAt)}
                 {event.timezone ? ` · ${event.timezone}` : ""}
               </div>
             </div>
@@ -251,14 +251,40 @@ export const EventDetails = ({
                         {tier.name}
                       </div>
                       <div className="text-xs text-muted-foreground tabular-nums">
-                        {tier.quantity.toLocaleString("en-NG")} released
+                        {tier.availableFrom || tier.availableUntil
+                          ? [
+                              tier.availableFrom
+                                ? `from ${new Intl.DateTimeFormat("en-NG", {
+                                    day: "numeric",
+                                    month: "short",
+                                  }).format(new Date(tier.availableFrom))}`
+                                : null,
+                              tier.availableUntil
+                                ? `until ${new Intl.DateTimeFormat("en-NG", {
+                                    day: "numeric",
+                                    month: "short",
+                                  }).format(new Date(tier.availableUntil))}`
+                                : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" ")
+                          : `${tier.quantity.toLocaleString("en-NG")} released`}
                       </div>
                     </div>
                   </div>
-                  <span className="shrink-0 text-sm font-semibold tabular-nums">
-                    {tier.priceNaira > 0
-                      ? formatNairaAmount(tier.priceNaira)
-                      : "Free"}
+                  <span className="flex shrink-0 items-center gap-2">
+                    {tier.onSale === false ? (
+                      <Badge variant="outline">
+                        {tier.availabilityState === "upcoming"
+                          ? "Not yet"
+                          : "Closed"}
+                      </Badge>
+                    ) : null}
+                    <span className="text-sm font-semibold tabular-nums">
+                      {tier.priceNaira > 0
+                        ? formatNairaAmount(tier.priceNaira)
+                        : "Free"}
+                    </span>
                   </span>
                 </div>
               </div>

@@ -67,7 +67,7 @@ const RevealSecretDialog = ({
           </div>
 
           <Button onClick={onClose} className="mt-2">
-            {copied ? "Copied — done" : "I've saved it"}
+            {copied ? "Copied" : "I've saved it"}
           </Button>
         </div>
       </DialogContent>

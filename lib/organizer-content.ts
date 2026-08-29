@@ -15,7 +15,7 @@ export const ORGANIZER_FEATURES: OrganizerFeature[] = [
     icon: "ticket",
     title: "Sell every tier you need",
     description:
-      "General admission, VIP, early bird — set up as many ticket tiers as your event needs, in minutes.",
+      "General admission, VIP, early bird. Set up as many ticket tiers as your event needs, in minutes.",
   },
   {
     icon: "wallet",
@@ -33,7 +33,7 @@ export const ORGANIZER_FEATURES: OrganizerFeature[] = [
     icon: "shield",
     title: "Resale that can't get scalped",
     description:
-      "Fans can resell a ticket they can't use anymore, but only at face value — nobody profits off your event but you.",
+      "Fans can resell a ticket they can't use anymore, but only at face value. Nobody profits off your event but you.",
   },
   {
     icon: "sparkles",
@@ -45,7 +45,7 @@ export const ORGANIZER_FEATURES: OrganizerFeature[] = [
     icon: "message",
     title: "Community built in",
     description:
-      "Every ticket holder gets access to your event's group chat and moments feed — no extra setup required.",
+      "Every ticket holder gets access to your event's group chat and moments feed. No extra setup required.",
   },
 ];
 
@@ -58,7 +58,7 @@ export const ORGANIZER_FAQS: OrganizerFaq[] = [
   {
     question: "How much does it cost to list an event?",
     answer:
-      "Listing is free. Vera takes a 5% service fee only on tickets that actually sell — no monthly subscription, no setup cost.",
+      "Listing is free. Vera takes a 5% service fee only on tickets that actually sell. No monthly subscription, no setup cost.",
   },
   {
     question: "When do I get paid?",
@@ -78,7 +78,7 @@ export const ORGANIZER_FAQS: OrganizerFaq[] = [
   {
     question: "Do I need a registered business to host?",
     answer:
-      "No. Individuals and registered businesses can both host events on Vera — you'll just need a valid bank account for payouts.",
+      "No. Individuals and registered businesses can both host events on Vera. You'll just need a valid bank account for payouts.",
   },
   {
     question: "Can I manage more than one event at a time?",

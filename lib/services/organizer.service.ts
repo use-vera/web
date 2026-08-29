@@ -44,8 +44,8 @@ export const organizerService = {
 
   /**
    * The organizer's own view of one event. Goes through the authenticated
-   * route rather than the public one so drafts and cancelled events — which
-   * the public endpoint hides — still resolve for their owner.
+   * route rather than the public one so drafts and cancelled events, which
+   * the public endpoint hides. Still resolve for their owner.
    */
   getEvent: async (eventId: string): Promise<OrganizerEventDetails> =>
     unwrap(
@@ -94,6 +94,18 @@ export const organizerService = {
         { params: query },
       ),
     ),
+
+  deleteEvent: async (eventId: string): Promise<{ deleted: boolean }> =>
+    unwrap(
+      await clientHttp.delete<ApiEnvelope<{ deleted: boolean }>>(
+        `/organizer/events/${eventId}`,
+      ),
+    ),
+
+  /** Announces a change in the event's channel, where ticket holders see it. */
+  postEventMessage: async (eventId: string, message: string): Promise<void> => {
+    await clientHttp.post(`/organizer/events/${eventId}/chat`, { message });
+  },
 
   /* --- attendees --- */
 

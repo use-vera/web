@@ -17,7 +17,7 @@ const dayKey = (date: Date) =>
  * than rows, so a single purchase of four tickets counts as four.
  *
  * Tickets come from a paged endpoint capped at 50 rows, so this describes the
- * tickets actually loaded — not the event's whole sales history. Label it as
+ * tickets actually loaded. Not the event's whole sales history. Label it as
  * such wherever it is drawn.
  */
 export const buildDailySeries = (

@@ -11,7 +11,7 @@ import { Clock, TriangleAlert } from "lucide-react";
  * The seller accepted your offer, so this ticket is held for you until the
  * deadline the backend stamped (acceptedBidExpiresAt / the bid's expiresAt).
  * Miss it and the offer expires, the listing goes back on the market, and
- * anyone can buy it — so the deadline is the loudest thing here.
+ * anyone can buy it, so the deadline is the loudest thing here.
  */
 export const ReservedForYou = ({
   ticket,
@@ -82,7 +82,7 @@ export const ReservedForYou = ({
               )}
             >
               <Clock className="h-5 w-5" />
-              {remaining ?? "—"}
+              {remaining ?? "-"}
             </div>
           </div>
         ) : null}

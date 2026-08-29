@@ -17,7 +17,7 @@ const FeedScreen = () => (
         <div className="h-8 w-8 rounded-full border-2 border-white/40 bg-white/20" />
         <div className="flex flex-col">
           <span className="text-xs font-semibold text-white">
-            Afrobeats Night — Lagos
+            Afrobeats Night, Lagos
           </span>
           <span className="text-[10px] text-white/60">2h ago</span>
         </div>
@@ -61,7 +61,7 @@ const TicketScreen = () => (
           </span>
         </div>
         <span className="text-sm font-bold text-card-foreground">
-          Afrobeats Night — Lagos
+          Afrobeats Night, Lagos
         </span>
         <span className="text-xs text-muted-foreground">
           Sat, Jul 12 · 9:00 PM · Landmark Beach

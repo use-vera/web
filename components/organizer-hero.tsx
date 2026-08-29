@@ -14,7 +14,7 @@ const OrganizerHero = () => {
       </h1>
 
       <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-foreground/70 sm:text-base">
-        Sell tickets, verify entry, control resale, and get discovered — all
+        Sell tickets, verify entry, control resale, and get discovered, all
         from one dashboard, with payouts that land in your account
         automatically.
       </p>

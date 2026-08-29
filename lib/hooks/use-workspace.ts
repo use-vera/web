@@ -23,8 +23,8 @@ export const useCreateWorkspace = () => {
 };
 
 /**
- * Resolves "the workspace this session's Developer Portal operates on" —
- * the first workspace the user belongs to, auto-creating one silently if
+ * Resolves "the workspace this session's Developer Portal operates on".
+ * The first workspace the user belongs to, auto-creating one silently if
  * they have none yet (zero-friction onboarding, matching how the mobile
  * wallet row is always visible rather than gated behind an explicit
  * "become an organizer" step).

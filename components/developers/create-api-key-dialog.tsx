@@ -53,7 +53,7 @@ const CreateApiKeyDialog = ({
     }
 
     try {
-      // Every key starts in test mode — switch to live from the API keys
+      // Every key starts in test mode. Switch to live from the API keys
       // page once you're ready to go live.
       const key = await createApiKey.mutateAsync({ label, mode: "test", scopes });
       reset();

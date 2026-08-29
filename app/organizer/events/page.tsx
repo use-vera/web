@@ -24,7 +24,7 @@ const PAGE_SIZE = 20;
 
 const FILTERS: { value: EventStatusFilter; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "published", label: "Live" },
+  { value: "published", label: "Published" },
   { value: "draft", label: "Drafts" },
   { value: "cancelled", label: "Cancelled" },
 ];
@@ -48,7 +48,7 @@ const OrganizerEventsPage = () => {
 
   /**
    * Headline numbers are derived from the page we already have rather than a
-   * second round trip — the backend has no organizer summary endpoint yet, so
+   * second round trip. The backend has no organizer summary endpoint yet, so
    * these describe the events listed, not the whole account.
    */
   const totals = useMemo(() => {

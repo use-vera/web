@@ -17,7 +17,7 @@ export interface WorkspaceMembershipApi {
   joinedAt: string;
 }
 
-/** listWorkspaces() shape — one entry per membership, workspace populated. */
+/** listWorkspaces() shape, one entry per membership, workspace populated. */
 export interface WorkspaceMembershipEntry {
   membership: WorkspaceMembershipApi;
   workspace: WorkspaceApi;
@@ -82,7 +82,7 @@ export interface CreateApiKeyPayload {
 }
 
 export interface CreateApiKeyResponse extends ApiKeyApi {
-  // Shown exactly once, only on the creation response — never retrievable
+  // Shown exactly once, only on the creation response. Never retrievable
   // again after this.
   secretKey: string;
 }

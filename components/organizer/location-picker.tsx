@@ -25,7 +25,7 @@ export interface EventLocation {
   geofenceRadiusMeters: number;
 }
 
-/** Lagos — the same fallback centre the mobile map uses. */
+/** Lagos. The same fallback centre the mobile map uses. */
 export const DEFAULT_LOCATION: EventLocation = {
   address: "",
   state: "",

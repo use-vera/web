@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Unlike every other organizer route this one streams a file rather than the
- * JSON envelope, so it can't go through the shared proxy — it forwards the
+ * JSON envelope, so it can't go through the shared proxy. It forwards the
  * body bytes plus the content-type and filename the backend set.
  */
 export async function GET(

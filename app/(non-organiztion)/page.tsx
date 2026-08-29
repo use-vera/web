@@ -30,7 +30,7 @@ export default function Home() {
           eyebrow="Moments"
           eyebrowIcon={Images}
           title="A feed built for what actually happened."
-          description="For You, This Week, My Circle — photos, videos and text updates from events you care about, with real comments, not just likes."
+          description="For You, This Week, My Circle: photos, videos and text updates from events you care about, with real comments, not just likes."
           bullets={[
             "Multi-photo and video moments in one post",
             "Comment threads on every moment",

@@ -1,14 +1,21 @@
 "use client";
 
-import { EmptyState, ErrorState } from "@/components/organizer/organizer-primitives";
+import {
+  EmptyState,
+  ErrorState,
+} from "@/components/organizer/organizer-primitives";
 import { Pagination } from "@/components/pagination";
 import Badge from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cloudinaryVariant } from "@/lib/cloudinary";
 import { formatNairaAmount } from "@/lib/format-currency";
 import { useMyTickets } from "@/lib/hooks/use-tickets";
-import { type MyTicketApi, type TicketEventSummaryApi } from "@/lib/types/event";
+import {
+  type MyTicketApi,
+  type TicketEventSummaryApi,
+} from "@/lib/types/event";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Clock, MapPin, Ticket } from "lucide-react";
 import Link from "next/link";
@@ -16,7 +23,9 @@ import { useState } from "react";
 
 const PAGE_SIZE = 20;
 
-const eventOf = (eventId: MyTicketApi["eventId"]): TicketEventSummaryApi | null =>
+const eventOf = (
+  eventId: MyTicketApi["eventId"],
+): TicketEventSummaryApi | null =>
   typeof eventId === "string" ? null : eventId;
 
 const AccountTicketsPage = () => {
@@ -68,7 +77,16 @@ const AccountTicketsPage = () => {
                   className="flex items-center gap-4 rounded-sm p-4 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus-visible:outline-none"
                 >
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                    <Ticket className="h-5 w-5" />
+                    {event?.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={cloudinaryVariant(event.imageUrl, "thumb")}
+                        alt=""
+                        className="h-full w-full object-cover rounded-sm"
+                      />
+                    ) : (
+                      <Ticket className="h-5.5 w-5.5 rounded-sm" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">

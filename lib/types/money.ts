@@ -2,7 +2,7 @@ import { type PublicEventApi } from "@/lib/types/event";
 
 /**
  * Wallet amounts are stored and returned in KOBO (backend: nairaToKobo =
- * naira * 100). Convert at the display boundary with koboToNaira — never
+ * naira * 100). Convert at the display boundary with koboToNaira. Never
  * render a *Kobo field directly.
  */
 export const koboToNaira = (kobo: number) => Math.round((kobo || 0) / 100);

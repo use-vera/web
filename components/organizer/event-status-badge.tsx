@@ -31,9 +31,28 @@ export const EventStatusBadge = ({ event }: { event: OrganizerEventApi }) => {
     return <Badge variant="solid">Sold out</Badge>;
   }
 
+  if (badge === "scheduled") {
+    return (
+      <Badge variant="outline">
+        <Dot className="bg-muted-foreground" />
+        Scheduled
+      </Badge>
+    );
+  }
+
+  if (badge === "on-sale") {
+    return (
+      <Badge>
+        <Dot className="bg-primary" />
+        On sale
+      </Badge>
+    );
+  }
+
+  /* Doors are open right now. */
   return (
-    <Badge>
-      <Dot className="bg-primary" />
+    <Badge variant="solid">
+      <Dot className="animate-pulse bg-primary-foreground" />
       Live
     </Badge>
   );

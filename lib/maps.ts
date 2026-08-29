@@ -35,7 +35,7 @@ export const googleMapsDirectionsUrl = (target: MapTarget) => {
   return url.toString();
 };
 
-/** A pin rather than a route — for "where is this?" rather than "take me there". */
+/** A pin rather than a route, for "where is this?" rather than "take me there". */
 export const googleMapsSearchUrl = (target: MapTarget) => {
   const url = new URL("https://www.google.com/maps/search/");
   url.searchParams.set("api", "1");

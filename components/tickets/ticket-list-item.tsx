@@ -51,6 +51,7 @@ const TicketListItem = ({ ticket, onSelect }: TicketListItemProps) => {
           imageUrl={event?.imageUrl}
           alt={event?.name}
           className="h-full w-full"
+          variant="thumb"
         />
       </div>
 

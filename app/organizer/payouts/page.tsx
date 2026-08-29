@@ -44,7 +44,7 @@ const FILTERS = [
 const eventNameOf = (eventId: WalletTransactionApi["eventId"]) =>
   eventId && typeof eventId !== "string" ? eventId.name : null;
 
-/** "Platform fee for Afrobeats Night" — the bare label when no event is tied. */
+/** "Platform fee for Afrobeats Night". The bare label when no event is tied. */
 const titleOf = (transaction: WalletTransactionApi) => {
   const label = TYPE_LABELS[transaction.type] ?? "Transaction";
   const eventName = eventNameOf(transaction.eventId);

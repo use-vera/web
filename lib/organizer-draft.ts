@@ -23,11 +23,6 @@ export interface EventDraft {
   feeMode: "absorbed_by_organizer" | "passed_to_attendee";
   tiers: EventTicketCategoryPayload[];
   salesStartsAt: string;
-  presaleEnabled: boolean;
-  presaleStartsAt: string;
-  presaleEndsAt: string;
-  presaleQuantity: string;
-  presalePriceNaira: string;
   resaleEnabled: boolean;
   resaleAllowBids: boolean;
   resaleMaxMarkupPercent: number;
@@ -46,7 +41,8 @@ export const grossIfSoldOut = (draft: EventDraft) =>
       )
     : 0;
 
-const toIso = (local: string) => (local ? new Date(local).toISOString() : null);
+const toIso = (local: string | null | undefined) =>
+  local ? new Date(local).toISOString() : null;
 
 /** Turns the form's local-time strings and blanks into the API's payload shape. */
 export const draftToPayload = (
@@ -73,10 +69,19 @@ export const draftToPayload = (
     feeMode: draft.feeMode,
     ticketPriceNaira: draft.isPaid ? leadPrice : 0,
     expectedTickets: capacityOf(draft),
+    /*
+     * A presale is stored as ONE quantity and ONE price on the event, with no
+     * field tying it to a tier, so the backend rejects presale alongside
+     * ticket categories. A single tier is conceptually the same thing as base
+     * pricing, so it is sent that way to keep presale usable; more than one
+     * tier is a genuine conflict and is caught in getStepIssues.
+     */
     ticketCategories: draft.tiers.map((tier) => ({
       name: tier.name.trim(),
       quantity: Number(tier.quantity) || 0,
       priceNaira: draft.isPaid ? Number(tier.priceNaira) || 0 : 0,
+      availableFrom: toIso(tier.availableFrom),
+      availableUntil: toIso(tier.availableUntil),
     })),
     recurrence:
       draft.recurrenceType === "none"
@@ -93,19 +98,11 @@ export const draftToPayload = (
               ? { endsOn: new Date(draft.recurrenceEndsOn).toISOString() }
               : {}),
           },
+    /* Early access is expressed per tier now, so the event-level presale
+       block stays off for anything created here. */
     sales: {
       startsAt: toIso(draft.salesStartsAt),
-      presaleEnabled: draft.presaleEnabled,
-      presaleStartsAt: draft.presaleEnabled
-        ? toIso(draft.presaleStartsAt)
-        : null,
-      presaleEndsAt: draft.presaleEnabled ? toIso(draft.presaleEndsAt) : null,
-      ...(draft.presaleEnabled && draft.presaleQuantity
-        ? { presaleQuantity: Number(draft.presaleQuantity) }
-        : {}),
-      ...(draft.presaleEnabled && draft.presalePriceNaira
-        ? { presalePriceNaira: Number(draft.presalePriceNaira) }
-        : {}),
+      presaleEnabled: false,
     },
     resale: {
       enabled: draft.resaleEnabled,
@@ -117,39 +114,146 @@ export const draftToPayload = (
   };
 };
 
-/** Which steps are complete enough to move past. */
-export const validateStep = (draft: EventDraft, step: number) => {
+export interface DraftIssue {
+  /** Matches the form field key so the message can render beside its input. */
+  field: string;
+  message: string;
+}
+
+/**
+ * Every problem on a step, not just whether it passes. Returning the issues
+ * lets the form say what is wrong beside the field instead of silently
+ * disabling Continue and leaving the organizer to guess.
+ *
+ * These mirror createEventSchema so the browser catches what the server would.
+ */
+export const getStepIssues = (
+  draft: EventDraft,
+  step: number,
+): DraftIssue[] => {
+  const issues: DraftIssue[] = [];
+
   if (step === 0) {
-    return draft.name.trim().length >= 2;
+    const name = draft.name.trim();
+
+    if (name.length === 0) {
+      issues.push({ field: "name", message: "Give the event a name." });
+    } else if (name.length < 2) {
+      issues.push({ field: "name", message: "Needs at least 2 characters." });
+    }
   }
 
   if (step === 1) {
-    return (
-      draft.location.address.trim().length >= 2 &&
-      Number.isFinite(draft.location.latitude) &&
-      Number.isFinite(draft.location.longitude)
-    );
+    if (draft.location.address.trim().length < 2) {
+      issues.push({
+        field: "address",
+        message: "Search a venue, use your location, or drop a pin.",
+      });
+    }
+
+    if (
+      !Number.isFinite(draft.location.latitude) ||
+      !Number.isFinite(draft.location.longitude)
+    ) {
+      issues.push({
+        field: "location",
+        message: "Pick a point on the map so tickets can scan at the door.",
+      });
+    }
   }
 
   if (step === 2) {
-    if (!draft.startsAt || !draft.endsAt) {
-      return false;
+    if (!draft.startsAt) {
+      issues.push({ field: "startsAt", message: "Set when doors open." });
     }
 
-    if (new Date(draft.endsAt) <= new Date(draft.startsAt)) {
-      return false;
+    if (!draft.endsAt) {
+      issues.push({ field: "endsAt", message: "Set when it ends." });
     }
 
-    return !(draft.recurrenceType === "weekly" && draft.recurrenceDays.length === 0);
+    if (
+      draft.startsAt &&
+      draft.endsAt &&
+      new Date(draft.endsAt) <= new Date(draft.startsAt)
+    ) {
+      issues.push({
+        field: "endsAt",
+        message: "The end time has to be after the start time.",
+      });
+    }
+
+    if (draft.recurrenceType === "weekly" && draft.recurrenceDays.length === 0) {
+      issues.push({
+        field: "recurrenceDays",
+        message: "Pick at least one day for a weekly event.",
+      });
+    }
   }
 
   if (step === 3) {
-    return (
-      capacityOf(draft) > 0 &&
-      draft.tiers.every((tier) => tier.name.trim().length >= 1) &&
-      (!draft.isPaid || draft.tiers.some((tier) => (tier.priceNaira ?? 0) > 0))
-    );
+    draft.tiers.forEach((tier, index) => {
+      if (tier.name.trim().length === 0) {
+        issues.push({
+          field: `tier.${index}.name`,
+          message: "Name this tier.",
+        });
+      }
+
+      if (!Number(tier.quantity)) {
+        issues.push({
+          field: `tier.${index}.quantity`,
+          message: "How many tickets are in this tier?",
+        });
+      }
+    });
+
+    if (capacityOf(draft) === 0 && draft.tiers.length > 0) {
+      issues.push({
+        field: "capacity",
+        message: "Total capacity cannot be zero.",
+      });
+    }
+
+    if (draft.isPaid && !draft.tiers.some((tier) => (tier.priceNaira ?? 0) > 0)) {
+      issues.push({
+        field: "tier.0.priceNaira",
+        message: "A paid event needs at least one tier priced above zero.",
+      });
+    }
+
+    draft.tiers.forEach((tier, index) => {
+      if (
+        tier.availableFrom &&
+        tier.availableUntil &&
+        new Date(tier.availableUntil) <= new Date(tier.availableFrom)
+      ) {
+        issues.push({
+          field: `tier.${index}.availableUntil`,
+          message: `"${tier.name || `Tier ${index + 1}`}" must close after it opens.`,
+        });
+      }
+    });
+
+    /* Every tier opening later would mean nothing is ever on sale. */
+    if (
+      draft.tiers.length > 0 &&
+      draft.tiers.every((tier) => Boolean(tier.availableFrom)) &&
+      draft.startsAt &&
+      draft.tiers.every(
+        (tier) => new Date(tier.availableFrom as string) >= new Date(draft.startsAt),
+      )
+    ) {
+      issues.push({
+        field: "tierWindows",
+        message:
+          "Every tier opens at or after the event starts, so nothing would ever be on sale.",
+      });
+    }
   }
 
-  return true;
+  return issues;
 };
+
+/** Which steps are complete enough to move past. */
+export const validateStep = (draft: EventDraft, step: number) =>
+  getStepIssues(draft, step).length === 0;

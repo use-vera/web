@@ -11,7 +11,7 @@ export const formatNaira = (amountNaira: number) => {
 };
 
 /**
- * Like formatNaira but never collapses zero to "Free" — a revenue figure of
+ * Like formatNaira but never collapses zero to "Free". A revenue figure of
  * ₦0 is a real number, not a free ticket.
  */
 export const formatNairaAmount = (amountNaira: number) =>

@@ -139,7 +139,7 @@ export const LocationMap = ({
   }, []);
 
   /* Keep the pin and circle in step when the coordinates change from
-     elsewhere — a venue picked from search, or "use my location". */
+     elsewhere. A venue picked from search, or "use my location". */
   useEffect(() => {
     if (!mapRef.current || !markerRef.current || !circleRef.current) {
       return;
@@ -166,7 +166,7 @@ export const LocationMap = ({
       className={cn(
         // `isolate` is load-bearing: Leaflet's panes and controls carry
         // z-index 400–800 of their own, which would otherwise paint over
-        // anything lower in the same stacking context — dialogs (z-50) and
+        // anything lower in the same stacking context. Dialogs (z-50) and
         // the sticky header included. Isolating the container traps those
         // z-indices inside it.
         "isolate w-full overflow-hidden rounded-md border border-border [&_.leaflet-container]:font-sans",

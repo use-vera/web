@@ -7,7 +7,7 @@ import { type ReactNode } from "react";
 
 /**
  * Destructive confirmation. The consequence goes in the body, and the confirm
- * button names the action rather than saying "OK" — the same verb the user
+ * button names the action rather than saying "OK". The same verb the user
  * clicked to get here.
  */
 export const ConfirmDialog = ({

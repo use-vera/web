@@ -52,7 +52,7 @@ const WithdrawPage = () => {
     (value) => value <= availableNaira,
   );
 
-  /* The bank check runs on demand rather than per keystroke — it is a real
+  /* The bank check runs on demand rather than per keystroke. It is a real
      lookup against the bank, not a format check. */
   const checkAccount = async () => {
     try {
@@ -115,7 +115,7 @@ const WithdrawPage = () => {
                   <div className="flex h-16 items-center gap-2 rounded-md border border-border bg-background px-4 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30">
                     <span className="text-xl text-muted-foreground">₦</span>
                     <input
-                      value={amount}
+                      value={amount ? Number(amount).toLocaleString("en-NG") : ""}
                       onChange={(input) =>
                         setAmount(input.target.value.replace(/[^0-9]/g, ""))
                       }

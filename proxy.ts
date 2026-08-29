@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 /**
  * Mirrors the cookie name in lib/session.ts. Proxy can't use the
  * `next/headers` cookies() API (that's for Route Handlers/Server Components),
- * so it reads the raw cookie off the request instead — this is only an
+ * so it reads the raw cookie off the request instead. This is only an
  * optimistic "is there a session at all" check, not a token verification.
  * The real check still happens server-side wherever the BFF forwards the
  * bearer token to the backend.

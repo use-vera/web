@@ -3,10 +3,15 @@
 import { OrganizerField } from "@/components/organizer/organizer-field";
 import { Eyebrow, Meter } from "@/components/organizer/organizer-primitives";
 import { QrScanner } from "@/components/organizer/qr-scanner";
+import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getApiErrorMessage } from "@/lib/api/error-message";
 import { clockLabel } from "@/lib/event-status";
+import { ScanResultPanel } from "@/components/organizer/scan-result-panel";
+import { useCheckInConflicts } from "@/lib/hooks/use-door-admin";
+import { useDoorMode } from "@/lib/hooks/use-door-mode";
+import { type ScanDecision } from "@/lib/checkin/validate";
 import {
   useCheckInTicket,
   useEventTickets,
@@ -14,7 +19,13 @@ import {
 } from "@/lib/hooks/use-organizer";
 import { type TicketCheckInResponse } from "@/lib/types/organizer";
 import { cn } from "@/lib/utils";
-import { Check, ScanLine, TriangleAlert } from "lucide-react";
+import {
+  Check,
+  Download,
+  ScanLine,
+  TriangleAlert,
+  WifiOff,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -40,6 +51,11 @@ const CheckInPage = () => {
   const [result, setResult] = useState<TicketCheckInResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<ScanEntry[]>([]);
+  const [localResult, setLocalResult] = useState<ScanDecision | null>(null);
+  const [lane, setLane] = useState("");
+  const conflictsQuery = useCheckInConflicts(eventId);
+  const door = useDoorMode(eventId, () => void conflictsQuery.refetch());
+  const conflicts = conflictsQuery.data?.items ?? [];
   const [admittedDelta, setAdmittedDelta] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -80,6 +96,42 @@ const CheckInPage = () => {
     }
 
     setError(null);
+
+    /* Offline mode decides locally and queues. No request, no waiting. The
+       server re-validates every queued scan when the sync lands. */
+    if (door.status === "ready") {
+      const decision = await door.scan(trimmed);
+
+      if (decision) {
+        const ok = decision.outcome === "admitted";
+
+        setResult(null);
+        setLocalResult(decision);
+        setHistory((current) =>
+          [
+            {
+              id: `${decision.hash}-${Date.now()}`,
+              name: decision.entry?.name ?? "Unknown code",
+              tier: decision.entry?.tier ?? "",
+              at: clockLabel(decision.scannedAt),
+              ok,
+              detail: ok ? undefined : decision.message.toLowerCase(),
+            },
+            ...current,
+          ].slice(0, 6),
+        );
+
+        if (ok) {
+          setAdmittedDelta((current) => current + 1);
+        } else {
+          setError(decision.message);
+        }
+      }
+
+      setCode("");
+      inputRef.current?.focus();
+      return;
+    }
 
     try {
       const response = await checkIn.mutateAsync({ code: trimmed, eventId });
@@ -122,6 +174,136 @@ const CheckInPage = () => {
 
   return (
     <div className="px-4 pt-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+      {/* Door mode: prepare while there is signal, then scan with none. */}
+      <Card className="mb-3.5 flex-col items-start gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
+        <span
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+            door.status === "ready"
+              ? "bg-accent text-accent-foreground"
+              : "bg-muted text-muted-foreground",
+          )}
+        >
+          {door.status === "ready" ? (
+            <WifiOff className="h-[17px] w-[17px]" />
+          ) : (
+            <Download className="h-[17px] w-[17px]" />
+          )}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[13px] font-semibold">
+              {door.status === "ready"
+                ? "Door mode is on. Scans work with no signal"
+                : "Door mode is off"}
+            </span>
+            {door.status === "ready" ? (
+              <>
+                <Badge variant={door.online ? "default" : "outline"}>
+                  {door.online ? "Online" : "Offline"}
+                </Badge>
+                {door.meta?.laneLabel ? (
+                  <Badge variant="outline">{door.meta.laneLabel}</Badge>
+                ) : null}
+              </>
+            ) : null}
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+            {door.status === "ready"
+              ? `${door.rosterCount.toLocaleString("en-NG")} tickets held · ${door.pendingCount} waiting to sync${
+                  door.syncing ? " · syncing" : ""
+                }`
+              : "Download the guest list once, then the door keeps working if the network drops."}
+          </div>
+          {door.error ? (
+            <p className="mt-1.5 text-xs font-semibold text-destructive">
+              {door.error}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="flex shrink-0 gap-2">
+          {door.status === "ready" ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 text-xs"
+              disabled={!door.online || door.syncing}
+              onClick={() => void door.sync()}
+            >
+              Sync now
+            </Button>
+          ) : null}
+          {door.status !== "ready" ? (
+            <OrganizerField
+              value={lane}
+              onChange={(input) => setLane(input.target.value)}
+              placeholder="Door 1"
+              aria-label="Name this door"
+              className="h-9 w-[110px] text-xs"
+              maxLength={60}
+            />
+          ) : null}
+          <Button
+            size="sm"
+            variant={door.status === "ready" ? "outline" : "default"}
+            className="h-9 text-xs"
+            loading={door.status === "preparing"}
+            disabled={!door.online}
+            onClick={() => void door.prepare(lane)}
+          >
+            {door.status === "ready" ? "Refresh list" : "Turn on door mode"}
+          </Button>
+        </div>
+      </Card>
+
+      {conflicts.length > 0 ? (
+        <Card className="mb-3.5 gap-0 py-0">
+          <div className="flex items-center justify-between px-4 py-3.5 sm:px-5">
+            <div className="flex items-center gap-2.5">
+              <TriangleAlert className="h-4 w-4 shrink-0 text-destructive" />
+              <span className="text-[13px] font-semibold">
+                {conflicts.length === 1
+                  ? "1 ticket was scanned at two doors"
+                  : `${conflicts.length} tickets were scanned at two doors`}
+              </span>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Found on sync
+            </span>
+          </div>
+          <hr className="ticket-perforation" />
+          <div className="px-4 py-1 pb-2.5 sm:px-5">
+            {conflicts.slice(0, 5).map((conflict) => (
+              <div
+                key={`${conflict.ticketCode}-${conflict.rescannedAt}`}
+                className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-2.5"
+              >
+                <span className="text-[13px] font-semibold">
+                  {conflict.attendeeName || conflict.ticketCode}
+                </span>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  {conflict.ticketCode}
+                </span>
+                <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                  admitted {conflict.admittedLane ?? "unknown door"}
+                  {conflict.admittedAt ? ` ${clockLabel(conflict.admittedAt)}` : ""}
+                  {" · "}
+                  rescanned {conflict.rescannedLane ?? "unknown door"}{" "}
+                  {clockLabel(conflict.rescannedAt)}
+                </span>
+              </div>
+            ))}
+            {conflicts.length > 5 ? (
+              <p className="py-2 text-xs text-muted-foreground tabular-nums">
+                and {conflicts.length - 5} more
+              </p>
+            ) : null}
+          </div>
+        </Card>
+      ) : null}
+
       <Card className="mb-3.5 flex-col items-stretch gap-4 px-4 py-4 sm:flex-row sm:items-center sm:gap-7 sm:px-5">
         <div>
           <Eyebrow>Admitted</Eyebrow>
@@ -187,135 +369,64 @@ const CheckInPage = () => {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-          {result ? (
-            <div
-              className={cn(
-                "rounded-sm px-4 pt-5 pb-6.5 outline outline-foreground/10 -outline-offset-1 sm:px-5.5",
-                admittedNow ? "bg-accent" : "bg-destructive/12",
+          {localResult ? (
+            <ScanResultPanel
+              ok={localResult.outcome === "admitted"}
+              headline={
+                localResult.outcome === "admitted"
+                  ? "Admitted"
+                  : localResult.message
+              }
+              headlineTime={clockLabel(localResult.scannedAt)}
+              eventName={event?.name}
+              attendeeName={localResult.entry?.name ?? "Unknown ticket"}
+              detailLine={
+                localResult.entry
+                  ? `${localResult.entry.tier}${
+                      localResult.entry.seats > 1
+                        ? ` · ${localResult.entry.seats} tickets`
+                        : ""
+                    }`
+                  : "Not on this event's guest list"
+              }
+              reference={localResult.ticketCode}
+              secondaryLabel={
+                localResult.previouslyAdmittedAt ? "First scanned" : undefined
+              }
+              secondaryValue={
+                localResult.previouslyAdmittedAt
+                  ? clockLabel(localResult.previouslyAdmittedAt)
+                  : undefined
+              }
+              stubLabel={
+                localResult.outcome === "admitted" ? "Admitted" : "Refused"
+              }
+              stubTime={clockLabel(localResult.scannedAt)}
+              note="Recorded on this device. It reaches the server on the next sync."
+            />
+          ) : result ? (
+            <ScanResultPanel
+              ok={Boolean(admittedNow)}
+              headline={admittedNow ? "Admitted" : "Already used"}
+              headlineTime={clockLabel(
+                result.checkedInAt ?? result.ticket.usedAt,
               )}
-            >
-              <div className="flex items-center gap-2.5">
-                <span
-                  className={cn(
-                    "flex h-6.5 w-6.5 items-center justify-center rounded-full",
-                    admittedNow
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-destructive text-destructive-foreground",
-                  )}
-                >
-                  {admittedNow ? (
-                    <Check className="h-[15px] w-[15px]" strokeWidth={3} />
-                  ) : (
-                    <TriangleAlert className="h-[15px] w-[15px]" />
-                  )}
-                </span>
-                <span
-                  className={cn(
-                    "text-[17px] font-bold tracking-[-0.01em]",
-                    admittedNow ? "text-accent-foreground" : "text-destructive",
-                  )}
-                >
-                  {admittedNow ? "Admitted" : "Already used"}
-                </span>
-                <span
-                  className={cn(
-                    "ml-auto text-[13px] font-semibold tabular-nums",
-                    admittedNow ? "text-accent-foreground" : "text-destructive",
-                  )}
-                >
-                  {clockLabel(result.checkedInAt ?? result.ticket.usedAt)}
-                </span>
-              </div>
-
-              {/* The tear: an admitted ticket splits along Vera's perforation,
-                  the counterfoil kicked loose from the body. */}
-              <div className="mt-4.5 flex flex-col sm:flex-row sm:items-stretch">
-                <div className="min-w-0 flex-1 rounded-l-sm bg-card px-5 py-4.5 outline outline-foreground/10 -outline-offset-1">
-                  <Eyebrow>{event?.name}</Eyebrow>
-                  <div className="mt-1.5 text-[19px] font-bold tracking-[-0.01em]">
-                    {result.ticket.attendeeName}
-                  </div>
-                  <div className="mt-0.5 text-[13px] text-muted-foreground">
-                    {result.ticket.ticketCategoryName || "General"} &middot;{" "}
-                    {result.ticket.quantity}{" "}
-                    {result.ticket.quantity === 1 ? "ticket" : "tickets"}
-                  </div>
-                  <div className="mt-4 flex gap-5.5">
-                    <div>
-                      <Eyebrow className="text-[10px]">Reference</Eyebrow>
-                      <div className="mt-0.5 font-mono text-[13px] font-semibold">
-                        {result.ticket.ticketCode}
-                      </div>
-                    </div>
-                    <div>
-                      <Eyebrow className="text-[10px]">Bought</Eyebrow>
-                      <div className="mt-0.5 text-[13px] font-semibold tabular-nums">
-                        {new Intl.DateTimeFormat("en-NG", {
-                          day: "numeric",
-                          month: "short",
-                        }).format(
-                          new Date(
-                            result.ticket.paidAt || result.ticket.createdAt,
-                          ),
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="relative shrink-0">
-                  <hr className="ticket-perforation sm:hidden" />
-                  <div className="ticket-perforation-vertical hidden h-full sm:block" />
-                  <span
-                    className={cn(
-                      "absolute -left-2.5 h-5 w-5 rounded-full",
-                      "-top-2.5 sm:-top-2.5",
-                      admittedNow ? "bg-accent" : "bg-destructive/12",
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "absolute -right-2.5 -top-2.5 h-5 w-5 rounded-full sm:-right-auto sm:-left-2.5 sm:top-auto sm:-bottom-2.5",
-                      admittedNow ? "bg-accent" : "bg-destructive/12",
-                    )}
-                  />
-                </div>
-
-                <div
-                  className={cn(
-                    "w-full rounded-b-sm bg-card p-4.5 outline outline-foreground/10 -outline-offset-1",
-                    "sm:w-[186px] sm:shrink-0 sm:origin-left sm:rounded-r-sm sm:rounded-bl-none",
-                    "shadow-[0_2px_4px_rgba(22,21,15,0.05),0_12px_32px_rgba(22,21,15,0.10)]",
-                    "transition-transform duration-300 ease-out motion-reduce:transform-none",
-                    admittedNow
-                      ? "sm:translate-x-3.5 sm:translate-y-2.5 sm:rotate-[2.4deg]"
-                      : "",
-                  )}
-                >
-                  <Eyebrow className="text-[10px]">
-                    {admittedNow ? "Admitted" : "First used"}
-                  </Eyebrow>
-                  <div className="mt-1 text-sm font-semibold tabular-nums">
-                    {clockLabel(result.checkedInAt ?? result.ticket.usedAt)}
-                  </div>
-                  <div className="mt-3.5 flex h-9 items-center justify-center gap-[3px] rounded bg-muted px-2.5">
-                    {Array.from({ length: 22 }).map((_, index) => (
-                      <span
-                        key={index}
-                        className="bg-foreground/55"
-                        style={{
-                          width: index % 4 === 0 ? 3 : index % 3 === 0 ? 2 : 1,
-                          height: 18 + ((index * 7) % 12),
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-1.5 text-center font-mono text-[10px] tracking-[0.08em] text-muted-foreground">
-                    {result.ticket.ticketCode}
-                  </div>
-                </div>
-              </div>
-            </div>
+              eventName={event?.name}
+              attendeeName={result.ticket.attendeeName}
+              detailLine={`${result.ticket.ticketCategoryName || "General"} · ${
+                result.ticket.quantity
+              } ${result.ticket.quantity === 1 ? "ticket" : "tickets"}`}
+              reference={result.ticket.ticketCode}
+              secondaryLabel="Bought"
+              secondaryValue={new Intl.DateTimeFormat("en-NG", {
+                day: "numeric",
+                month: "short",
+              }).format(
+                new Date(result.ticket.paidAt || result.ticket.createdAt),
+              )}
+              stubLabel={admittedNow ? "Admitted" : "First used"}
+              stubTime={clockLabel(result.checkedInAt ?? result.ticket.usedAt)}
+            />
           ) : (
             <Card className="flex flex-1 items-center justify-center py-14">
               <div className="max-w-xs text-center">

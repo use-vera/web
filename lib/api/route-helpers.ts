@@ -10,7 +10,7 @@ interface BackendEnvelope {
 
 /**
  * Every real-backend error already comes back as { success, message, details }
- * (see backend/src/middlewares/error.middleware.js) — forward it as-is so the
+ * (see backend/src/middlewares/error.middleware.js). Forward it as-is so the
  * browser sees the same status code and message the backend produced.
  */
 export const forwardBackendError = (error: unknown) => {

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 /**
- * One series, one hue — bars are never recoloured by rank, so the tallest bar
+ * One series, one hue. Bars are never recoloured by rank, so the tallest bar
  * looks like every other bar and the peak is called out with a direct label
  * instead. Values sit in text tokens, not the series colour.
  */

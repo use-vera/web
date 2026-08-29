@@ -23,7 +23,7 @@ import { Loader2, MapPin, Search, SlidersHorizontal, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
 // startDate is a plain YYYY-MM-DD string from the native <input type="date">
-// — parsed as local-calendar midnight (not UTC) so the day bounds sent to
+//. Parsed as local-calendar midnight (not UTC) so the day bounds sent to
 // the backend match what the picker visually shows the user.
 const startOfDayIso = (dateKey: string) => {
   const [year, month, day] = dateKey.split("-").map(Number);
@@ -55,7 +55,7 @@ export default function EventsPage() {
   const geolocation = useGeolocation();
   const nearMeReady = nearMeActive && geolocation.status === "granted";
 
-  // Excludes `page` — useInfiniteEvents drives pagination itself via
+  // Excludes `page`. UseInfiniteEvents drives pagination itself via
   // fetchNextPage, and changing any of these fields changes the query's
   // cache key, which naturally restarts from page 1 (no manual reset needed).
   const query = useMemo<Omit<EventListQuery, "page">>(
