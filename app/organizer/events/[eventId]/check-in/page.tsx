@@ -173,7 +173,7 @@ const CheckInPage = () => {
   const admittedNow = result && !result.alreadyUsed;
 
   return (
-    <div className="px-4 pt-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+    <div className="px-4 pt-5 pb-8 sm:px-6 lg:px-8">
       {/* Door mode: prepare while there is signal, then scan with none. */}
       <Card className="mb-3.5 flex-col items-start gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
         <span
@@ -440,7 +440,7 @@ const CheckInPage = () => {
           )}
 
           <Card className="gap-0 py-0">
-            <div className="flex items-center justify-between px-5 py-3.5">
+            <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-3.5">
               <span className="text-base leading-snug font-semibold">
                 Last through the door
               </span>

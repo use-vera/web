@@ -21,6 +21,13 @@ import { ChevronRight, Clock, MapPin, Ticket } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+/* Refunded and cancelled lines are not the holder's any more, so the card
+   only advertises what they can actually collect. */
+const heldAddOns = (ticket: MyTicketApi) =>
+  (ticket.addOns ?? []).filter((purchase) =>
+    ["paid", "redeemed"].includes(purchase.status),
+  );
+
 const PAGE_SIZE = 20;
 
 const eventOf = (
@@ -130,6 +137,35 @@ const AccountTicketsPage = () => {
                   </div>
                   <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </Link>
+                {heldAddOns(ticket).length ? (
+                  <div className="flex flex-wrap items-center gap-1.5 border-t border-border/60 px-4 py-2.5">
+                    <span className="mr-0.5 text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+                      Also included
+                    </span>
+                    {heldAddOns(ticket).map((purchase) => {
+                      const collected =
+                        purchase.redeemedQuantity >= purchase.quantity;
+
+                      return (
+                        <span
+                          key={purchase._id}
+                          className={cn(
+                            "rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold",
+                            collected
+                              ? "bg-muted text-muted-foreground line-through decoration-border"
+                              : purchase.redemption === "door"
+                                ? "bg-accent text-accent-foreground"
+                                : "bg-secondary text-muted-foreground",
+                          )}
+                        >
+                          {purchase.name}
+                          {purchase.variantName ? ` · ${purchase.variantName}` : ""}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
                 {event ? (
                   <div className="border-t border-border/60 px-4 py-2">
                     <Link
@@ -154,7 +190,7 @@ const AccountTicketsPage = () => {
           pageSize={PAGE_SIZE}
           onPageChange={setPage}
           noun="ticket"
-          className="px-4 pt-4 sm:px-6 lg:px-4 sm:px-6 lg:px-8"
+          className="px-4 pt-4 sm:px-6 lg:px-8"
         />
       ) : null}
     </div>

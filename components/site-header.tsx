@@ -27,6 +27,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface SiteHeaderProps {
   inverted?: boolean;
@@ -101,10 +102,13 @@ const SiteHeader = ({ inverted = false }: SiteHeaderProps) => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex h-12.5 items-center gap-2 rounded-full border border-border bg-secondary px-4 text-sm font-semibold text-foreground">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                    {user.fullName.charAt(0).toUpperCase()}
-                  </span>
-                  {user.fullName.split(" ")[0]}
+                  <Avatar>
+                    <AvatarImage src={user?.avatarUrl} />
+                    <AvatarFallback>
+                      {user.fullName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>

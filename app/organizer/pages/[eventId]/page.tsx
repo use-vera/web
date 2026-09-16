@@ -257,7 +257,7 @@ const PageBuilder = () => {
 
         {/* The preview renders through the same components the published page
             uses, so what an organizer arranges is what ships. */}
-        <div className="flex min-h-0 flex-1 items-start justify-center bg-muted p-5 lg:overflow-y-auto lg:p-7">
+        <div className="flex min-h-0 flex-1 items-start justify-center bg-muted p-4 sm:p-5 lg:overflow-y-auto lg:p-7">
           <div
             className={cn(
               "w-full overflow-hidden rounded-t-lg shadow-[0_-1px_0_var(--color-border),0_12px_32px_rgba(22,21,15,0.10)] transition-[max-width] duration-300",

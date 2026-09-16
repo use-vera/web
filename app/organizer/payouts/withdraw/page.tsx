@@ -106,7 +106,7 @@ const WithdrawPage = () => {
       <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start pt-5 sm:px-6 lg:px-8 lg:pt-6">
         <div className="min-w-0 w-full lg:max-w-[640px] lg:flex-1">
           <Card className="gap-0 py-0">
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               <SectionLabel>How much</SectionLabel>
               {walletQuery.isLoading ? (
                 <Skeleton className="h-16 w-full rounded-md" />
@@ -175,7 +175,7 @@ const WithdrawPage = () => {
 
             <hr className="ticket-perforation" />
 
-            <div className="flex items-center gap-3.5 p-5">
+            <div className="flex items-center gap-3.5 p-4 sm:p-5">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                 <Wallet className="h-[17px] w-[17px]" />
               </span>
@@ -210,7 +210,7 @@ const WithdrawPage = () => {
 
           {showAccountForm ? (
             <Card className="mt-3.5 gap-0 py-0">
-              <div className="px-5 py-4">
+              <div className="px-4 py-3.5 sm:px-5 sm:py-4">
                 <div className="text-base leading-snug font-semibold">
                   {account ? "Change payout account" : "Add a payout account"}
                 </div>
@@ -219,7 +219,7 @@ const WithdrawPage = () => {
                 </p>
               </div>
               <hr className="ticket-perforation" />
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="flex flex-col gap-3.5 sm:flex-row">
                   <label className="flex-1">
                     <SectionLabel>Bank</SectionLabel>
@@ -302,14 +302,14 @@ const WithdrawPage = () => {
 
         <div className="w-full lg:w-[360px] lg:shrink-0">
           <Card className="gap-0 py-0">
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               <Eyebrow>Withdrawing</Eyebrow>
               <div className="mt-1.5 text-3xl font-bold tracking-[-0.02em] tabular-nums">
                 {formatNairaAmount(amountNaira)}
               </div>
             </div>
             <hr className="ticket-perforation" />
-            <div className="flex flex-col gap-2.5 px-5 py-4">
+            <div className="flex flex-col gap-2.5 px-4 py-3.5 sm:px-5 sm:py-4">
               {[
                 [
                   "To",
@@ -329,7 +329,7 @@ const WithdrawPage = () => {
                 </div>
               ))}
             </div>
-            <div className="bg-muted/60 px-5 py-4">
+            <div className="bg-muted/60 px-4 py-3.5 sm:px-5 sm:py-4">
               <Button
                 className="w-full"
                 disabled={!canWithdraw}
@@ -348,7 +348,7 @@ const WithdrawPage = () => {
           </Card>
 
           <Card className="mt-3 gap-0 py-0">
-            <div className="px-5 py-4">
+            <div className="px-4 py-3.5 sm:px-5 sm:py-4">
               <div className="text-base leading-snug font-semibold">
                 Recent withdrawals
               </div>

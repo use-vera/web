@@ -339,7 +339,7 @@ const EditEventPage = () => {
           </Card>
         ) : null}
 
-        <div className="flex flex-col gap-7">
+        <div className="flex flex-col gap-5 sm:gap-7">
           <Section title="Basics">
             <div className="flex flex-col gap-5">
               <label className="block">

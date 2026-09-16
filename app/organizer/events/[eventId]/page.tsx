@@ -129,7 +129,7 @@ const EventOverviewPage = () => {
   return (
     <div className="flex flex-col gap-3.5 px-4 py-5 pb-8 sm:px-6 lg:px-8 lg:py-6">
       {event.status === "draft" ? (
-        <Card className="flex-col items-start gap-4 border-0 bg-accent p-5 shadow-[inset_0_0_0_2px_var(--primary)] sm:flex-row sm:items-center">
+        <Card className="flex-col items-start gap-4 border-0 bg-accent p-4 sm:p-5 shadow-[inset_0_0_0_2px_var(--primary)] sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
             <div className="text-base font-semibold text-accent-foreground">
               This event is still a draft
@@ -180,7 +180,7 @@ const EventOverviewPage = () => {
 
       <div className="flex flex-col gap-3.5 lg:flex-row lg:items-stretch">
         <Card className="min-w-0 flex-1 gap-0 py-0">
-          <div className="flex items-baseline justify-between px-5 py-4">
+          <div className="flex items-baseline justify-between px-4 py-3.5 sm:px-5 sm:py-4">
             <div>
               <div className="text-base leading-snug font-semibold">
                 Sales this week
@@ -202,7 +202,7 @@ const EventOverviewPage = () => {
             )}
           </div>
           <hr className="ticket-perforation" />
-          <div className="px-5 py-3.5">
+          <div className="px-4 py-3 sm:px-5 sm:py-3.5">
             <Meter percent={percent} className="h-2" />
             <div className="mt-2.5 flex justify-between text-xs text-muted-foreground tabular-nums">
               <span>{sold.toLocaleString("en-NG")} sold</span>
@@ -212,7 +212,7 @@ const EventOverviewPage = () => {
         </Card>
 
         <Card className="w-full lg:w-[360px] lg:shrink-0 gap-0 py-0">
-          <div className="px-5 py-4">
+          <div className="px-4 py-3.5 sm:px-5 sm:py-4">
             <div className="text-base leading-snug font-semibold">
               Before doors open
             </div>
@@ -243,7 +243,7 @@ const EventOverviewPage = () => {
               </Link>
             ))}
           </div>
-          <div className="mt-auto flex items-center gap-2.5 bg-muted/50 px-5 py-3.5">
+          <div className="mt-auto flex items-center gap-2.5 bg-muted/50 px-4 py-3 sm:px-5 sm:py-3.5">
             <TriangleAlert className="h-[15px] w-[15px] shrink-0 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">
               Cancelling refunds every ticket automatically.
@@ -253,7 +253,7 @@ const EventOverviewPage = () => {
       </div>
 
       <Card className="gap-0 py-0">
-        <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4">
           <div className="text-base leading-snug font-semibold">
             Latest tickets
           </div>

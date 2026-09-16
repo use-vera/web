@@ -66,7 +66,9 @@ export const BlockOutline = ({
               <GripVertical
                 className={cn(
                   "h-3.5 w-3.5 shrink-0",
-                  locked ? "text-muted-foreground/30" : "text-muted-foreground/60",
+                  locked
+                    ? "text-muted-foreground/30"
+                    : "text-muted-foreground/60",
                 )}
               />
               <button
@@ -174,7 +176,7 @@ export const BlockOutline = ({
       <div className="mt-auto hidden border-t border-border p-3.5 lg:block">
         <div className="flex items-center gap-2">
           <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <span className="truncate font-mono text-[11px] font-semibold">
+          <span className="truncate font-sans text-[11px] font-semibold">
             vera.tickets/{slug}
           </span>
         </div>

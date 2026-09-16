@@ -98,7 +98,7 @@ const AttendeesPage = () => {
   };
 
   return (
-    <div className="px-4 pt-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+    <div className="px-4 pt-5 pb-8 sm:px-6 lg:px-8">
       <div className="mb-4.5 flex flex-wrap items-center gap-2.5">
         <div className="relative w-full sm:max-w-[360px]">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -155,7 +155,7 @@ const AttendeesPage = () => {
 
       <Card className="gap-0 py-0">
         {ticketsQuery.isLoading ? (
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             {Array.from({ length: 6 }).map((_, index) => (
               <Skeleton key={index} className="my-2 h-12 w-full rounded-md" />
             ))}
@@ -181,7 +181,7 @@ const AttendeesPage = () => {
               <table className="w-full table-fixed border-collapse">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="w-[32%] px-5 py-3 text-left text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
+                    <th className="w-[32%] px-4 py-2.5 sm:px-5 sm:py-3 text-left text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
                       Attendee
                     </th>
                     <th className="w-[16%] px-2 py-3 text-left text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
@@ -196,7 +196,7 @@ const AttendeesPage = () => {
                     <th className="w-[12%] px-2 py-3 text-left text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
                       Status
                     </th>
-                    <th className="w-[10%] px-5 py-3 text-right text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
+                    <th className="w-[10%] px-4 py-2.5 sm:px-5 sm:py-3 text-right text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
                       Paid
                     </th>
                   </tr>
@@ -218,7 +218,7 @@ const AttendeesPage = () => {
                           : "hover:bg-muted/50",
                       )}
                     >
-                      <td className="px-5 py-3.5">
+                      <td className="px-4 py-3 sm:px-5 sm:py-3.5">
                         <div className="flex items-center gap-2.5">
                           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground outline outline-foreground/10 -outline-offset-1">
                             {ticket.attendeeName
@@ -254,7 +254,7 @@ const AttendeesPage = () => {
                       <td className="px-2 py-3.5">
                         <StatusBadge status={ticket.status} />
                       </td>
-                      <td className="px-5 py-3.5 text-right text-[13px] font-semibold tabular-nums">
+                      <td className="px-4 py-3 sm:px-5 sm:py-3.5 text-right text-[13px] font-semibold tabular-nums">
                         {formatNairaAmount(ticket.totalPriceNaira)}
                       </td>
                     </tr>

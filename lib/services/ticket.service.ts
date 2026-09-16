@@ -4,6 +4,7 @@ import {
   type MyTicketsQuery,
   type PaginatedResponse,
   type TicketPurchasePayload,
+  type TicketUpgradeOptionsApi,
   type TicketPurchaseResponse,
   type VerifyTicketResponse,
 } from "@/lib/types/event";
@@ -39,6 +40,26 @@ export const ticketService = {
     return response.data.data;
   },
 
+  getUpgradeOptions: async (
+    ticketId: string,
+  ): Promise<TicketUpgradeOptionsApi> => {
+    const response = await clientHttp.get<ApiEnvelope<TicketUpgradeOptionsApi>>(
+      `/tickets/${ticketId}/upgrade-options`,
+    );
+
+    return response.data.data;
+  },
+  initializeUpgrade: async (
+    ticketId: string,
+    payload: { ticketCategoryId: string; callbackUrl?: string },
+  ): Promise<TicketPurchaseResponse> => {
+    const response = await clientHttp.post<ApiEnvelope<TicketPurchaseResponse>>(
+      `/tickets/${ticketId}/upgrade/initialize`,
+      payload,
+    );
+
+    return response.data.data;
+  },
   listMyTickets: async (
     query: MyTicketsQuery,
   ): Promise<PaginatedResponse<MyTicketApi>> => {

@@ -44,7 +44,7 @@ export const StatCell = ({
   value: ReactNode;
   note?: ReactNode;
 }) => (
-  <div className="flex-1 px-5 py-[18px]">
+  <div className="flex-1 px-4 py-4 sm:px-5 sm:py-[18px]">
     <Eyebrow>{label}</Eyebrow>
     <div className="mt-[5px] text-2xl font-bold tracking-[-0.02em] tabular-nums">
       {value}
@@ -83,7 +83,9 @@ export const StatStrip = ({
           {cell.value}
         </div>
         {cell.note ? (
-          <div className="mt-[3px] text-xs text-muted-foreground">{cell.note}</div>
+          <div className="mt-[3px] text-xs text-muted-foreground">
+            {cell.note}
+          </div>
         ) : null}
       </div>
     ))}

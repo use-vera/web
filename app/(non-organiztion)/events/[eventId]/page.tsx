@@ -1,6 +1,10 @@
 "use client";
 
 import { EventDetails } from "@/components/events/event-details";
+import {
+  AddOnPicker,
+  type AddOnSelection,
+} from "@/components/events/add-on-picker";
 import { TicketPurchasePanel } from "@/components/events/ticket-purchase-panel";
 import { ResaleMarketplace } from "@/components/resale/resale-marketplace";
 import Badge from "@/components/ui/badge";
@@ -22,6 +26,7 @@ const EventPage = () => {
   /* Published landing pages link straight to a tier: /events/:id?tier=… */
   const requestedTier = useSearchParams().get("tier") ?? undefined;
   const [tab, setTab] = useState<Tab>("details");
+  const [addOnSelection, setAddOnSelection] = useState<AddOnSelection>({});
 
   const eventQuery = useEvent(eventId);
   const marketplaceQuery = useResaleMarketplace(eventId);
@@ -58,7 +63,7 @@ const EventPage = () => {
 
   return (
     <main className="flex flex-1 flex-col">
-      <div className="ticket-dot-texture relative h-[180px] shrink-0 bg-muted sm:h-[240px] lg:h-[280px]">
+      <div className="ticket-dot-texture relative h-[150px] shrink-0 bg-muted sm:h-[240px] lg:h-[280px]">
         {event.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -73,10 +78,10 @@ const EventPage = () => {
         )}
       </div>
 
-      <div className="mx-auto w-full max-w-6xl px-4 pb-10 sm:px-6">
-        <div className="pt-6">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-8 sm:px-6 sm:pb-10">
+        <div className="pt-5 sm:pt-6">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-2xl leading-tight font-bold tracking-[-0.02em] sm:text-3xl">
+            <h1 className="text-[21px] leading-tight font-bold tracking-[-0.02em] sm:text-3xl">
               {event.name}
             </h1>
             {soldOut ? (
@@ -88,7 +93,7 @@ const EventPage = () => {
               </Badge>
             )}
           </div>
-          <div className="mt-2.5 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-muted-foreground sm:mt-2.5 sm:text-sm">
             <span className="inline-flex items-center gap-1.5">
               <MapPin className="h-[15px] w-[15px]" />
               {event.address}
@@ -111,7 +116,7 @@ const EventPage = () => {
           </div>
         </div>
 
-        <nav className="mt-5 flex gap-6 overflow-x-auto" aria-label="Event sections">
+        <nav className="mt-4 flex gap-5 overflow-x-auto sm:mt-5 sm:gap-6" aria-label="Event sections">
           {(
             [
               ["details", "Details", null],
@@ -141,10 +146,29 @@ const EventPage = () => {
         </nav>
         <hr className="ticket-perforation" />
 
-        <div className="flex items-start gap-7 pt-6">
+        <div className="flex flex-col gap-6 pt-5 lg:flex-row lg:items-start lg:gap-7 lg:pt-6">
           <div className="min-w-0 flex-1">
             {tab === "details" ? (
               <div>
+                {(event.addOns ?? []).length ? (
+                  <section className="mb-7">
+                    <h2 className="text-[19px] font-bold tracking-[-0.01em]">
+                      Enhance your experience
+                    </h2>
+                    <p className="mt-1 text-[13.5px] text-muted-foreground">
+                      Optional extras, added to this ticket only. Collected at
+                      the event.
+                    </p>
+                    <div className="mt-4">
+                      <AddOnPicker
+                        addOns={event.addOns ?? []}
+                        selection={addOnSelection}
+                        onChange={setAddOnSelection}
+                      />
+                    </div>
+                  </section>
+                ) : null}
+
                 <EventDetails
                   event={event}
                   ratings={
@@ -156,7 +180,7 @@ const EventPage = () => {
                   }
                 />
                 {resaleCount > 0 ? (
-                  <Card className="mt-7 flex-row items-center gap-4 px-5 py-4">
+                  <Card className="mt-5 flex-row items-center gap-3 px-4 py-3.5 sm:mt-7 sm:gap-4 sm:px-5 sm:py-4">
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-semibold">
                         {resaleCount} {resaleCount === 1 ? "ticket" : "tickets"}{" "}
@@ -189,10 +213,14 @@ const EventPage = () => {
             )}
           </div>
 
-          <div className="w-full lg:sticky lg:top-24 lg:w-[340px] lg:shrink-0">
-            <TicketPurchasePanel event={event} initialTierId={requestedTier} />
+          <div className="order-first w-full lg:sticky lg:top-24 lg:order-none lg:w-[340px] lg:shrink-0">
+            <TicketPurchasePanel
+              event={event}
+              initialTierId={requestedTier}
+              addOnSelection={addOnSelection}
+            />
 
-            <Card className="mt-3 flex-row items-start gap-3 p-4">
+            <Card className="mt-3 flex-row items-start gap-3 p-3.5 sm:p-4">
               <TriangleAlert className="mt-px h-4 w-4 shrink-0 text-muted-foreground" />
               <p className="text-xs leading-relaxed text-pretty text-muted-foreground">
                 Never pay a seller outside Vera. A ticket only transfers when it

@@ -107,7 +107,7 @@ const OrganizerEventsPage = () => {
       </header>
 
       {totals.liveCount > 0 ? (
-        <div className="flex gap-8 px-4 pt-5 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+        <div className="flex gap-8 px-4 pt-5 sm:px-6 lg:px-8">
           <div>
             <Eyebrow>Tickets sold</Eyebrow>
             <div className="mt-1 text-[22px] font-bold tracking-[-0.01em] tabular-nums">
@@ -218,7 +218,7 @@ const OrganizerEventsPage = () => {
           pageSize={PAGE_SIZE}
           onPageChange={setPage}
           noun="event"
-          className="px-4 pt-4 sm:px-6 lg:px-4 sm:px-6 lg:px-8"
+          className="px-4 pt-4 sm:px-6 lg:px-8"
         />
       ) : null}
     </div>

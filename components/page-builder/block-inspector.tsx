@@ -15,7 +15,7 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { LogoUpload } from "@/components/page-builder/logo-upload";
-import { Check, Lock, Plus, Trash2 } from "lucide-react";
+import { Check, Lock, Palette, Plus, Trash2 } from "lucide-react";
 
 const Field = ({
   label,
@@ -55,8 +55,7 @@ const asList = (value: unknown): Repeatable[] =>
 const BOUND_NOTICE: Partial<Record<BlockType, string>> = {
   tickets:
     "Tiers, prices, sale windows and remaining counts come from your ticket setup. Change them once and every page follows.",
-  venue:
-    "The address, map and directions come from the event's location.",
+  venue: "The address, map and directions come from the event's location.",
   countdown:
     "Counts down to your start time. Move the event and this follows it.",
   progress:
@@ -85,7 +84,8 @@ export const BlockInspector = ({
   if (!block) {
     return (
       <aside className="hidden w-[300px] shrink-0 border-l border-border bg-card lg:block">
-        <div className="flex h-full items-center justify-center px-8 text-center">
+        <div className=" h-full items-center justify-center px-8 text-center flex flex-col gap-3">
+          <Palette className="text-muted-foreground" />
           <p className="text-[13px] leading-relaxed text-muted-foreground">
             Pick a section on the page to change it.
           </p>
@@ -100,7 +100,8 @@ export const BlockInspector = ({
     typeof props[key] === "string" ? (props[key] as string) : "";
   const flag = (key: string, fallback = true) =>
     typeof props[key] === "boolean" ? (props[key] as boolean) : fallback;
-  const set = (key: string, value: unknown) => onChange(block.id, { [key]: value });
+  const set = (key: string, value: unknown) =>
+    onChange(block.id, { [key]: value });
 
   return (
     <aside className="w-full shrink-0 border-t border-border bg-card lg:min-h-0 lg:w-[300px] lg:overflow-y-auto lg:border-t-0 lg:border-l">
@@ -143,7 +144,9 @@ export const BlockInspector = ({
                 }
                 className="mt-2 inline-block text-[11px] font-bold text-accent-foreground underline underline-offset-2"
               >
-                {block.type === "tickets" ? "Edit tickets & pricing" : "Edit the event"}
+                {block.type === "tickets"
+                  ? "Edit tickets & pricing"
+                  : "Edit the event"}
               </Link>
             </div>
           </div>
@@ -247,11 +250,11 @@ export const BlockInspector = ({
           </>
         ) : null}
 
-        {(block.type === "countdown" ||
-          block.type === "progress" ||
-          block.type === "organizer" ||
-          block.type === "reviews" ||
-          block.type === "resale") ? (
+        {block.type === "countdown" ||
+        block.type === "progress" ||
+        block.type === "organizer" ||
+        block.type === "reviews" ||
+        block.type === "resale" ? (
           <Field label="Heading">
             <OrganizerField
               value={text("heading")}
@@ -295,12 +298,13 @@ export const BlockInspector = ({
               type="number"
               min={1}
               max={6}
-              value={String(
-                typeof props.limit === "number" ? props.limit : 3,
-              )}
+              value={String(typeof props.limit === "number" ? props.limit : 3)}
               className="h-10 text-[13px]"
               onChange={(input) =>
-                set("limit", Math.max(1, Math.min(6, Number(input.target.value) || 3)))
+                set(
+                  "limit",
+                  Math.max(1, Math.min(6, Number(input.target.value) || 3)),
+                )
               }
             />
           </Field>
@@ -313,7 +317,9 @@ export const BlockInspector = ({
           </p>
         ) : null}
 
-        {(block.type === "lineup" || block.type === "faq" || block.type === "sponsors") ? (
+        {block.type === "lineup" ||
+        block.type === "faq" ||
+        block.type === "sponsors" ? (
           <RepeatableItems
             block={block}
             heading={text("heading")}
@@ -364,9 +370,15 @@ const RepeatableItems = ({
 
   const fields: [string, string][] =
     block.type === "faq"
-      ? [["question", "Question"], ["answer", "Answer"]]
+      ? [
+          ["question", "Question"],
+          ["answer", "Answer"],
+        ]
       : block.type === "lineup"
-        ? [["name", "Name"], ["time", "Time"]]
+        ? [
+            ["name", "Name"],
+            ["time", "Time"],
+          ]
         : [["name", "Name"]];
 
   /* The renderer read `imageUrl`; nothing ever wrote it. */

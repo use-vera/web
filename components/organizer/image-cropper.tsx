@@ -152,7 +152,7 @@ export const ImageCropper = ({
       }}
     >
       <DialogContent showClose={false} className="max-w-[540px] p-0">
-        <div className="p-5 sm:p-6">
+        <div className="p-4 sm:p-6">
           <h2 className="text-lg font-bold tracking-[-0.01em]">
             Position the cover
           </h2>

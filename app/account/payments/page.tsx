@@ -82,7 +82,7 @@ const PaymentsPage = () => {
         </p>
       </header>
 
-      <div className="px-4 pt-5 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+      <div className="px-4 pt-5 sm:px-6 lg:px-8">
         <div className="inline-flex gap-1 rounded-full bg-muted p-1">
           {FILTERS.map((filter) => (
             <button
@@ -105,10 +105,10 @@ const PaymentsPage = () => {
         </div>
       </div>
 
-      <div className="px-4 pt-4 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+      <div className="px-4 pt-4 sm:px-6 lg:px-8">
         <Card className="gap-0 py-0">
           {attemptsQuery.isLoading ? (
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton key={index} className="my-2 h-11 w-full rounded-md" />
               ))}
@@ -156,7 +156,7 @@ const PaymentsPage = () => {
                         key={attempt._id}
                         className="border-b border-border/60 last:border-0"
                       >
-                        <td className="truncate px-5 py-3.5 text-[13px] font-semibold">
+                        <td className="truncate px-4 py-3 sm:px-5 sm:py-3.5 text-[13px] font-semibold">
                           {whatOf(attempt)}
                         </td>
                         <td className="px-2 py-3.5 text-[13px] text-muted-foreground">
@@ -176,7 +176,7 @@ const PaymentsPage = () => {
                         <td className="px-2 py-3.5">
                           <StatusBadge status={attempt.status} />
                         </td>
-                        <td className="px-5 py-3.5 text-right text-[13px] font-semibold tabular-nums">
+                        <td className="px-4 py-3 sm:px-5 sm:py-3.5 text-right text-[13px] font-semibold tabular-nums">
                           {formatNairaAmount(koboToNaira(attempt.amountKobo))}
                         </td>
                       </tr>

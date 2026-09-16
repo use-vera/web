@@ -14,6 +14,7 @@ import {
   type EventTicketCategoryApi,
   type PublicEventApi,
 } from "@/lib/types/event";
+import { type AddOnSelection } from "@/components/events/add-on-picker";
 import { cn } from "@/lib/utils";
 import { Check, Loader2, Minus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -35,8 +36,12 @@ type Step = "picking" | "awaiting-payment" | "verifying";
 export const TicketPurchasePanel = ({
   event,
   initialTierId,
+  addOnSelection = {},
 }: {
   event: PublicEventApi;
+  /* Owned by the page: the picker sits in the main column while the running
+     total lives here, which is the whole point of the desktop layout. */
+  addOnSelection?: AddOnSelection;
   /* Set when someone arrived from a published landing page having already
      picked a tier there. Landing on "General" after clicking "VIP" reads as
      the link being broken. */
@@ -83,7 +88,29 @@ export const TicketPurchasePanel = ({
     : (selectedTier?.priceNaira ??
       event.currentTicketPriceNaira ??
       event.ticketPriceNaira);
-  const subtotal = unitPrice * quantity;
+  const availableAddOns = event.addOns ?? [];
+
+  /* Filtered against what is still sellable: an add-on that sold out between
+     render and click must not ride along in the payload. */
+  const selectedAddOns = Object.entries(addOnSelection)
+    .filter(([addOnId]) =>
+      availableAddOns.some((addOn) => addOn._id === addOnId && !addOn.soldOut),
+    )
+    .map(([addOnId, picked]) => ({
+      addOnId,
+      variantName: picked.variantName,
+      quantity: picked.quantity,
+    }));
+
+  const addOnsTotal = selectedAddOns.reduce((sum, picked) => {
+    const addOn = availableAddOns.find((item) => item._id === picked.addOnId);
+
+    return sum + Number(addOn?.priceNaira || 0) * picked.quantity;
+  }, 0);
+
+  /* Add-ons are charged whether or not the ticket itself is, so a free event
+     with paid parking still shows a real number. */
+  const subtotal = unitPrice * quantity + addOnsTotal;
   const { purchasable, reason } = getEventPurchasability(event);
   const busy = step !== "picking" || initialize.isPending;
 
@@ -96,7 +123,13 @@ export const TicketPurchasePanel = ({
     for (let attempt = 0; attempt < 8; attempt += 1) {
       try {
         await verify.mutateAsync({ ticketId, reference });
-        toast.success("Ticket confirmed. It's in your account");
+        toast.success(
+          selectedAddOns.length
+            ? `Ticket confirmed with ${selectedAddOns.length} add-on${
+                selectedAddOns.length > 1 ? "s" : ""
+              }. Open it to see where to collect them.`
+            : "Ticket confirmed. It's in your account",
+        );
         setStep("picking");
         router.push("/account/tickets");
         return;
@@ -119,6 +152,7 @@ export const TicketPurchasePanel = ({
       const result = await initialize.mutateAsync({
         quantity,
         ticketCategoryId: selectedTier?._id,
+        addOns: selectedAddOns,
         callbackUrl: `${window.location.origin}/checkout/callback`,
       });
 

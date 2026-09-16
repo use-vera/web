@@ -22,10 +22,17 @@ import {
   useResaleBids,
   useRespondToBid,
 } from "@/lib/hooks/use-resale";
-import { useMyTickets } from "@/lib/hooks/use-tickets";
+import {
+  useInitializeTicketUpgrade,
+  useMyTickets,
+  useTicketUpgradeOptions,
+  useVerifyTicketPayment,
+} from "@/lib/hooks/use-tickets";
 import { googleMapsDirectionsUrl } from "@/lib/maps";
+import { TicketUpgradeDialog } from "@/components/tickets/upgrade-dialog";
+import { getResaleUnlock } from "@/lib/resale-unlock";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ArrowRight, Navigation } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, Check, Lock, Navigation } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -61,6 +68,24 @@ const TicketDetailPage = () => {
     (item) => item._id === ticketId,
   );
 
+  /* Refunded and cancelled lines are not the holder's any more. */
+  const heldAddOns = (ticket?.addOns ?? []).filter((purchase) =>
+    ["paid", "redeemed"].includes(purchase.status),
+  );
+  const collectedAddOns = heldAddOns.filter(
+    (purchase) => purchase.redeemedQuantity >= purchase.quantity,
+  ).length;
+
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  /* Asked for only once the dialog opens: a ticket page should not pay for an
+     availability sweep nobody looked at. */
+  const upgradeOptionsQuery = useTicketUpgradeOptions(ticketId, upgradeOpen);
+  const upgrade = useInitializeTicketUpgrade(ticketId);
+  const verify = useVerifyTicketPayment();
+  /* Kept separate from the mutation's own pending state: the wait that
+     matters to the buyer is the verify after the popup closes. */
+  const [upgrading, setUpgrading] = useState(false);
+
   const isListed = ticket?.resaleStatus === "listed";
   const bidsQuery = useResaleBids(ticketId, Boolean(isListed));
   const listForResale = useListTicketForResale(ticketId);
@@ -95,7 +120,11 @@ const TicketDetailPage = () => {
   const netOfFee = Math.round(listedPrice * (1 - PLATFORM_FEE_PERCENT / 100));
 
   const priceNaira = Number(price) || 0;
-  const priceValid = priceNaira > 0 && priceNaira <= ceiling;
+
+  /* Resale stays shut while the organizer can still sell the same seat. */
+  const unlock = getResaleUnlock(fullEvent, ticket?.ticketCategoryId ?? null);
+  const priceValid =
+    unlock.unlocked && priceNaira > 0 && priceNaira <= ceiling;
 
   const submitListing = async () => {
     try {
@@ -197,7 +226,7 @@ const TicketDetailPage = () => {
       <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start pt-5 sm:px-6 lg:px-8 lg:pt-6">
         <div className="w-full lg:w-[380px] lg:shrink-0">
           <Card className="gap-0 py-0">
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               <Eyebrow>{event?.name}</Eyebrow>
               <div className="mt-1.5 text-xl font-bold tracking-[-0.01em]">
                 {ticket.attendeeName}
@@ -212,7 +241,7 @@ const TicketDetailPage = () => {
               <span className="absolute -top-2.5 -left-2.5 h-5 w-5 rounded-full bg-background" />
               <span className="absolute -top-2.5 -right-2.5 h-5 w-5 rounded-full bg-background" />
             </div>
-            <div className="flex flex-col items-center gap-3 p-5">
+            <div className="flex flex-col items-center gap-3 p-4 sm:p-5">
               <TicketQrCode
                 value={ticket.barcodeValue || ticket.ticketCode}
                 size={168}
@@ -225,10 +254,90 @@ const TicketDetailPage = () => {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-3.5">
+          <Card className="flex-row items-center gap-4 bg-accent p-4 sm:p-5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary">
+              <ArrowUp className="h-5 w-5 text-primary-foreground" strokeWidth={2.2} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-base leading-snug font-semibold">
+                Move up a tier
+              </div>
+              <p className="mt-0.5 text-[13px] text-accent-foreground">
+                Pay only the difference from what you already paid.
+              </p>
+            </div>
+            <Button size="sm" onClick={() => setUpgradeOpen(true)}>
+              Upgrade
+            </Button>
+          </Card>
+
+          {heldAddOns.length ? (
+            <Card className="gap-0 py-0">
+              <div className="flex items-baseline justify-between gap-3 p-4 sm:p-5">
+                <div className="text-base leading-snug font-semibold">
+                  Your add-ons
+                </div>
+                <span className="text-[13px] text-muted-foreground tabular-nums">
+                  {collectedAddOns} of {heldAddOns.length} used
+                </span>
+              </div>
+              <hr className="ticket-perforation" />
+              <div className="flex flex-col gap-2 p-4 sm:p-5">
+                {heldAddOns.map((purchase) => {
+                  const done = purchase.redeemedQuantity >= purchase.quantity;
+
+                  return (
+                    <div
+                      key={purchase._id}
+                      className={cn(
+                        "flex items-center gap-3 rounded-md bg-background px-4 py-3 ring-1 ring-border ring-inset",
+                        done && "opacity-60",
+                      )}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className={cn(
+                            "text-sm font-semibold",
+                            done && "line-through decoration-border",
+                          )}
+                        >
+                          {purchase.name}
+                          {purchase.variantName ? ` · ${purchase.variantName}` : ""}
+                        </div>
+                        <div className="mt-0.5 text-xs text-muted-foreground">
+                          {done
+                            ? "Collected"
+                            : purchase.location ||
+                              (purchase.redemption === "door"
+                                ? "Show this ticket at the door"
+                                : "Collect at the desk")}
+                        </div>
+                      </div>
+                      {done ? (
+                        <Check className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <span
+                          className={cn(
+                            "shrink-0 rounded-full px-2.5 py-1 text-[11.5px] font-semibold",
+                            purchase.redemption === "door"
+                              ? "bg-accent text-accent-foreground"
+                              : "bg-secondary text-muted-foreground",
+                          )}
+                        >
+                          {purchase.redemption === "door" ? "Ready" : "Collect"}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          ) : null}
+
           {isListed ? (
             <>
               <Card className="gap-0 py-0">
-                <div className="flex items-start justify-between gap-4 px-5 py-[18px]">
+                <div className="flex items-start justify-between gap-4 px-4 py-4 sm:px-5 sm:py-[18px]">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-base leading-snug font-semibold">
@@ -253,7 +362,7 @@ const TicketDetailPage = () => {
                   </Button>
                 </div>
                 <hr className="ticket-perforation" />
-                <div className="flex flex-wrap gap-7 px-5 py-[18px]">
+                <div className="flex flex-wrap gap-5 sm:gap-7 px-4 py-4 sm:px-5 sm:py-[18px]">
                   {[
                     ["Your price", formatNairaAmount(listedPrice)],
                     ["Face value", formatNairaAmount(faceValue)],
@@ -279,7 +388,7 @@ const TicketDetailPage = () => {
               </Card>
 
               <Card className="gap-0 py-0">
-                <div className="flex items-center justify-between px-5 py-4">
+                <div className="flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4">
                   <div>
                     <span className="text-base leading-snug font-semibold">
                       Offers
@@ -372,7 +481,7 @@ const TicketDetailPage = () => {
             </>
           ) : (
             <Card className="gap-0 py-0">
-              <div className="px-5 py-[18px]">
+              <div className="px-4 py-4 sm:px-5 sm:py-[18px]">
                 <div className="text-base leading-snug font-semibold">
                   Can&apos;t make it?
                 </div>
@@ -382,7 +491,15 @@ const TicketDetailPage = () => {
                 </p>
               </div>
               <hr className="ticket-perforation" />
-              <div className="p-5">
+              {unlock.reason ? (
+                <div className="flex items-start gap-2.5 border-b border-border bg-muted/60 px-4 py-3.5 sm:px-5 sm:py-4">
+                  <Lock className="mt-px h-4 w-4 shrink-0 text-muted-foreground" />
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">
+                    {unlock.reason}
+                  </p>
+                </div>
+              ) : null}
+              <div className="p-4 sm:p-5">
                 <label className="block">
                   <SectionLabel
                     hint={`Face value ${formatNairaAmount(faceValue)} · ceiling ${formatNairaAmount(ceiling)}`}
@@ -393,6 +510,7 @@ const TicketDetailPage = () => {
                     value={price}
                     onValueChange={setPrice}
                     prefix="₦"
+                    disabled={!unlock.unlocked}
                     placeholder={faceValue.toLocaleString("en-NG")}
                     className="w-full sm:max-w-[240px]"
                   />
@@ -448,6 +566,72 @@ const TicketDetailPage = () => {
           )}
         </div>
       </div>
+      <TicketUpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        data={upgradeOptionsQuery.data}
+        isLoading={upgradeOptionsQuery.isLoading}
+        isSubmitting={upgrade.isPending || upgrading}
+        onUpgrade={async (ticketCategoryId) => {
+          try {
+            const result = await upgrade.mutateAsync({
+              ticketCategoryId,
+              callbackUrl: `${window.location.origin}/checkout/callback`,
+            });
+
+            if (result.requiresPayment && result.payment?.authorizationUrl) {
+              setUpgradeOpen(false);
+
+              /* A popup, not a navigation: the callback page closes itself and
+                 expects the original window to still be here to finish up.
+                 Navigating away strands the buyer on "you can close this tab". */
+              const popup = window.open(
+                result.payment.authorizationUrl,
+                "vera-upgrade",
+                "width=480,height=720",
+              );
+
+              const pollClosed = window.setInterval(() => {
+                if (popup && !popup.closed) {
+                  return;
+                }
+
+                window.clearInterval(pollClosed);
+                setUpgrading(true);
+
+                void verify
+                  .mutateAsync({
+                    ticketId,
+                    reference: result.payment?.reference,
+                  })
+                  .then(() => ticketsQuery.refetch())
+                  .then(() =>
+                    toast.success(
+                      "You have been upgraded. Your ticket carries a new code.",
+                    ),
+                  )
+                  .catch(() =>
+                    toast.message("We could not confirm that yet", {
+                      description:
+                        "If you were charged, your ticket will update shortly.",
+                    }),
+                  )
+                  .finally(() => setUpgrading(false));
+              }, 700);
+
+              return;
+            }
+
+            toast.success("You have been upgraded. Your ticket carries a new code.");
+            setUpgradeOpen(false);
+            void ticketsQuery.refetch();
+          } catch (error) {
+            /* The dialog stays open so the reason sits next to the choice. */
+            toast.error(getApiErrorMessage(error, "Couldn't start the upgrade"));
+          }
+        }}
+      />
+
     </div>
   );
 };

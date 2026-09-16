@@ -135,7 +135,7 @@ const PremiumPage = () => {
         <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start pt-5 sm:px-6 lg:px-8 lg:pt-6">
           <div className="flex min-w-0 flex-1 flex-col gap-3.5 sm:flex-row">
             <Card className="flex-1 gap-0 py-0">
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="flex items-center justify-between">
                   <span className="text-base leading-snug font-semibold">
                     Free
@@ -148,7 +148,7 @@ const PremiumPage = () => {
                 <div className="mt-0.5 text-xs text-muted-foreground">forever</div>
               </div>
               <hr className="ticket-perforation" />
-              <div className="flex flex-col gap-2.5 px-5 py-4">
+              <div className="flex flex-col gap-2.5 px-4 py-3.5 sm:px-5 sm:py-4">
                 {FREE_INCLUDES.map((item) => (
                   <div key={item} className="flex items-start gap-2.5 text-[13px]">
                     <Check className="mt-px h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -159,7 +159,7 @@ const PremiumPage = () => {
             </Card>
 
             <Card className="flex-1 gap-0 py-0 shadow-[inset_0_0_0_2px_var(--primary),0_4px_12px_rgba(22,21,15,0.06)]">
-              <div className="bg-accent p-5">
+              <div className="bg-accent p-4 sm:p-5">
                 <div className="flex items-center justify-between">
                   <span className="text-base leading-snug font-semibold text-accent-foreground">
                     Premium
@@ -177,7 +177,7 @@ const PremiumPage = () => {
                 </div>
               </div>
               <hr className="ticket-perforation" />
-              <div className="flex flex-col gap-3 px-5 py-4">
+              <div className="flex flex-col gap-3 px-4 py-3.5 sm:px-5 sm:py-4">
                 {PREMIUM_PERKS.map(([title, body]) => (
                   <div key={title} className="flex items-start gap-2.5">
                     <Check
@@ -198,7 +198,7 @@ const PremiumPage = () => {
 
           <div className="w-full lg:w-[340px] lg:shrink-0">
             <Card className="gap-0 py-0">
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <Eyebrow>{isActive ? "Your subscription" : "Upgrade"}</Eyebrow>
                 <div className="mt-1.5 text-3xl font-bold tracking-[-0.02em] tabular-nums">
                   {formatNairaAmount(price)}
@@ -208,7 +208,7 @@ const PremiumPage = () => {
                 </div>
               </div>
               <hr className="ticket-perforation" />
-              <div className="flex flex-col gap-2.5 px-5 py-4">
+              <div className="flex flex-col gap-2.5 px-4 py-3.5 sm:px-5 sm:py-4">
                 {[
                   ["Renews", "Manually, you decide"],
                   [
@@ -229,7 +229,7 @@ const PremiumPage = () => {
                   </div>
                 ))}
               </div>
-              <div className="bg-muted/60 px-5 py-4">
+              <div className="bg-muted/60 px-4 py-3.5 sm:px-5 sm:py-4">
                 <Button
                   className="w-full"
                   loading={initialize.isPending || checkingOut || verify.isPending}

@@ -1,4 +1,12 @@
 import {
+  findIncompleteAddOn,
+  parseVariantNames,
+  resolveAddOnStock,
+  resolveAddOnVariantStock,
+  toAddOnPayload,
+  type AddOnDraft,
+} from "@/components/organizer/add-on-editor";
+import {
   type CreateEventPayload,
   type EventTicketCategoryPayload,
 } from "@/lib/types/organizer";
@@ -22,6 +30,8 @@ export interface EventDraft {
   isPaid: boolean;
   feeMode: "absorbed_by_organizer" | "passed_to_attendee";
   tiers: EventTicketCategoryPayload[];
+  /** Extras sold with a ticket. Optional: most events have none. */
+  addOns?: AddOnDraft[];
   salesStartsAt: string;
   resaleEnabled: boolean;
   resaleAllowBids: boolean;
@@ -40,6 +50,47 @@ export const grossIfSoldOut = (draft: EventDraft) =>
         0,
       )
     : 0;
+
+/**
+ * What one add-on could sell at most.
+ *
+ * Add-ons are only ever bought alongside a ticket and cap at one per ticket,
+ * so however much stock is declared the real ceiling is the number of people
+ * in the room. Without that cap a t-shirt in four sizes would project four
+ * times the attendance in sales.
+ */
+const addOnUnitsIfSoldOut = (draft: EventDraft, addOn: AddOnDraft) => {
+  const capacity = capacityOf(draft);
+  const options = parseVariantNames(addOn.variantNames);
+  const declared = options.length
+    ? options.length *
+      (Number(resolveAddOnVariantStock(addOn, capacity)) || 0)
+    : Number(resolveAddOnStock(addOn, capacity)) || 0;
+
+  return Math.max(0, Math.min(Math.round(declared), capacity));
+};
+
+/** Each named add-on priced out at its ceiling, biggest earner first. */
+export const addOnLinesIfSoldOut = (draft: EventDraft) =>
+  (draft.addOns ?? [])
+    .filter((addOn) => addOn.name.trim())
+    .map((addOn) => {
+      const units = addOnUnitsIfSoldOut(draft, addOn);
+
+      return {
+        name: addOn.name.trim(),
+        units,
+        grossNaira: units * (Math.max(0, Number(addOn.priceNaira)) || 0),
+      };
+    })
+    .filter((line) => line.grossNaira > 0)
+    .sort((a, b) => b.grossNaira - a.grossNaira);
+
+/* Deliberately not gated on draft.isPaid the way ticket gross is: a free
+   event selling ₦5,000 parking still earns, and that is exactly the number
+   an organizer running one wants to see. */
+export const addOnGrossIfSoldOut = (draft: EventDraft) =>
+  addOnLinesIfSoldOut(draft).reduce((sum, line) => sum + line.grossNaira, 0);
 
 const toIso = (local: string | null | undefined) =>
   local ? new Date(local).toISOString() : null;
@@ -76,6 +127,7 @@ export const draftToPayload = (
      * pricing, so it is sent that way to keep presale usable; more than one
      * tier is a genuine conflict and is caught in getStepIssues.
      */
+    addOns: toAddOnPayload(draft.addOns ?? [], capacityOf(draft)),
     ticketCategories: draft.tiers.map((tier) => ({
       name: tier.name.trim(),
       quantity: Number(tier.quantity) || 0,
@@ -206,6 +258,20 @@ export const getStepIssues = (
         });
       }
     });
+
+    /* A named add-on with no stock is a thing nobody can ever buy, which the
+       server would reject anyway. Catch it here so it reads as a form error. */
+    const incompleteAddOn = findIncompleteAddOn(
+      draft.addOns ?? [],
+      capacityOf(draft),
+    );
+
+    if (incompleteAddOn) {
+      issues.push({
+        field: "addOns",
+        message: `Set how many "${incompleteAddOn.name}" you have, or give it options with their own stock.`,
+      });
+    }
 
     if (capacityOf(draft) === 0 && draft.tiers.length > 0) {
       issues.push({

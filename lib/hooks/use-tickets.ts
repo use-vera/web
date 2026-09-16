@@ -1,6 +1,11 @@
 import { ticketService } from "@/lib/services/ticket.service";
 import { type MyTicketsQuery, type TicketPurchasePayload } from "@/lib/types/event";
-import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 const normalizeMyTicketsQuery = (query?: MyTicketsQuery) => ({
   page: query?.page ?? 1,
@@ -63,6 +68,29 @@ export const useInitializeTicketPurchase = (eventId: string) =>
     mutationFn: (payload: TicketPurchasePayload) =>
       ticketService.initializePurchase(eventId, payload),
   });
+
+/** Tiers this ticket could move up to, priced as a difference. */
+export const useTicketUpgradeOptions = (ticketId: string, enabled: boolean) =>
+  useQuery({
+    queryKey: ["tickets", ticketId, "upgrade-options"],
+    queryFn: () => ticketService.getUpgradeOptions(ticketId),
+    enabled: Boolean(ticketId) && enabled,
+  });
+
+export const useInitializeTicketUpgrade = (ticketId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { ticketCategoryId: string; callbackUrl?: string }) =>
+      ticketService.initializeUpgrade(ticketId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tickets", "mine"] });
+      queryClient.invalidateQueries({
+        queryKey: ["tickets", ticketId, "upgrade-options"],
+      });
+    },
+  });
+};
 
 export const useVerifyTicketPayment = () =>
   useMutation({

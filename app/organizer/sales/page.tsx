@@ -93,7 +93,7 @@ const SalesPage = () => {
         </div>
       </header>
 
-      <div className="flex gap-8 px-4 pt-5 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+      <div className="flex gap-8 px-4 pt-5 sm:px-6 lg:px-8">
         <div>
           <Eyebrow>Gross</Eyebrow>
           <div className="mt-1 text-[22px] font-bold tracking-[-0.01em] tabular-nums">
@@ -146,7 +146,7 @@ const SalesPage = () => {
       <div className="px-4 sm:px-6 lg:px-8">
         <Card className="gap-0 py-0">
           {salesQuery.isLoading ? (
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton key={index} className="my-2 h-12 w-full rounded-md" />
               ))}
@@ -198,7 +198,7 @@ const SalesPage = () => {
                       key={ticket._id}
                       className="border-b border-border/60 last:border-0"
                     >
-                      <td className="px-5 py-3.5">
+                      <td className="px-4 py-3 sm:px-5 sm:py-3.5">
                         <div className="truncate text-[13px] font-semibold">
                           {ticket.attendeeName}
                         </div>
@@ -233,7 +233,7 @@ const SalesPage = () => {
                           {ticket.status}
                         </Badge>
                       </td>
-                      <td className="px-5 py-3.5 text-right text-[13px] font-semibold tabular-nums">
+                      <td className="px-4 py-3 sm:px-5 sm:py-3.5 text-right text-[13px] font-semibold tabular-nums">
                         {formatNairaAmount(ticket.totalPriceNaira)}
                       </td>
                     </tr>

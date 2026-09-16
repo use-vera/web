@@ -92,7 +92,7 @@ const Section = ({
     id={id}
     style={{
       background: tone === "surface" ? theme.surface : theme.ground,
-      padding: `${flush ? "0" : "clamp(22px, 4.5cqi, 56px)"} clamp(16px, 4.5cqi, 40px) clamp(22px, 4.5cqi, 56px)`,
+      padding: `${flush ? "0" : "clamp(20px, 4.2cqi, 56px)"} clamp(15px, 4.2cqi, 40px) clamp(20px, 4.2cqi, 56px)`,
       /* Anchored jumps land with the heading clear of the viewport edge. */
       scrollMarginTop: 12,
       ...style,
@@ -173,8 +173,8 @@ const Hero = ({ block, ctx }: { block: PageBlock; ctx: BlockContext }) => {
         background: onPhoto
           ? `linear-gradient(180deg, rgba(0,0,0,0.58) 0%, rgba(0,0,0,0.40) 48%, rgba(0,0,0,0.74) 100%), url(${imageUrl}) center/cover no-repeat`
           : theme.surface,
-        padding: "clamp(28px, 6cqi, 80px) clamp(16px, 4.5cqi, 40px)",
-        minHeight: onPhoto ? "clamp(320px, 62cqi, 560px)" : undefined,
+        padding: "clamp(24px, 6cqi, 80px) clamp(15px, 4.2cqi, 40px)",
+        minHeight: onPhoto ? "clamp(280px, 60cqi, 560px)" : undefined,
         display: "flex",
         /* A poster reads bottom-up; a plain hero reads top-down. */
         alignItems: onPhoto ? "flex-end" : "flex-start",
@@ -467,7 +467,7 @@ const Tickets = ({ block, ctx }: { block: PageBlock; ctx: BlockContext }) => {
                 display: "flex",
                 alignItems: "center",
                 gap: 16,
-                padding: "16px 18px",
+                padding: "13px 14px",
                 borderRadius: 12,
                 background: theme.ground,
                 boxShadow: `inset 0 0 0 1px ${theme.line}`,
@@ -779,7 +779,7 @@ const Placeholder = ({
 }) => (
   <div
     style={{
-      margin: "clamp(16px, 3.5cqi, 32px) clamp(16px, 4.5cqi, 40px)",
+      margin: "clamp(14px, 3.5cqi, 32px) clamp(15px, 4.2cqi, 40px)",
       padding: "20px 22px",
       borderRadius: 12,
       border: `1px dashed ${theme.line}`,
@@ -832,8 +832,9 @@ const Countdown = ({ block, ctx }: { block: PageBlock; ctx: BlockContext }) => {
             <div
               key={part.label}
               style={{
-                minWidth: 78,
-                padding: "14px 16px",
+                minWidth: 66,
+                flex: "1 1 66px",
+                padding: "12px 10px",
                 borderRadius: 12,
                 background: theme.ground,
                 boxShadow: `inset 0 0 0 1px ${theme.line}`,
@@ -995,7 +996,7 @@ const Phase = ({ ctx }: { ctx: BlockContext }) => {
           display: "flex",
           gap: 14,
           alignItems: "flex-start",
-          padding: "16px 18px",
+          padding: "14px 15px",
           borderRadius: 12,
           background: `${theme.accent}1a`,
           boxShadow: `inset 0 0 0 1px ${theme.accent}40`,
@@ -1214,7 +1215,7 @@ const Reviews = ({ block, ctx }: { block: PageBlock; ctx: BlockContext }) => {
                 key={item._id}
                 style={{
                   margin: 0,
-                  padding: "16px 18px",
+                  padding: "14px 15px",
                   borderRadius: 12,
                   background: theme.ground,
                   boxShadow: `inset 0 0 0 1px ${theme.line}`,
@@ -1272,7 +1273,7 @@ const Resale = ({ block, ctx }: { block: PageBlock; ctx: BlockContext }) => {
           alignItems: "center",
           justifyContent: "space-between",
           flexWrap: "wrap",
-          padding: "22px 24px",
+          padding: "18px 18px",
           borderRadius: 14,
           background: theme.surface,
           boxShadow: `inset 0 0 0 1px ${theme.line}`,
@@ -1348,7 +1349,7 @@ const Footer = ({ ctx }: { ctx: BlockContext }) => {
       style={{
         background: theme.surface,
         borderTop: `1px solid ${theme.line}`,
-        padding: "clamp(18px, 3cqi, 26px) clamp(16px, 4.5cqi, 40px) clamp(22px, 3.5cqi, 32px)",
+        padding: "clamp(16px, 3cqi, 26px) clamp(15px, 4.2cqi, 40px) clamp(20px, 3.5cqi, 32px)",
       }}
     >
       <div

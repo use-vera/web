@@ -79,7 +79,7 @@ const PromotePage = () => {
     ticketPrice > 0 ? Math.ceil(total / ticketPrice) : null;
 
   return (
-    <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start py-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start py-5 pb-8 sm:px-6 lg:px-8">
       <div className="min-w-0 flex-1">
         <h2 className="text-xl leading-tight font-bold tracking-[-0.02em]">
           Put this in front of more people
@@ -167,7 +167,7 @@ const PromotePage = () => {
         ) : null}
 
         <Card className="mt-5.5 gap-0 py-0">
-          <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4">
             <div className="text-base leading-snug font-semibold">
               How it will look
             </div>
@@ -236,7 +236,7 @@ const PromotePage = () => {
             </div>
           </div>
           <hr className="ticket-perforation" />
-          <div className="flex flex-col gap-2.5 px-5 py-4">
+          <div className="flex flex-col gap-2.5 px-4 py-3.5 sm:px-5 sm:py-4">
             <div className="flex justify-between text-[13px]">
               <span className="text-muted-foreground">Per day</span>
               <span className="font-semibold tabular-nums">
@@ -259,7 +259,7 @@ const PromotePage = () => {
               </div>
             ) : null}
           </div>
-          <div className="bg-muted/60 px-5 py-4">
+          <div className="bg-muted/60 px-4 py-3.5 sm:px-5 sm:py-4">
             <Button
               className="w-full"
               onClick={promote}

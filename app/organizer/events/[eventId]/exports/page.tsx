@@ -95,10 +95,10 @@ const ExportsPage = () => {
   const preview = previewQuery.data;
 
   return (
-    <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start py-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start py-5 pb-8 sm:px-6 lg:px-8">
       <div className="flex min-w-0 flex-1 flex-col gap-3.5">
         <Card className="gap-0 py-0">
-          <div className="px-5 py-4">
+          <div className="px-4 py-3.5 sm:px-5 sm:py-4">
             <div className="text-base leading-snug font-semibold">
               Build an export
             </div>
@@ -179,7 +179,7 @@ const ExportsPage = () => {
             </p>
           </div>
 
-          <div className="flex items-center justify-between bg-muted/60 px-5 py-3.5">
+          <div className="flex items-center justify-between bg-muted/60 px-4 py-3 sm:px-5 sm:py-3.5">
             <span className="text-xs text-muted-foreground tabular-nums">
               {preview
                 ? `${preview.rowCount.toLocaleString("en-NG")} rows · ${preview.columns.length} columns`
@@ -194,7 +194,7 @@ const ExportsPage = () => {
 
         {previewId ? (
           <Card className="gap-0 py-0">
-            <div className="flex items-center justify-between px-5 py-4">
+            <div className="flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4">
               <div className="text-base leading-snug font-semibold">Preview</div>
               {preview ? (
                 <span className="text-xs font-medium text-muted-foreground tabular-nums">
@@ -204,7 +204,7 @@ const ExportsPage = () => {
               ) : null}
             </div>
             <hr className="ticket-perforation" />
-            <div className="overflow-x-auto px-5 py-3.5 pb-4.5">
+            <div className="overflow-x-auto px-4 py-3 sm:px-5 sm:py-3.5 pb-4.5">
               {previewQuery.isLoading ? (
                 <Skeleton className="h-24 w-full rounded-md" />
               ) : !preview || preview.previewRows.length === 0 ? (
@@ -247,7 +247,7 @@ const ExportsPage = () => {
       </div>
 
       <Card className="w-full lg:w-[392px] lg:shrink-0 gap-0 py-0">
-        <div className="px-5 py-4">
+        <div className="px-4 py-3.5 sm:px-5 sm:py-4">
           <div className="text-base leading-snug font-semibold">
             Recent exports
           </div>
@@ -318,7 +318,7 @@ const ExportsPage = () => {
           noun="export"
           className="border-t border-border"
         />
-        <div className="bg-muted/60 px-5 py-3.5">
+        <div className="bg-muted/60 px-4 py-3 sm:px-5 sm:py-3.5">
           <Eyebrow>Heads up</Eyebrow>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             An export is a snapshot. Build a new one for the latest numbers.

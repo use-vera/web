@@ -246,7 +246,22 @@ export interface UploadedAsset {
   resourceType?: string;
 }
 
+/** An extra sold alongside a ticket, collected at the event. */
+export interface EventAddOnPayload {
+  name: string;
+  description?: string;
+  priceNaira: number;
+  redemption: "door" | "desk" | "none";
+  location?: string;
+  stock: number;
+  variants: { name: string; stock: number }[];
+  maxPerTicket?: number;
+  transfersOnResale?: boolean;
+  active?: boolean;
+}
+
 export interface CreateEventPayload {
+  addOns?: EventAddOnPayload[];
   name: string;
   description?: string;
   imageUrl?: string;

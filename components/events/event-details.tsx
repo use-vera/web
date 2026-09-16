@@ -133,7 +133,7 @@ export const EventDetails = ({
         }
       >
         <Card className="gap-0 py-0">
-          <div className="flex items-center gap-4 px-5 py-4">
+          <div className="flex items-center gap-4 px-4 py-3.5 sm:px-5 sm:py-4">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
               <CalendarDays className="h-[18px] w-[18px]" />
             </span>
@@ -150,7 +150,7 @@ export const EventDetails = ({
           {presale ? (
             <>
               <hr className="ticket-perforation" />
-              <div className="flex items-center gap-4 px-5 py-4">
+              <div className="flex items-center gap-4 px-4 py-3.5 sm:px-5 sm:py-4">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
                   <Clock className="h-[18px] w-[18px]" />
                 </span>
@@ -241,7 +241,7 @@ export const EventDetails = ({
             {tiers.map((tier, index) => (
               <div key={tier._id ?? tier.name}>
                 {index > 0 ? <hr className="ticket-perforation" /> : null}
-                <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+                <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                       <Ticket className="h-4 w-4" />
@@ -361,7 +361,7 @@ export const EventDetails = ({
         ) : (
           <div className="flex flex-col gap-3">
             {reviews.slice(0, 4).map((rating) => (
-              <Card key={rating._id} className="flex-row gap-3 px-5 py-4">
+              <Card key={rating._id} className="flex-row gap-3 px-4 py-3.5 sm:px-5 sm:py-4">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
                   {initials(raterOf(rating))}
                 </span>

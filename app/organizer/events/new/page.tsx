@@ -4,6 +4,7 @@ import { AmountField } from "@/components/organizer/amount-field";
 import { CategoryPicker } from "@/components/organizer/category-picker";
 import { LocationMap } from "@/components/location-map";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { AddOnEditor } from "@/components/organizer/add-on-editor";
 import { ImageUpload } from "@/components/organizer/image-upload";
 import {
   DEFAULT_LOCATION,
@@ -31,6 +32,8 @@ import { COUNTRIES, subdivisionLabel, subdivisionsFor } from "@/lib/countries";
 import {
   capacityOf,
   draftToPayload,
+  addOnGrossIfSoldOut,
+  addOnLinesIfSoldOut,
   grossIfSoldOut,
   PLATFORM_FEE_PERCENT,
   getStepIssues,
@@ -92,6 +95,7 @@ const emptyDraft = (): EventDraft => ({
   recurrenceEndsOn: "",
   isPaid: true,
   feeMode: "absorbed_by_organizer",
+  addOns: [],
   tiers: [
     {
       name: "General admission",
@@ -159,6 +163,11 @@ const NewEventPage = () => {
   const capacity = useMemo(() => capacityOf(draft), [draft]);
   const gross = useMemo(() => grossIfSoldOut(draft), [draft]);
   const fee = Math.round((gross * PLATFORM_FEE_PERCENT) / 100);
+
+  const addOnLines = useMemo(() => addOnLinesIfSoldOut(draft), [draft]);
+  const addOnGross = useMemo(() => addOnGrossIfSoldOut(draft), [draft]);
+  const addOnFee = Math.round((addOnGross * PLATFORM_FEE_PERCENT) / 100);
+  const addOnUnits = addOnLines.reduce((sum, line) => sum + line.units, 0);
   const leadPrice = Number(draft.tiers[0]?.priceNaira) || 0;
   const feeOnLead = Math.round((leadPrice * PLATFORM_FEE_PERCENT) / 100);
   /* Issues are computed continuously, but only shown once the organizer has
@@ -476,7 +485,7 @@ const NewEventPage = () => {
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-7 px-4 py-6 sm:px-6 lg:flex-row lg:py-8 lg:pr-8 lg:pl-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-5 sm:gap-7 px-4 py-6 sm:px-6 lg:flex-row lg:py-8 lg:pr-8 lg:pl-2">
           <div className="w-full min-w-0 lg:max-w-[700px] lg:flex-1">
             <IssueSummary
               messages={showIssues ? issues.map((issue) => issue.message) : []}
@@ -1133,6 +1142,22 @@ const NewEventPage = () => {
                       />
                     </div>
 
+                    <div className="mt-7">
+                      <SectionLabel hint="Optional. Parking, dinner, merch — anything collected at the event.">
+                        Add-ons
+                      </SectionLabel>
+                      <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">
+                        Extras people buy alongside a ticket. Each keeps its own
+                        stock, and how it is collected decides which of your
+                        staff sees it at the door.
+                      </p>
+                      <AddOnEditor
+                        drafts={draft.addOns ?? []}
+                        onChange={(next) => set("addOns", next)}
+                        capacity={capacity}
+                      />
+                    </div>
+
                     <Card className="mt-3 gap-0 py-0">
                       <div className="flex items-center justify-between px-4 py-3.5">
                         <div>
@@ -1226,7 +1251,7 @@ const NewEventPage = () => {
                       No cover image. It will show a placeholder in the feed
                     </div>
                   )}
-                  <div className="px-5 py-4">
+                  <div className="px-4 py-3.5 sm:px-5 sm:py-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xl font-bold tracking-[-0.01em]">
                         {draft.name || "Untitled event"}
@@ -1315,7 +1340,7 @@ const NewEventPage = () => {
                         {index > 0 ? (
                           <hr className="ticket-perforation" />
                         ) : null}
-                        <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+                        <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
                           <div className="min-w-0">
                             <div className="truncate text-[13px] font-semibold">
                               {tier.name || "Untitled tier"}
@@ -1404,7 +1429,7 @@ const NewEventPage = () => {
                         {index > 0 ? (
                           <hr className="ticket-perforation" />
                         ) : null}
-                        <div className="flex items-baseline justify-between gap-6 px-5 py-3">
+                        <div className="flex items-baseline justify-between gap-6 px-4 py-2.5 sm:px-5 sm:py-3">
                           <span className="shrink-0 text-[13px] text-muted-foreground">
                             {key}
                           </span>
@@ -1440,8 +1465,8 @@ const NewEventPage = () => {
           </div>
 
           {step === 3 || step === 4 ? (
-            <div className="w-full lg:w-[308px] lg:shrink-0">
-              <Card className="sticky top-8 gap-0 py-0">
+            <div className="w-full lg:sticky lg:top-8 lg:w-[308px] lg:shrink-0 lg:self-start">
+              <Card className="gap-0 py-0">
                 <div className="px-4 py-4">
                   <Eyebrow>If it sells out</Eyebrow>
                   <div className="mt-1.5 text-[28px] font-bold tracking-[-0.02em] tabular-nums">
@@ -1491,6 +1516,70 @@ const NewEventPage = () => {
                   </span>
                 </div>
               </Card>
+
+              {/* Add-ons get their own card rather than a line in the one
+                  above: they are priced, capped and sold separately, and on a
+                  free event they are the only thing here that earns. */}
+              {addOnLines.length > 0 ? (
+                <Card className="mt-3.5 gap-0 py-0">
+                  <div className="px-4 py-4">
+                    <Eyebrow>If add-ons sell out</Eyebrow>
+                    <div className="mt-1.5 text-[28px] font-bold tracking-[-0.02em] tabular-nums">
+                      {formatNairaCompact(addOnGross)}
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                      {addOnUnits.toLocaleString("en-NG")} sold across{" "}
+                      {addOnLines.length}{" "}
+                      {addOnLines.length === 1 ? "add-on" : "add-ons"}
+                    </div>
+                  </div>
+                  <hr className="ticket-perforation" />
+                  <div className="flex flex-col gap-2.5 px-4 py-4">
+                    {addOnLines.map((line) => (
+                      <div
+                        key={line.name}
+                        className="flex justify-between text-[13px]"
+                      >
+                        <span className="min-w-0 truncate text-muted-foreground">
+                          {line.name} &times; {line.units}
+                        </span>
+                        <span className="shrink-0 font-semibold tabular-nums">
+                          {formatNairaCompact(line.grossNaira)}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between text-[13px]">
+                      <span className="text-muted-foreground">
+                        Vera fee ({PLATFORM_FEE_PERCENT}%)
+                      </span>
+                      <span className="font-semibold tabular-nums">
+                        &minus;{formatNairaCompact(addOnFee)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between bg-muted px-4 py-3.5">
+                    <span className="text-[13px] font-semibold">
+                      Lands in your wallet
+                    </span>
+                    <span className="text-[15px] font-bold tabular-nums">
+                      {formatNairaCompact(addOnGross - addOnFee)}
+                    </span>
+                  </div>
+                </Card>
+              ) : null}
+
+              {/* The number the organizer actually came for. Only worth
+                  saying once both halves exist to be added up. */}
+              {addOnLines.length > 0 ? (
+                <div className="mt-3.5 flex items-baseline justify-between px-1">
+                  <span className="text-[13px] font-semibold">
+                    Everything, sold out
+                  </span>
+                  <span className="text-[15px] font-bold tabular-nums">
+                    {formatNairaCompact(gross + addOnGross - fee - addOnFee)}
+                  </span>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>

@@ -82,7 +82,7 @@ const InsightsPage = () => {
   const sellThrough = capacity > 0 ? Math.round((sold / capacity) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-3.5 px-4 py-5 sm:px-6 lg:px-4 pb-8 sm:px-6 lg:px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col gap-3.5 px-4 py-5 pb-8 sm:px-6 lg:px-8">
       <StatStrip
         cells={[
           {
@@ -109,7 +109,7 @@ const InsightsPage = () => {
       />
 
       <Card className="gap-0 py-0">
-        <div className="flex items-baseline justify-between px-5 py-4">
+        <div className="flex items-baseline justify-between px-4 py-3.5 sm:px-5 sm:py-4">
           <div>
             <div className="text-base leading-snug font-semibold">
               Tickets sold per day
@@ -131,7 +131,7 @@ const InsightsPage = () => {
 
       <div className="flex flex-col gap-3.5 lg:flex-row lg:items-stretch">
         <Card className="w-full lg:w-[420px] lg:shrink-0 gap-0 py-0">
-          <div className="px-5 py-4">
+          <div className="px-4 py-3.5 sm:px-5 sm:py-4">
             <div className="text-base leading-snug font-semibold">
               How the night landed
             </div>
@@ -173,7 +173,7 @@ const InsightsPage = () => {
         </Card>
 
         <Card className="min-w-0 flex-1 gap-0 py-0">
-          <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4">
             <div className="text-base leading-snug font-semibold">
               What they wrote
             </div>
