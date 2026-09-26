@@ -7,9 +7,15 @@ import { getEventPurchasability } from "@/lib/event-status";
 import { formatNairaAmount } from "@/lib/format-currency";
 import { useSession } from "@/lib/hooks/use-auth";
 import {
+  useAvailablePromoCodes,
   useInitializeTicketPurchase,
+  usePreviewPromoCode,
   useVerifyTicketPayment,
 } from "@/lib/hooks/use-tickets";
+import PromoCodeField, {
+  type AppliedPromoCode,
+} from "@/components/events/promo-code-field";
+import { getApiErrorMessage } from "@/lib/api/error-message";
 import {
   type EventTicketCategoryApi,
   type PublicEventApi,
@@ -52,6 +58,8 @@ export const TicketPurchasePanel = ({
   const sessionQuery = useSession();
   const initialize = useInitializeTicketPurchase(event._id);
   const verify = useVerifyTicketPayment();
+  const previewPromo = usePreviewPromoCode(event._id);
+  const availablePromoCodes = useAvailablePromoCodes(event._id);
 
   const tiers = event.ticketCategories ?? [];
   /* The server marks each tier's window state; only open ones are buyable. */
@@ -65,6 +73,10 @@ export const TicketPurchasePanel = ({
     requested ?? sellableTiers[0] ?? tiers[0] ?? null,
   );
   const [quantity, setQuantity] = useState(1);
+  const [appliedPromo, setAppliedPromo] = useState<AppliedPromoCode | null>(
+    null,
+  );
+  const [promoError, setPromoError] = useState("");
   const [step, setStep] = useState<Step>("picking");
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -111,6 +123,64 @@ export const TicketPurchasePanel = ({
   /* Add-ons are charged whether or not the ticket itself is, so a free event
      with paid parking still shows a real number. */
   const subtotal = unitPrice * quantity + addOnsTotal;
+  /* A waiting add-on code has nothing to come off yet, so it must not move
+     the total: the order still costs what it costs until an add-on is in it. */
+  const promoDiscount = appliedPromo?.needsAddOn
+    ? 0
+    : (appliedPromo?.discountNaira ?? 0);
+  const total = Math.max(0, subtotal - promoDiscount);
+  /* What the basket costs decides whether this asks for money, not whether the
+     ticket has a price. A free ticket with paid add-ons is charged for, and a
+     code that clears a paid order is not — the server decides the same way. */
+  const chargeable = total > 0;
+
+  /* A code is priced against a specific order, so the order is passed in
+     rather than read from state: the handlers below re-price with the values
+     they are about to set, which state has not caught up with yet. */
+  const pricePromoCode = async (
+    code: string,
+    order: { quantity: number; ticketCategoryId?: string },
+  ) => {
+    setPromoError("");
+
+    try {
+      const preview = await previewPromo.mutateAsync({
+        code,
+        quantity: order.quantity,
+        ticketCategoryId: order.ticketCategoryId,
+        addOns: selectedAddOns,
+      });
+
+      setAppliedPromo({
+        code: preview.code,
+        appliesTo: preview.appliesTo,
+        discountNaira: preview.discountNaira,
+        needsAddOn: preview.needsAddOn,
+      });
+    } catch (error) {
+      setAppliedPromo(null);
+      setPromoError(
+        getApiErrorMessage(error, "That code could not be applied."),
+      );
+    }
+  };
+
+  /* Changing the order re-prices whatever code is on it: a ₦5,000-off code is
+     worth something different against two tickets than against one, and a
+     stale number here is a number the buyer would be charged differently. */
+  const repriceAppliedPromo = (changed: {
+    quantity?: number;
+    ticketCategoryId?: string;
+  }) => {
+    if (!appliedPromo) {
+      return;
+    }
+
+    void pricePromoCode(appliedPromo.code, {
+      quantity: changed.quantity ?? quantity,
+      ticketCategoryId: changed.ticketCategoryId ?? selectedTier?._id,
+    });
+  };
   const { purchasable, reason } = getEventPurchasability(event);
   const busy = step !== "picking" || initialize.isPending;
 
@@ -153,6 +223,12 @@ export const TicketPurchasePanel = ({
         quantity,
         ticketCategoryId: selectedTier?._id,
         addOns: selectedAddOns,
+        /* A waiting code is not sent: the server would refuse the order
+           rather than charge it, and the buyer has not chosen an add-on. */
+        promoCode:
+          appliedPromo && !appliedPromo.needsAddOn
+            ? appliedPromo.code
+            : undefined,
         callbackUrl: `${window.location.origin}/checkout/callback`,
       });
 
@@ -257,7 +333,10 @@ export const TicketPurchasePanel = ({
                     type="button"
                     aria-pressed={selected}
                     disabled={closed}
-                    onClick={() => setSelectedTier(tier)}
+                    onClick={() => {
+                      setSelectedTier(tier);
+                      repriceAppliedPromo({ ticketCategoryId: tier._id });
+                    }}
                     className={cn(
                       "flex items-center gap-3 rounded-md p-3 text-left transition-colors",
                       closed
@@ -330,7 +409,11 @@ export const TicketPurchasePanel = ({
               type="button"
               aria-label="One fewer ticket"
               disabled={quantity <= 1}
-              onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+              onClick={() => {
+                const next = Math.max(1, quantity - 1);
+                setQuantity(next);
+                repriceAppliedPromo({ quantity: next });
+              }}
               className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border transition-colors hover:bg-secondary disabled:pointer-events-none disabled:opacity-40"
             >
               <Minus className="h-4 w-4" />
@@ -342,9 +425,11 @@ export const TicketPurchasePanel = ({
               type="button"
               aria-label="One more ticket"
               disabled={quantity >= maxQuantity}
-              onClick={() =>
-                setQuantity((current) => Math.min(maxQuantity, current + 1))
-              }
+              onClick={() => {
+                const next = Math.min(maxQuantity, quantity + 1);
+                setQuantity(next);
+                repriceAppliedPromo({ quantity: next });
+              }}
               className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border transition-colors hover:bg-secondary disabled:pointer-events-none disabled:opacity-40"
             >
               <Plus className="h-4 w-4" />
@@ -353,12 +438,59 @@ export const TicketPurchasePanel = ({
         </div>
 
         {!isFree ? (
-          <div className="mt-3.5 flex items-baseline justify-between">
-            <span className="text-[13px] text-muted-foreground">Total</span>
-            <span className="text-lg font-bold tracking-[-0.01em] tabular-nums">
-              {formatNairaAmount(subtotal)}
+          <div className="mt-4">
+            <span className="mb-2 block text-[13px] font-semibold">
+              Promo code
             </span>
+            <PromoCodeField
+              applied={appliedPromo}
+              offers={availablePromoCodes.data ?? []}
+              isApplying={previewPromo.isPending}
+              error={promoError}
+              onApply={(code) =>
+                void pricePromoCode(code, {
+                  quantity,
+                  ticketCategoryId: selectedTier?._id,
+                })
+              }
+              onRemove={() => {
+                setAppliedPromo(null);
+                setPromoError("");
+              }}
+              onErrorCleared={() => setPromoError("")}
+            />
           </div>
+        ) : null}
+
+        {!isFree || chargeable ? (
+          <>
+            {promoDiscount > 0 ? (
+              <div className="mt-3.5 flex items-baseline justify-between text-accent-foreground">
+                <span className="text-[13px] font-semibold">
+                  {appliedPromo?.appliesTo === "addons"
+                    ? "Add-on discount"
+                    : "Ticket discount"}
+                </span>
+                <span className="text-[13px] font-semibold tabular-nums">
+                  &minus;{formatNairaAmount(promoDiscount)}
+                </span>
+              </div>
+            ) : null}
+
+            <div className="mt-2 flex items-baseline justify-between">
+              <span className="text-[13px] text-muted-foreground">Total</span>
+              <span className="flex items-baseline gap-2">
+                {promoDiscount > 0 ? (
+                  <span className="text-[13px] text-muted-foreground line-through tabular-nums">
+                    {formatNairaAmount(subtotal)}
+                  </span>
+                ) : null}
+                <span className="text-lg font-bold tracking-[-0.01em] tabular-nums">
+                  {formatNairaAmount(total)}
+                </span>
+              </span>
+            </div>
+          </>
         ) : null}
       </div>
 
@@ -382,9 +514,9 @@ export const TicketPurchasePanel = ({
         >
           {!purchasable && (event.remainingTickets ?? 0) <= 0
             ? "Sold out"
-            : isFree
-              ? `Get ${quantity} ${quantity > 1 ? "tickets" : "ticket"}`
-              : `Pay ${formatNairaAmount(subtotal)}`}
+            : chargeable
+              ? `Pay ${formatNairaAmount(total)}`
+              : `Get ${quantity} ${quantity > 1 ? "tickets" : "ticket"}`}
         </Button>
 
         {!sessionQuery.data?.user ? (

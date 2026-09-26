@@ -1,5 +1,9 @@
 import { ticketService } from "@/lib/services/ticket.service";
-import { type MyTicketsQuery, type TicketPurchasePayload } from "@/lib/types/event";
+import {
+  type MyTicketsQuery,
+  type PromoCodePreviewPayload,
+  type TicketPurchasePayload,
+} from "@/lib/types/event";
 import {
   useInfiniteQuery,
   useMutation,
@@ -61,6 +65,27 @@ export const useTicketsByPurchaseBatch = (purchaseBatchId: string | null) =>
         limit: 50,
       }),
     enabled: Boolean(purchaseBatchId),
+  });
+
+/** The codes this event is advertising, for the buyer's own list. */
+export const useAvailablePromoCodes = (eventId: string) =>
+  useQuery({
+    queryKey: ["events", eventId, "promo-codes", "available"],
+    queryFn: () => ticketService.listAvailablePromoCodes(eventId),
+    enabled: Boolean(eventId),
+    staleTime: 60 * 1000,
+  });
+
+/**
+ * Prices a typed code against the order the buyer is holding.
+ *
+ * A mutation rather than a query: applying a code is something the buyer
+ * does, and it must not re-run on its own while they are editing the order.
+ */
+export const usePreviewPromoCode = (eventId: string) =>
+  useMutation({
+    mutationFn: (payload: PromoCodePreviewPayload) =>
+      ticketService.previewPromoCode(eventId, payload),
   });
 
 export const useInitializeTicketPurchase = (eventId: string) =>

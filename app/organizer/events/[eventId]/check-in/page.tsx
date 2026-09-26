@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { getApiErrorMessage } from "@/lib/api/error-message";
 import { clockLabel } from "@/lib/event-status";
 import { ScanResultPanel } from "@/components/organizer/scan-result-panel";
+import { AddOnRedemptionPanel } from "@/components/organizer/add-on-redemption-panel";
 import { useCheckInConflicts } from "@/lib/hooks/use-door-admin";
 import { useDoorMode } from "@/lib/hooks/use-door-mode";
 import { type ScanDecision } from "@/lib/checkin/validate";
@@ -16,8 +17,13 @@ import {
   useCheckInTicket,
   useEventTickets,
   useOrganizerEvent,
+  useRedeemAddOn,
 } from "@/lib/hooks/use-organizer";
-import { type TicketCheckInResponse } from "@/lib/types/organizer";
+import { organizerService } from "@/lib/services/organizer.service";
+import {
+  type TicketAddOnApi,
+  type TicketCheckInResponse,
+} from "@/lib/types/organizer";
 import { cn } from "@/lib/utils";
 import {
   Check,
@@ -46,6 +52,14 @@ const CheckInPage = () => {
 
   const ticketsQuery = useEventTickets(eventId, { limit: 50 });
   const checkIn = useCheckInTicket();
+  const redeemAddOn = useRedeemAddOn(eventId);
+
+  /* What the scanned ticket holds. Kept beside the scan result rather than
+     inside it: the result is the admission, these are the things still to
+     hand over, and one outlives the other as items are collected. */
+  const [heldAddOns, setHeldAddOns] = useState<TicketAddOnApi[]>([]);
+  const [addOnHolder, setAddOnHolder] = useState("");
+  const [redeemingId, setRedeemingId] = useState<string | null>(null);
 
   const [code, setCode] = useState("");
   const [result, setResult] = useState<TicketCheckInResponse | null>(null);
@@ -126,6 +140,26 @@ const CheckInPage = () => {
         } else {
           setError(decision.message);
         }
+
+        setHeldAddOns([]);
+        setAddOnHolder(decision.entry?.name ?? "");
+
+        /* The roster carries hashed codes and nothing else, so what a ticket
+           holds can only come from the server. Asked for after the door has
+           already rendered its decision, and only with signal — an admission
+           must never wait on this. */
+        if (ok && door.online) {
+          void organizerService
+            .checkInTicket({ code: trimmed, eventId })
+            .then((response) => {
+              setHeldAddOns(response.addOns ?? []);
+              setAddOnHolder(response.ticket.attendeeName);
+            })
+            .catch(() => {
+              /* Signal went while we asked. The admission still stands, and
+                 the add-ons can be handed over from the outstanding list. */
+            });
+        }
       }
 
       setCode("");
@@ -137,6 +171,8 @@ const CheckInPage = () => {
       const response = await checkIn.mutateAsync({ code: trimmed, eventId });
 
       setResult(response);
+      setHeldAddOns(response.addOns ?? []);
+      setAddOnHolder(response.ticket.attendeeName);
       setHistory((current) =>
         [
           {
@@ -159,9 +195,30 @@ const CheckInPage = () => {
     } catch (caught) {
       setError(getApiErrorMessage(caught, "That code didn't scan"));
       setResult(null);
+      setHeldAddOns([]);
     } finally {
       setCode("");
       inputRef.current?.focus();
+    }
+  };
+
+  const handOver = async (purchase: TicketAddOnApi) => {
+    setRedeemingId(purchase._id);
+    setError(null);
+
+    try {
+      const updated = await redeemAddOn.mutateAsync({ purchaseId: purchase._id });
+
+      /* Replaced in place rather than refetched: a door usually has two or
+         three things to hand the same person, and the list should not jump
+         between them. */
+      setHeldAddOns((current) =>
+        current.map((item) => (item._id === updated._id ? updated : item)),
+      );
+    } catch (caught) {
+      setError(getApiErrorMessage(caught, `Could not hand over ${purchase.name}`));
+    } finally {
+      setRedeemingId(null);
     }
   };
 
@@ -438,6 +495,17 @@ const CheckInPage = () => {
               </div>
             </Card>
           )}
+
+          {heldAddOns.length ? (
+            <AddOnRedemptionPanel
+              addOns={heldAddOns}
+              attendeeName={addOnHolder}
+              surface="door"
+              busyPurchaseId={redeemingId}
+              offline={door.status === "ready" && !door.online}
+              onRedeem={(purchase) => void handOver(purchase)}
+            />
+          ) : null}
 
           <Card className="gap-0 py-0">
             <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-3.5">

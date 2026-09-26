@@ -25,6 +25,12 @@ import { useState } from "react";
 
 const TYPE_LABELS: Record<WalletTransactionType, string> = {
   ticket_sale: "Ticket sale",
+  add_on_sale: "Add-on sale",
+  ticket_upgrade: "Ticket upgrade",
+  /* Vendors earn through the same wallet, and organizers earn from them. */
+  vendor_order_sale: "Vendor order",
+  vendor_revenue_share: "Share of vendor sales",
+  vendor_stall_fee: "Stall fee",
   platform_fee: "Platform fee",
   refund: "Refund",
   chargeback: "Chargeback",

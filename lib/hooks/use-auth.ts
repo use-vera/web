@@ -1,3 +1,4 @@
+import { disconnectRealtimeSocket } from "@/lib/realtime/socket-client";
 import { authService } from "@/lib/services/auth.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -38,6 +39,9 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: authService.logout,
     onSuccess: () => {
+      /* The socket outlives the session cookie otherwise, and keeps the
+         signed-out user's own room open. */
+      disconnectRealtimeSocket();
       queryClient.setQueryData(SESSION_KEY, { user: null });
     },
   });

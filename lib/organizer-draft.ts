@@ -7,6 +7,11 @@ import {
   type AddOnDraft,
 } from "@/components/organizer/add-on-editor";
 import {
+  findPromoCodeIssue,
+  toPromoCodePayload,
+  type PromoCodeDraft,
+} from "@/components/organizer/promo-code-editor";
+import {
   type CreateEventPayload,
   type EventTicketCategoryPayload,
 } from "@/lib/types/organizer";
@@ -30,6 +35,7 @@ export interface EventDraft {
   isPaid: boolean;
   feeMode: "absorbed_by_organizer" | "passed_to_attendee";
   tiers: EventTicketCategoryPayload[];
+  promoCodes?: PromoCodeDraft[];
   /** Extras sold with a ticket. Optional: most events have none. */
   addOns?: AddOnDraft[];
   salesStartsAt: string;
@@ -128,6 +134,7 @@ export const draftToPayload = (
      * tier is a genuine conflict and is caught in getStepIssues.
      */
     addOns: toAddOnPayload(draft.addOns ?? [], capacityOf(draft)),
+    promoCodes: toPromoCodePayload(draft.promoCodes ?? []),
     ticketCategories: draft.tiers.map((tier) => ({
       name: tier.name.trim(),
       quantity: Number(tier.quantity) || 0,
@@ -271,6 +278,12 @@ export const getStepIssues = (
         field: "addOns",
         message: `Set how many "${incompleteAddOn.name}" you have, or give it options with their own stock.`,
       });
+    }
+
+    const promoCodeIssue = findPromoCodeIssue(draft.promoCodes ?? []);
+
+    if (promoCodeIssue) {
+      issues.push({ field: "promoCodes", message: promoCodeIssue });
     }
 
     if (capacityOf(draft) === 0 && draft.tiers.length > 0) {

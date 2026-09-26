@@ -5,6 +5,8 @@ import {
   type CreateEventExportPayload,
   type CreateEventPayload,
   type EventCenterSuggestion,
+  type AddOnFulfilmentItem,
+  type EventPromoCodesResponse,
   type GeocodeResult,
   type UploadedAsset,
   type EventExportApi,
@@ -18,6 +20,7 @@ import {
   type OrganizerEventApi,
   type OrganizerEventDetails,
   type TicketCheckInPayload,
+  type TicketAddOnApi,
   type TicketCheckInResponse,
 } from "@/lib/types/organizer";
 
@@ -51,6 +54,13 @@ export const organizerService = {
     unwrap(
       await clientHttp.get<ApiEnvelope<OrganizerEventDetails>>(
         `/organizer/events/${eventId}`,
+      ),
+    ),
+
+  listPromoCodes: async (eventId: string): Promise<EventPromoCodesResponse> =>
+    unwrap(
+      await clientHttp.get<ApiEnvelope<EventPromoCodesResponse>>(
+        `/organizer/events/${eventId}/promo-codes`,
       ),
     ),
 
@@ -140,6 +150,51 @@ export const organizerService = {
       await clientHttp.post<ApiEnvelope<TicketCheckInResponse>>(
         "/organizer/tickets/check-in",
         payload,
+      ),
+    ),
+
+  /* --- add-ons at the door and the desk --- */
+
+  /**
+   * A ticket and what it still holds, without admitting anyone.
+   *
+   * The desk cannot use the check-in call for this: that admits an
+   * un-scanned ticket as a side effect, which would put someone through the
+   * gate from the merch table.
+   */
+  lookupTicket: async (
+    eventId: string,
+    code: string,
+  ): Promise<TicketCheckInResponse> =>
+    unwrap(
+      await clientHttp.get<ApiEnvelope<TicketCheckInResponse>>(
+        `/organizer/events/${eventId}/tickets/lookup`,
+        { params: { code } },
+      ),
+    ),
+
+  /** Hands one add-on over. The server decides whether it can be. */
+  redeemAddOn: async (
+    eventId: string,
+    purchaseId: string,
+    quantity = 1,
+  ): Promise<TicketAddOnApi> =>
+    unwrap(
+      await clientHttp.post<ApiEnvelope<TicketAddOnApi>>(
+        `/organizer/events/${eventId}/add-ons/${purchaseId}/redeem`,
+        { quantity },
+      ),
+    ),
+
+  /** What has been sold, what has been collected, what is still owed. */
+  listAddOnFulfilment: async (
+    eventId: string,
+    redemption?: "door" | "desk",
+  ): Promise<{ items: AddOnFulfilmentItem[] }> =>
+    unwrap(
+      await clientHttp.get<ApiEnvelope<{ items: AddOnFulfilmentItem[] }>>(
+        `/organizer/events/${eventId}/add-ons/fulfilment`,
+        { params: redemption ? { redemption } : undefined },
       ),
     ),
 

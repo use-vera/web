@@ -3,21 +3,39 @@
 import AuthField from "@/components/auth/auth-field";
 import AuthHeader from "@/components/auth/auth-header";
 import Button from "@/components/ui/button";
+import { AUTH_COPY, type AuthRole } from "@/lib/auth-roles";
 import { useRegister } from "@/lib/hooks/use-auth";
+import { cn } from "@/lib/utils";
 import { ArrowRight, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
 interface SignUpViewProps {
   onSuccess: () => void;
-  onSwitchToSignIn: () => void;
+  /** Modal use: swap the panel in place. */
+  onSwitchToSignIn?: () => void;
+  /** Page use: the sign-in page for this role. */
+  switchToSignInHref?: string;
+  role?: AuthRole;
+  className?: string;
+  /** Slot under the form, for the other role's entrance. */
+  footer?: React.ReactNode;
 }
 
-const SignUpView = ({ onSuccess, onSwitchToSignIn }: SignUpViewProps) => {
+const SignUpView = ({
+  onSuccess,
+  onSwitchToSignIn,
+  switchToSignInHref,
+  role = "attendee",
+  className,
+  footer,
+}: SignUpViewProps) => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const copy = AUTH_COPY[role]["sign-up"];
   const register = useRegister();
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -32,11 +50,11 @@ const SignUpView = ({ onSuccess, onSwitchToSignIn }: SignUpViewProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 pt-10">
-      <AuthHeader
-        title="Create your account."
-        subtitle="Takes a few seconds, then you can grab your ticket."
-      />
+    <form
+      onSubmit={handleSubmit}
+      className={cn("flex flex-col gap-6 p-6 pt-10", className)}
+    >
+      <AuthHeader title={copy.title} subtitle={copy.subtitle} />
 
       <div className="flex flex-col gap-4">
         <AuthField
@@ -79,7 +97,7 @@ const SignUpView = ({ onSuccess, onSwitchToSignIn }: SignUpViewProps) => {
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <>
-              Create account
+              {copy.action}
               <ArrowRight className="h-4 w-4" />
             </>
           )}
@@ -87,15 +105,26 @@ const SignUpView = ({ onSuccess, onSwitchToSignIn }: SignUpViewProps) => {
 
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <button
-            type="button"
-            onClick={onSwitchToSignIn}
-            className="font-semibold text-foreground underline underline-offset-2"
-          >
-            Sign in
-          </button>
+          {switchToSignInHref ? (
+            <Link
+              href={switchToSignInHref}
+              className="font-semibold text-foreground underline underline-offset-2"
+            >
+              Sign in
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={onSwitchToSignIn}
+              className="font-semibold text-foreground underline underline-offset-2"
+            >
+              Sign in
+            </button>
+          )}
         </p>
       </div>
+
+      {footer}
     </form>
   );
 };

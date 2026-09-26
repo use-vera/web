@@ -4,7 +4,12 @@ import { AmountField } from "@/components/organizer/amount-field";
 import { CategoryPicker } from "@/components/organizer/category-picker";
 import { LocationMap } from "@/components/location-map";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { AddOnEditor } from "@/components/organizer/add-on-editor";
+import { PromoCodeEditor } from "@/components/organizer/promo-code-editor";
+import {
+  AddOnEditor,
+  parseVariantNames,
+  resolveAddOnStock,
+} from "@/components/organizer/add-on-editor";
 import { ImageUpload } from "@/components/organizer/image-upload";
 import {
   DEFAULT_LOCATION,
@@ -96,6 +101,7 @@ const emptyDraft = (): EventDraft => ({
   isPaid: true,
   feeMode: "absorbed_by_organizer",
   addOns: [],
+  promoCodes: [],
   tiers: [
     {
       name: "General admission",
@@ -1158,6 +1164,21 @@ const NewEventPage = () => {
                       />
                     </div>
 
+                    <div className="mt-7">
+                      <SectionLabel hint="Optional. You can also add these later from the event's Promo codes tab.">
+                        Promo codes
+                      </SectionLabel>
+                      <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">
+                        Money off, for people you choose to give it to. A
+                        discount comes out of what you keep &mdash; Vera&apos;s
+                        fee is still worked out on the full price.
+                      </p>
+                      <PromoCodeEditor
+                        drafts={draft.promoCodes ?? []}
+                        onChange={(next) => set("promoCodes", next)}
+                      />
+                    </div>
+
                     <Card className="mt-3 gap-0 py-0">
                       <div className="flex items-center justify-between px-4 py-3.5">
                         <div>
@@ -1379,6 +1400,93 @@ const NewEventPage = () => {
                     ))}
                   </Card>
                 </div>
+
+                {(draft.addOns ?? []).length > 0 ? (
+                  <div className="mt-5">
+                    <SectionLabel hint="Sold alongside a ticket, collected at the event.">
+                      Add-ons
+                    </SectionLabel>
+                    <Card className="gap-0 py-0">
+                      {(draft.addOns ?? []).map((addOn, index) => {
+                        const options = parseVariantNames(addOn.variantNames);
+                        const stock = options.length
+                          ? `${options.length} options`
+                          : `${Number(resolveAddOnStock(addOn, capacity)) || 0} in stock`;
+
+                        return (
+                          <div key={index}>
+                            {index > 0 ? (
+                              <hr className="ticket-perforation" />
+                            ) : null}
+                            <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
+                              <div className="min-w-0">
+                                <div className="truncate text-[13px] font-semibold">
+                                  {addOn.name || "Untitled add-on"}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {addOn.redemption === "door"
+                                    ? "At the door"
+                                    : addOn.redemption === "desk"
+                                      ? "Collect at a desk"
+                                      : "Nothing to collect"}{" "}
+                                  &middot; {stock}
+                                </div>
+                              </div>
+                              <div className="shrink-0 text-[13px] font-semibold tabular-nums">
+                                {formatNairaAmount(
+                                  Number(addOn.priceNaira) || 0,
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </Card>
+                  </div>
+                ) : null}
+
+                {(draft.promoCodes ?? []).length > 0 ? (
+                  <div className="mt-5">
+                    <SectionLabel hint="A discount comes out of what you keep.">
+                      Promo codes
+                    </SectionLabel>
+                    <Card className="gap-0 py-0">
+                      {(draft.promoCodes ?? []).map((promo, index) => (
+                        <div key={index}>
+                          {index > 0 ? (
+                            <hr className="ticket-perforation" />
+                          ) : null}
+                          <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="truncate text-[13px] font-semibold tracking-[0.04em]">
+                                  {promo.code.toUpperCase() || "NO CODE"}
+                                </span>
+                                {promo.isPublic ? (
+                                  <Badge variant="outline">Listed</Badge>
+                                ) : null}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {promo.name || "Unnamed"} &middot;{" "}
+                                {promo.appliesTo === "addons"
+                                  ? "off add-ons"
+                                  : "off the ticket"}
+                                {Number(promo.maxUses) > 0
+                                  ? ` · ${Number(promo.maxUses).toLocaleString("en-NG")} uses`
+                                  : " · no limit"}
+                              </div>
+                            </div>
+                            <div className="shrink-0 text-[13px] font-semibold tabular-nums">
+                              {promo.discountType === "percent"
+                                ? `${Number(promo.discountValue) || 0}% off`
+                                : `${formatNairaAmount(Number(promo.discountValue) || 0)} off`}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </Card>
+                  </div>
+                ) : null}
 
                 {/* The settings that are easy to get wrong */}
                 <div className="mt-5">

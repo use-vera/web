@@ -1,10 +1,9 @@
 "use client";
 
-import { useAuthModal } from "@/components/auth/auth-modal-provider";
 import Button from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useLogout, useSession } from "@/lib/hooks/use-auth";
-import { navLinks } from "@/lib/nav-links";
+import { navLinks, navMenus } from "@/lib/nav-links";
 import { useActiveNavHref } from "@/lib/use-active-nav-href";
 import { cn, ROUTES } from "@/lib/utils";
 import { LogOut, Menu, Ticket, X } from "lucide-react";
@@ -23,7 +22,6 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
   const router = useRouter();
   const sessionQuery = useSession();
   const logout = useLogout();
-  const { openAuthModal } = useAuthModal();
 
   const user = sessionQuery.data?.user;
 
@@ -36,7 +34,7 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
 
   const handleSignIn = () => {
     close();
-    openAuthModal({ view: "sign-in" });
+    router.push(ROUTES.SIGN_IN);
   };
 
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -114,11 +112,40 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
                     );
                   })}
 
+                  {/* No room for a dropdown on a phone, so the group opens
+                      flat under its own label. */}
+                  {navMenus.map((menu) => (
+                    <div key={menu.label} className="mt-2 flex flex-col gap-1">
+                      <span className="px-3 pt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                        {menu.label}
+                      </span>
+                      {menu.items.map((item) => {
+                        const active = isActive(item.href);
+
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={close}
+                            className={cn(
+                              "rounded-lg px-3 py-3 text-sm font-semibold transition-colors",
+                              active
+                                ? "bg-accent text-accent-foreground"
+                                : "text-foreground hover:bg-secondary",
+                            )}
+                          >
+                            {item.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ))}
+
                   {user ? (
                     <Link
                       href={ROUTES.TICKETS}
                       onClick={close}
-                      className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-foreground hover:bg-secondary"
+                      className="mt-2 flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-foreground hover:bg-secondary"
                     >
                       <Ticket className="h-4 w-4" />
                       My tickets

@@ -13,4 +13,6 @@ export const IMAGES = {
   people: "/images/people.svg",
   spacex: "/images/spacex.svg",
   tickets: "/images/tickets.svg",
+  vendorHowItWorks: "/images/vendor-how-it-works.png",
+  vendorWhatItCosts: "/images/vendor-what-it-costs.png",
 } as const;

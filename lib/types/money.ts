@@ -26,6 +26,13 @@ export interface OrganizerWalletApi {
 
 export type WalletTransactionType =
   | "ticket_sale"
+  | "add_on_sale"
+  | "ticket_upgrade"
+  /* Vendor money moves through the same wallet: a vendor's share of an order
+     they handed over, an organizer's cut of it, and stall fees. */
+  | "vendor_order_sale"
+  | "vendor_revenue_share"
+  | "vendor_stall_fee"
   | "platform_fee"
   | "refund"
   | "chargeback"

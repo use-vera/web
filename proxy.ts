@@ -10,7 +10,7 @@ import type { NextRequest } from "next/server";
  * bearer token to the backend.
  */
 const SESSION_COOKIE = "vera_session";
-const PROTECTED_ROUTES = ["/tickets", "/developers"];
+const PROTECTED_ROUTES = ["/tickets", "/developers", "/vendors/onboarding", "/vendors/menu", "/vendors/events", "/vendors/orders", "/vendors/money", "/vendors/verification"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -30,5 +30,18 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/tickets", "/tickets/:path*", "/developers", "/developers/:path*"],
+  matcher: [
+    "/tickets",
+    "/tickets/:path*",
+    "/developers",
+    "/developers/:path*",
+    "/vendors/onboarding",
+    "/vendors/menu",
+    "/vendors/menu/:path*",
+    "/vendors/events",
+    "/vendors/orders",
+    "/vendors/orders/:path*",
+    "/vendors/money",
+    "/vendors/verification",
+  ],
 };

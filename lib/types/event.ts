@@ -71,6 +71,9 @@ export interface PublicEventApi {
   isPaid: boolean;
   ticketPriceNaira: number;
   currentTicketPriceNaira?: number;
+  /** Vera's cut, as a percentage of the full price. */
+  platformFeePercent?: number;
+  feeMode?: "absorbed_by_organizer" | "passed_to_attendee";
   currency: "NGN";
   expectedTickets: number;
   ticketCategories?: EventTicketCategoryApi[];
@@ -232,6 +235,38 @@ export interface TicketPurchasePayload {
   attendeeName?: string;
   callbackUrl?: string;
   addOns?: SelectedAddOnPayload[];
+  promoCode?: string;
+}
+
+export interface PromoCodePreviewPayload {
+  code: string;
+  quantity?: number;
+  ticketCategoryId?: string;
+  addOns?: SelectedAddOnPayload[];
+}
+
+/** A code an event is advertising, as a buyer sees it: the offer only. */
+export interface AvailablePromoCodeApi {
+  _id: string;
+  name: string;
+  code: string;
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  appliesTo: "ticket" | "addons";
+  endsAt: string | null;
+}
+
+/** What a code would be worth on the order the buyer is holding. */
+export interface PromoCodePreviewApi {
+  code: string;
+  appliesTo: "ticket" | "addons";
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  discountNaira: number;
+  /** The code is good, but the order has nothing for it to come off yet. */
+  needsAddOn: boolean;
+  subtotalNaira: number;
+  totalNaira: number;
 }
 
 export interface TicketPurchaseResponse {

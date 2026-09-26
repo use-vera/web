@@ -27,6 +27,9 @@ const TABS = [
   { segment: "check-in", label: "Check-in" },
   { segment: "insights", label: "Insights" },
   { segment: "exports", label: "Exports" },
+  { segment: "add-ons", label: "Add-ons" },
+  { segment: "vendors", label: "Vendors" },
+  { segment: "promo-codes", label: "Promo codes" },
   { segment: "promote", label: "Promote" },
 ];
 

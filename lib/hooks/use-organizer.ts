@@ -195,6 +195,46 @@ export const useOrganizerEvent = (eventId: string) =>
     enabled: Boolean(eventId),
   });
 
+/** What is still owed at the door and the desk. */
+export const useAddOnFulfilment = (
+  eventId: string,
+  redemption?: "door" | "desk",
+) =>
+  useQuery({
+    queryKey: [...organizerKeys.event(eventId), "add-on-fulfilment", redemption ?? "all"],
+    queryFn: () => organizerService.listAddOnFulfilment(eventId, redemption),
+    enabled: Boolean(eventId),
+  });
+
+/**
+ * Hands one add-on over.
+ *
+ * The fulfilment figures are invalidated rather than patched: what is left
+ * is the server's count, and a door with two lanes open is exactly where a
+ * locally-adjusted number would start lying.
+ */
+export const useRedeemAddOn = (eventId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ purchaseId, quantity }: { purchaseId: string; quantity?: number }) =>
+      organizerService.redeemAddOn(eventId, purchaseId, quantity),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...organizerKeys.event(eventId), "add-on-fulfilment"],
+      });
+    },
+  });
+};
+
+/** The organizer's codes, with what each has cost them. */
+export const useEventPromoCodes = (eventId: string) =>
+  useQuery({
+    queryKey: [...organizerKeys.event(eventId), "promo-codes"],
+    queryFn: () => organizerService.listPromoCodes(eventId),
+    enabled: Boolean(eventId),
+  });
+
 export const useCreateEventExport = (eventId: string) => {
   const queryClient = useQueryClient();
 

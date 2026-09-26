@@ -186,10 +186,37 @@ export interface TicketCheckInPayload {
   override?: boolean;
 }
 
+/** One add-on a ticket holds, as the door and the desk see it. */
+export interface TicketAddOnApi {
+  _id: string;
+  name: string;
+  variantName?: string;
+  /** Where it is handed over. "none" prints on the ticket and is collected nowhere. */
+  redemption: "door" | "desk" | "none";
+  location?: string;
+  quantity: number;
+  redeemedQuantity: number;
+  status: "pending" | "paid" | "redeemed" | "cancelled" | "refunded";
+  redeemedAt?: string | null;
+  unitPriceNaira: number;
+}
+
 export interface TicketCheckInResponse {
   ticket: EventTicketApi;
   alreadyUsed: boolean;
   checkedInAt?: string | null;
+  /** What this ticket still holds. The scan is what tells a door about them. */
+  addOns?: TicketAddOnApi[];
+}
+
+/** One add-on's standing across the whole event. */
+export interface AddOnFulfilmentItem {
+  addOnId: string;
+  name: string;
+  variantName: string;
+  sold: number;
+  collected: number;
+  outstanding: number;
 }
 
 /* --- create / cancel --- */
@@ -260,8 +287,49 @@ export interface EventAddOnPayload {
   active?: boolean;
 }
 
+export interface EventPromoCodePayload {
+  name: string;
+  code: string;
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  appliesTo: "ticket" | "addons";
+  maxUses?: number;
+  perUserLimit?: number;
+  endsAt?: string | null;
+  /** Listed on the event for anyone to see and tap. */
+  isPublic?: boolean;
+  active?: boolean;
+}
+
+/** One of an organizer's codes, with what it has cost them so far. */
+export interface EventPromoCodeApi {
+  _id: string;
+  name: string;
+  code: string;
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  appliesTo: "ticket" | "addons";
+  maxUses: number;
+  perUserLimit: number;
+  endsAt: string | null;
+  isPublic: boolean;
+  active: boolean;
+  usedCount: number;
+  /** Null when the code has no ceiling. */
+  remainingUses: number | null;
+  givenAwayNaira: number;
+  paidUseCount: number;
+}
+
+export interface EventPromoCodesResponse {
+  items: EventPromoCodeApi[];
+  givenAwayNaira: number;
+  paidUseCount: number;
+}
+
 export interface CreateEventPayload {
   addOns?: EventAddOnPayload[];
+  promoCodes?: EventPromoCodePayload[];
   name: string;
   description?: string;
   imageUrl?: string;

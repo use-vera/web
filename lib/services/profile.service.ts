@@ -12,6 +12,8 @@ export interface ProfileApi extends AuthUser {
   title?: string;
   bio?: string;
   state?: string;
+  /* ISO date. Asked for where it decides something, never on sign-up. */
+  dateOfBirth?: string;
 }
 
 export interface UpdateProfilePayload {
@@ -21,6 +23,8 @@ export interface UpdateProfilePayload {
   title?: string;
   bio?: string;
   state?: string;
+  /* ISO date. Asked for where it decides something, never on sign-up. */
+  dateOfBirth?: string;
 }
 
 export const profileService = {

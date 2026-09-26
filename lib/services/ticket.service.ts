@@ -3,6 +3,9 @@ import {
   type MyTicketApi,
   type MyTicketsQuery,
   type PaginatedResponse,
+  type AvailablePromoCodeApi,
+  type PromoCodePreviewApi,
+  type PromoCodePreviewPayload,
   type TicketPurchasePayload,
   type TicketUpgradeOptionsApi,
   type TicketPurchaseResponse,
@@ -22,6 +25,30 @@ export const ticketService = {
   ): Promise<TicketPurchaseResponse> => {
     const response = await clientHttp.post<ApiEnvelope<TicketPurchaseResponse>>(
       `/events/${eventId}/tickets/initialize`,
+      payload,
+    );
+
+    return response.data.data;
+  },
+
+  /** What this event is advertising, for the buyer's own list. */
+  listAvailablePromoCodes: async (
+    eventId: string,
+  ): Promise<AvailablePromoCodeApi[]> => {
+    const response = await clientHttp.get<
+      ApiEnvelope<{ items: AvailablePromoCodeApi[] }>
+    >(`/events/${eventId}/promo-codes/available`);
+
+    return response.data.data.items ?? [];
+  },
+
+  /** Prices a typed code against the order the buyer is holding. */
+  previewPromoCode: async (
+    eventId: string,
+    payload: PromoCodePreviewPayload,
+  ): Promise<PromoCodePreviewApi> => {
+    const response = await clientHttp.post<ApiEnvelope<PromoCodePreviewApi>>(
+      `/events/${eventId}/promo-codes/preview`,
       payload,
     );
 

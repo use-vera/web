@@ -4,10 +4,7 @@ import { ChevronDown } from "lucide-react";
 
 const Accordion = BaseAccordion.Root;
 
-const AccordionItem = ({
-  className,
-  ...props
-}: BaseAccordion.Item.Props) => (
+const AccordionItem = ({ className, ...props }: BaseAccordion.Item.Props) => (
   <BaseAccordion.Item
     className={cn("border-b border-border", className)}
     {...props}
@@ -28,7 +25,7 @@ const AccordionTrigger = ({
       {...props}
     >
       {children}
-      <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[panel-open]:rotate-180" />
+      <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-panel-open:rotate-180" />
     </BaseAccordion.Trigger>
   </BaseAccordion.Header>
 );
@@ -40,7 +37,7 @@ const AccordionPanel = ({
 }: BaseAccordion.Panel.Props) => (
   <BaseAccordion.Panel
     className={cn(
-      "overflow-hidden text-sm leading-relaxed text-muted-foreground transition-[height] data-[ending-style]:h-0 data-[starting-style]:h-0",
+      "overflow-hidden text-sm leading-relaxed text-muted-foreground transition-all duration-200 ease-in-out data-ending-style:h-0 data-starting-style:h-0",
       className,
     )}
     {...props}
