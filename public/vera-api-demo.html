@@ -1,0 +1,2366 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Lagos Live — a Vera API demo</title>
+    <meta
+      name="description"
+      content="A working ticket site built on the Vera API. Browse events, buy a ticket, admit someone at the door, refund an order."
+    />
+    <style>
+      /* ---------------------------------------------------------------
+         Vera Paper. These are not approximations: the tokens below are
+         copied from the app's own globals.css, so the demo and the product
+         are the same material. The card colour in particular is lifted off
+         the background by lightness alone — pure white dropped the warmth
+         and read as a different surface.
+         --------------------------------------------------------------- */
+
+      @font-face {
+        font-family: "Gilroy";
+        src: url("/fonts/gilroy/Gilroy-Regular.ttf") format("truetype");
+        font-weight: 400;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Gilroy";
+        src: url("/fonts/gilroy/Gilroy-Medium.ttf") format("truetype");
+        font-weight: 500;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Gilroy";
+        src: url("/fonts/gilroy/Gilroy-SemiBold.ttf") format("truetype");
+        font-weight: 600;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Gilroy";
+        src: url("/fonts/gilroy/Gilroy-Bold.ttf") format("truetype");
+        font-weight: 700;
+        font-display: swap;
+      }
+
+      :root {
+        --background: #f5f3ef;
+        --foreground: #16150f;
+        --card: #faf8f4;
+        --primary: #0fb26e;
+        --primary-foreground: #16150f;
+        --secondary: #edeae2;
+        --muted: #edeae2;
+        --muted-foreground: #7a786c;
+        --accent: #ddf3e9;
+        --accent-foreground: #0c8f5a;
+        --destructive: #b65163;
+        --destructive-foreground: #ffedf1;
+        --destructive-soft: #f9ecef;
+        --border: #e1ddd1;
+
+        --radius: 1rem;
+        --radius-sm: calc(var(--radius) - 8px);
+        --radius-md: calc(var(--radius) - 4px);
+        --radius-lg: var(--radius);
+        --radius-xl: calc(var(--radius) + 6px);
+
+        --sans:
+          "Gilroy", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", sans-serif;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+        --shadow:
+          0 1px 2px rgb(22 21 15 / 0.04), 0 10px 30px rgb(22 21 15 / 0.06);
+        --shadow-lift:
+          0 2px 6px rgb(22 21 15 / 0.05), 0 22px 48px rgb(22 21 15 / 0.1);
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--foreground);
+        font: 400 16px/1.6 var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Vera sets headings in the same Gilroy as everything else — bold,
+         tight tracking, tight leading. No second typeface anywhere. */
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+      }
+
+      h3 {
+        line-height: 1.2;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .mono {
+        font-family: var(--mono);
+      }
+
+      .shell {
+        max-width: 72rem;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* The product's own motifs, lifted from globals.css. */
+      .ticket-perforation {
+        border: none;
+        height: 1px;
+        margin: 0;
+        background-image: repeating-linear-gradient(
+          to right,
+          var(--border) 0,
+          var(--border) 8px,
+          transparent 8px,
+          transparent 16px
+        );
+      }
+
+      .ticket-dot-texture {
+        background-image: radial-gradient(var(--border) 1px, transparent 1px);
+        background-size: 16px 16px;
+      }
+
+      /* ---------------------------------------------------------- header */
+
+      header.site {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: rgb(245 243 239 / 0.9);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .bar {
+        height: 80px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-right: auto;
+      }
+
+      .brand .dot {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        background: var(--primary);
+        display: grid;
+        place-items: center;
+        color: var(--primary-foreground);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      nav.main {
+        display: flex;
+        gap: 4px;
+      }
+
+      nav.main a {
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--muted-foreground);
+        padding: 8px 16px;
+        border-radius: 999px;
+        transition:
+          color 0.15s var(--ease),
+          background 0.15s var(--ease);
+      }
+
+      nav.main a:hover {
+        color: var(--foreground);
+      }
+
+      nav.main a[aria-current="page"] {
+        background: var(--accent);
+        color: var(--accent-foreground);
+      }
+
+      .keychip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        border-radius: 999px;
+        padding: 0 16px;
+        font: 600 14px var(--sans);
+        color: var(--foreground);
+        cursor: pointer;
+      }
+
+      .keychip .led {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #c7c2b2;
+      }
+
+      .keychip.on .led {
+        background: var(--primary);
+      }
+
+      .keychip.live .led {
+        background: var(--destructive);
+      }
+
+      @media (max-width: 820px) {
+        nav.main a {
+          padding: 8px 11px;
+          font-size: 13px;
+        }
+        .keychip span.label {
+          display: none;
+        }
+      }
+
+      /* ------------------------------------------------------------ bits */
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 50px;
+        padding: 0 24px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font: 600 15px var(--sans);
+        text-decoration: none;
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+          opacity 0.15s var(--ease),
+          background 0.15s var(--ease);
+      }
+
+      .btn:hover {
+        opacity: 0.9;
+      }
+
+      .btn.ghost {
+        background: transparent;
+        border-color: var(--border);
+        color: var(--foreground);
+      }
+
+      .btn.ghost:hover {
+        background: var(--secondary);
+        opacity: 1;
+      }
+
+      .btn.quiet {
+        background: transparent;
+        color: var(--foreground);
+        height: 40px;
+        padding: 0 16px;
+        font-size: 14px;
+      }
+
+      .btn.quiet:hover {
+        background: var(--secondary);
+        opacity: 1;
+      }
+
+      .btn.danger {
+        background: var(--destructive);
+        color: var(--destructive-foreground);
+      }
+
+      .btn.sm {
+        height: 40px;
+        padding: 0 16px;
+        font-size: 14px;
+      }
+
+      .btn:disabled {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+        border-radius: 6px;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted-foreground);
+        margin-bottom: 8px;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        font: 400 15px var(--sans);
+        height: 50px;
+        padding: 0 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--card);
+        color: var(--foreground);
+      }
+
+      input::placeholder {
+        color: var(--muted-foreground);
+        opacity: 0.75;
+      }
+
+      .field + .field {
+        margin-top: 18px;
+      }
+
+      .two {
+        display: grid;
+        gap: 24px;
+      }
+
+      @media (min-width: 768px) {
+        .two {
+          grid-template-columns: 1fr 1fr;
+        }
+        .two.wide-left {
+          grid-template-columns: 1.6fr 1fr;
+        }
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background: var(--secondary);
+        color: var(--muted-foreground);
+        text-transform: capitalize;
+      }
+
+      .tag.green {
+        background: var(--accent);
+        color: var(--accent-foreground);
+      }
+
+      .tag.gold {
+        background: var(--secondary);
+        color: var(--foreground);
+      }
+
+      .tag.rose {
+        background: var(--destructive-soft);
+        color: var(--destructive);
+      }
+
+      .note {
+        border-radius: var(--radius-md);
+        padding: 16px 18px;
+        font-size: 14.5px;
+        line-height: 1.55;
+      }
+
+      .note.good {
+        background: var(--accent);
+        color: var(--accent-foreground);
+      }
+
+      .note.warn {
+        background: var(--secondary);
+        color: var(--foreground);
+      }
+
+      .note.bad {
+        background: var(--destructive-soft);
+        color: var(--destructive);
+      }
+
+      .muted {
+        color: var(--muted-foreground);
+      }
+
+      .eyebrow {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary);
+        margin: 0;
+      }
+
+      .stack {
+        display: grid;
+        gap: 20px;
+      }
+
+      .stack.tight {
+        gap: 12px;
+      }
+
+      /* ------------------------------------------------------------ hero */
+
+      .hero {
+        position: relative;
+        display: grid;
+        gap: 56px;
+        max-width: 72rem;
+        margin: 0 auto;
+        padding: 80px 24px 56px;
+      }
+
+      @media (min-width: 768px) {
+        .hero {
+          grid-template-columns: 1fr 1fr;
+          align-items: center;
+          padding: 56px 24px;
+        }
+      }
+
+      .hero h1 {
+        font-size: clamp(36px, 7vw, 60px);
+      }
+
+      .hero h1 em {
+        font-style: normal;
+        color: var(--primary);
+      }
+
+      .hero p.lede {
+        font-size: 18px;
+        color: var(--muted-foreground);
+        max-width: 30rem;
+        margin: 0;
+      }
+
+      .hero .cta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .hero-left {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 32px;
+      }
+
+      /* The right-hand panel: a ticket, since that is what this sells. */
+      .hero-art {
+        position: relative;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        background: var(--card);
+        padding: 28px;
+        box-shadow: var(--shadow);
+      }
+
+      .hero-art .strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .hero-art .big {
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 18px 0 4px;
+      }
+
+      /* --------------------------------------------------------- sections */
+
+      .section {
+        padding: 56px 0;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+      }
+
+      .section-head h2 {
+        font-size: clamp(26px, 4vw, 36px);
+        margin-top: 10px;
+      }
+
+      /* ----------------------------------------------------- event cards */
+
+      .events {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+
+      .event {
+        display: flex;
+        flex-direction: column;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        transition:
+          transform 0.18s var(--ease),
+          box-shadow 0.18s var(--ease);
+      }
+
+      .event:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lift);
+      }
+
+      .event .shot {
+        aspect-ratio: 16 / 10;
+        background: var(--secondary);
+        position: relative;
+        display: grid;
+        place-items: center;
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--muted-foreground);
+      }
+
+      .event .shot img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .event .shot .float {
+        position: absolute;
+        left: 14px;
+        top: 14px;
+        background: var(--card);
+      }
+
+      .event .body {
+        padding: 18px 20px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+      }
+
+      .event h3 {
+        font-size: 19px;
+      }
+
+      .event .when {
+        font-size: 14px;
+        color: var(--muted-foreground);
+        margin: 0;
+      }
+
+      .event .foot {
+        margin-top: auto;
+        padding-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 14px;
+        border-top: 1px dashed var(--border);
+      }
+
+      .price {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      /* -------------------------------------------------------- skeleton */
+
+      .skeleton {
+        border-radius: var(--radius-xl);
+        background: linear-gradient(
+          90deg,
+          var(--secondary),
+          var(--card),
+          var(--secondary)
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.4s linear infinite;
+        height: 300px;
+      }
+
+      @keyframes shimmer {
+        to {
+          background-position: -200% 0;
+        }
+      }
+
+      /* Vera's own reveal: a short rise, on the product's easing curve. */
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+      }
+
+      .rise {
+        animation: rise 0.6s var(--ease) both;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+        html {
+          scroll-behavior: auto;
+        }
+      }
+
+      /* --------------------------------------------------------- tickets */
+
+      .tier {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        text-align: left;
+        background: var(--background);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 16px 18px;
+        cursor: pointer;
+        font: inherit;
+        color: inherit;
+      }
+
+      .tier[aria-pressed="true"] {
+        border-color: var(--primary);
+        background: var(--accent);
+      }
+
+      .tier .pick {
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        border: 2px solid var(--border);
+        flex: none;
+        display: grid;
+        place-items: center;
+      }
+
+      .tier[aria-pressed="true"] .pick {
+        border-color: var(--primary);
+      }
+
+      .tier[aria-pressed="true"] .pick::after {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--primary);
+      }
+
+      /* ----------------------------------------------------- ticket stub */
+
+      .stub {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--card);
+        padding: 22px 26px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+        position: relative;
+      }
+
+      /* The notch and the dashed tear line are the product's ticket motif,
+         not decoration invented for this page. */
+      .stub::before,
+      .stub::after {
+        content: "";
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: var(--background);
+        border: 1px solid var(--border);
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      .stub::before {
+        left: -12px;
+        clip-path: inset(0 0 0 50%);
+      }
+
+      .stub::after {
+        right: -12px;
+        clip-path: inset(0 50% 0 0);
+      }
+
+      .stub .code {
+        font-family: var(--mono);
+        font-size: 19px;
+        letter-spacing: 0.04em;
+        margin: 6px 0 0;
+      }
+
+      /* ------------------------------------------------------- door view */
+
+      .door {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 30px;
+      }
+
+      .verdict {
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        text-align: center;
+      }
+
+      .verdict .mark {
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 14px;
+        font-size: 26px;
+      }
+
+      .verdict.ok {
+        background: var(--accent);
+        color: var(--accent-foreground);
+      }
+
+      .verdict.ok .mark {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+
+      .verdict.no {
+        background: var(--destructive-soft);
+        color: var(--destructive);
+      }
+
+      .verdict.no .mark {
+        background: var(--destructive);
+        color: var(--destructive-foreground);
+      }
+
+      /* ------------------------------------------------------------ table */
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14.5px;
+      }
+
+      th {
+        text-align: left;
+        font-size: 12px;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+        padding: 0 14px 12px;
+        font-weight: 600;
+      }
+
+      td {
+        padding: 14px;
+        border-top: 1px dashed var(--border);
+        vertical-align: middle;
+      }
+
+      tr.sel td {
+        background: var(--accent);
+      }
+
+      /* -------------------------------------------------------- dev panel */
+
+      .devtoggle {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 60;
+        background: var(--card);
+        box-shadow: var(--shadow-lift);
+      }
+
+      .devpanel {
+        position: fixed;
+        inset: 0 0 0 auto;
+        width: min(460px, 100%);
+        background: var(--card);
+        border-left: 1px solid var(--border);
+        z-index: 70;
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        transition: transform 0.25s var(--ease);
+      }
+
+      .devpanel.open {
+        transform: none;
+      }
+
+      .devpanel header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .devpanel .scroll {
+        overflow: auto;
+        padding: 16px 20px 40px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .call {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--background);
+        max-width: calc(min(460px, 100%) - 40px);
+      }
+
+      .call summary {
+        cursor: pointer;
+        padding: 11px 13px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+      }
+
+      .call .status {
+        font-family: var(--sans);
+        font-size: 11.5px;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 3px 9px;
+        background: var(--accent);
+        color: var(--accent-foreground);
+      }
+
+      .call.bad .status {
+        background: var(--destructive-soft);
+        color: var(--destructive);
+      }
+
+      .call .path {
+        font-family: var(--sans);
+        font-size: 12px;
+        color: var(--muted-foreground);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: block;
+      }
+
+      .call .ms {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--muted-foreground);
+        flex: none;
+      }
+
+      pre {
+        margin: 0 13px 13px;
+        background: var(--foreground);
+        color: var(--background);
+        border-radius: var(--radius-sm);
+        padding: 13px;
+        overflow: auto;
+        max-height: 300px;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .scrim {
+        position: fixed;
+        inset: 0;
+        background: rgb(22 21 15 / 0.35);
+        z-index: 65;
+      }
+
+      /* ----------------------------------------------------------- footer */
+
+      footer.site {
+        margin-top: 80px;
+        border-top: 1px dashed var(--border);
+        padding: 32px 0 64px;
+        font-size: 14.5px;
+        color: var(--muted-foreground);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .crumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--muted-foreground);
+        text-decoration: none;
+        margin-bottom: 20px;
+      }
+
+      .steps {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+      }
+
+      .steps span {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted-foreground);
+        background: var(--secondary);
+        border-radius: 999px;
+        padding: 6px 14px;
+      }
+
+      .steps span.now {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+
+      .steps span.done {
+        background: var(--accent);
+        color: var(--accent-foreground);
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="site">
+      <div class="shell bar">
+        <a class="brand" href="#/"> Lagos Live </a>
+
+        <nav class="main" id="nav">
+          <a href="#/" data-route="home">What&rsquo;s on</a>
+          <a href="#/door" data-route="door">Door</a>
+          <a href="#/admin" data-route="admin">Back office</a>
+        </nav>
+
+        <button class="keychip" id="keychip" type="button">
+          <span class="led"></span>
+          <span class="label">No key</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="view"></main>
+
+    <footer class="site">
+      <div class="shell">
+        <strong>Lagos Live</strong> is not a real company. It is a demo of the
+        Vera API — every event, ticket and refund you see here is whatever your
+        own test workspace contains.
+        <a href="/developers/docs" style="font-weight: 600">Read the docs</a>
+      </div>
+    </footer>
+
+    <button class="btn ghost sm devtoggle" id="devtoggle" type="button">
+      API calls <span class="tag" id="callcount">0</span>
+    </button>
+
+    <div class="scrim hidden" id="scrim"></div>
+
+    <aside class="devpanel" id="devpanel" aria-label="API calls">
+      <header>
+        <strong style="font-size: 17px; font-weight: 700"> API calls </strong>
+        <button class="btn quiet" id="clearcalls" type="button">Clear</button>
+        <button class="btn quiet" id="closedev" type="button">Close</button>
+      </header>
+      <div class="scroll" id="calls"></div>
+    </aside>
+
+    <script>
+      "use strict";
+
+      /* =====================================================================
+         Lagos Live — a pretend ticket brand running on the real Vera API.
+         Each screen is a place a real integration calls an endpoint:
+           #/              GET  /events
+           #/events/:id    GET  /events/:id  +  /events/:id/tickets
+           #/checkout/:id  POST /checkout/sessions
+           #/order/:id     GET  /checkout/sessions/:id
+           #/door          POST /tickets/verify  +  /tickets/check-in
+           #/admin         GET  /orders  +  POST /refunds
+         ================================================================== */
+
+      const $ = (id) => document.getElementById(id);
+      const view = $("view");
+
+      const STORE = { key: "vera_demo_key", base: "vera_demo_base" };
+      const DEFAULT_BASE = "https://api.vera.dev/v1";
+
+      const read = (name, fallback) => {
+        try {
+          return window.sessionStorage.getItem(name) || fallback;
+        } catch {
+          /* Private windows and blocked site data both throw on access. */
+          return fallback;
+        }
+      };
+
+      const write = (name, value) => {
+        try {
+          window.sessionStorage.setItem(name, value);
+        } catch {
+          /* Not fatal: state lives in memory for this visit either way. */
+        }
+      };
+
+      const state = {
+        key: read(STORE.key, ""),
+        base: read(STORE.base, DEFAULT_BASE),
+        calls: [],
+      };
+
+      const esc = (value) =>
+        String(value ?? "").replace(
+          /[&<>"']/g,
+          (ch) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[ch],
+        );
+
+      const money = (naira) =>
+        Number(naira) === 0
+          ? "Free"
+          : "₦" + Number(naira || 0).toLocaleString();
+
+      const when = (iso) => {
+        if (!iso) return "Date to be announced";
+        const date = new Date(iso);
+        return date.toLocaleString(undefined, {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          hour: "numeric",
+          minute: "2-digit",
+        });
+      };
+
+      const initials = (name) =>
+        String(name || "?")
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((word) => word[0] || "")
+          .join("")
+          .toUpperCase();
+
+      /* ------------------------------------------------------------ keys */
+
+      const keyKind = () => {
+        const key = state.key.trim();
+        if (!key) return "none";
+        if (/^pk_live_|^sk_live_/.test(key)) return "live";
+        if (key.startsWith("sk_")) return "secret";
+        if (key.startsWith("pk_")) return "publishable";
+        return "odd";
+      };
+
+      const paintKeychip = () => {
+        const chip = $("keychip");
+        const kind = keyKind();
+        chip.classList.toggle(
+          "on",
+          kind === "secret" || kind === "publishable",
+        );
+        chip.classList.toggle("live", kind === "live");
+        chip.querySelector(".label").textContent =
+          kind === "none"
+            ? "No key"
+            : kind === "live"
+              ? "Live key"
+              : kind === "secret"
+                ? "Test key"
+                : kind === "publishable"
+                  ? "Read-only key"
+                  : "Check key";
+      };
+
+      /* --------------------------------------------------------- the API */
+
+      const paintCalls = () => {
+        $("callcount").textContent = String(state.calls.length);
+        const box = $("calls");
+        box.innerHTML = "";
+
+        if (!state.calls.length) {
+          box.innerHTML =
+            '<p class="muted" style="font-size:14px">Nothing sent yet. Every request this site makes will show up here.</p>';
+          return;
+        }
+
+        for (const entry of state.calls) {
+          const details = document.createElement("details");
+          details.className = "call" + (entry.ok ? "" : " bad");
+          details.innerHTML =
+            '<summary><span class="status">' +
+            esc(entry.status) +
+            '</span><span class="path">' +
+            esc(entry.method + " " + entry.path) +
+            '</span><span class="ms">' +
+            entry.ms +
+            "ms</span></summary><pre>" +
+            esc(entry.text) +
+            "</pre>";
+          box.append(details);
+        }
+      };
+
+      /** Every request goes through here, so the panel cannot drift from it. */
+      const api = async (method, path, body, headers) => {
+        const base = state.base.trim().replace(/\/+$/, "");
+
+        if (!state.key.trim()) {
+          return {
+            ok: false,
+            status: 0,
+            problem: "Add an API key to continue.",
+          };
+        }
+
+        const sentAt = performance.now();
+
+        try {
+          const response = await fetch(base + path, {
+            method,
+            headers: Object.assign(
+              { Authorization: "Bearer " + state.key.trim() },
+              body === undefined ? {} : { "Content-Type": "application/json" },
+              headers || {},
+            ),
+            body: body === undefined ? undefined : JSON.stringify(body),
+          });
+
+          const ms = Math.round(performance.now() - sentAt);
+          const parsed = await response.json().catch(() => null);
+
+          state.calls.unshift({
+            method,
+            path,
+            status: response.status,
+            ok: response.ok,
+            ms,
+            text: JSON.stringify(parsed, null, 2),
+          });
+          state.calls.length = Math.min(state.calls.length, 40);
+          paintCalls();
+
+          if (!response.ok) {
+            const error = parsed && parsed.error;
+            return {
+              ok: false,
+              status: response.status,
+              body: parsed,
+              problem: error
+                ? error.code + " — " + error.message
+                : "The API returned " + response.status + ".",
+            };
+          }
+
+          return { ok: true, status: response.status, body: parsed };
+        } catch (error) {
+          const ms = Math.round(performance.now() - sentAt);
+
+          state.calls.unshift({
+            method,
+            path,
+            status: "—",
+            ok: false,
+            ms,
+            text: String((error && error.message) || error),
+          });
+          paintCalls();
+
+          /* Almost always CORS or a wrong base URL: the request never left
+             the browser, so there is no status to report. */
+          return {
+            ok: false,
+            status: 0,
+            problem:
+              "The request could not be sent. Check the API base URL, and that this page's origin is allowed by the API's CORS settings.",
+          };
+        }
+      };
+
+      /* -------------------------------------------------- shared pieces */
+
+      /**
+       * The gate each flow opens with.
+       *
+       * A flow asks for what it needs at the moment it needs it, rather than
+       * one settings screen up front: arriving at the door should tell you
+       * the door needs a key that can admit people.
+       */
+      const connectCard = (title, blurb, scopes) => `
+        <div class="card" style="max-width:620px;margin-inline:auto">
+          <p class="eyebrow">Before you start</p>
+          <h2 style="font-size:26px;margin-top:10px">${esc(title)}</h2>
+          <p class="muted" style="margin-top:10px">${blurb}</p>
+
+          <div class="field" style="margin-top:22px">
+            <label for="gate-key">Your API key</label>
+            <input id="gate-key" class="mono" placeholder="sk_test_..."
+                   autocomplete="off" spellcheck="false" value="${esc(state.key)}" />
+          </div>
+
+          <div class="field">
+            <label for="gate-base">API base URL</label>
+            <input id="gate-base" class="mono" spellcheck="false" value="${esc(state.base)}" />
+          </div>
+
+          ${
+            scopes
+              ? `<p class="muted" style="font-size:13.5px;margin-top:14px">
+                   This flow needs <strong>${esc(scopes)}</strong>.
+                 </p>`
+              : ""
+          }
+
+          <div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap">
+            <button class="btn" id="gate-save">Continue</button>
+            <a class="btn ghost" href="/developers/keys" target="_blank" rel="noopener">
+              Get a test key
+            </a>
+          </div>
+
+          <p class="muted" style="font-size:13px;margin-top:18px">
+            Your key is held in this browser tab only and is sent nowhere
+            except the base URL above.
+          </p>
+        </div>`;
+
+      const wireGate = () => {
+        const save = $("gate-save");
+        if (!save) return;
+
+        save.addEventListener("click", () => {
+          state.key = $("gate-key").value.trim();
+          state.base = $("gate-base").value.trim() || DEFAULT_BASE;
+          write(STORE.key, state.key);
+          write(STORE.base, state.base);
+          paintKeychip();
+          router();
+        });
+      };
+
+      const liveBanner = () =>
+        keyKind() === "live"
+          ? `<div class="note bad" style="margin-bottom:22px">
+               <strong>That is a live key.</strong> This page runs in a browser,
+               where a secret cannot stay secret, and everything here is real:
+               real charges, real check-ins, real refunds. Switch to a test key.
+             </div>`
+          : "";
+
+      const problemNote = (text) => `<div class="note bad">${esc(text)}</div>`;
+
+      const steps = (names, current) =>
+        '<div class="steps">' +
+        names
+          .map(
+            (name, index) =>
+              '<span class="' +
+              (index === current ? "now" : index < current ? "done" : "") +
+              '">' +
+              esc(name) +
+              "</span>",
+          )
+          .join("") +
+        "</div>";
+
+      /* ------------------------------------------------------ 1. what's on */
+
+      const homeView = async () => {
+        view.innerHTML = `
+          <section class="hero">
+            <div class="hero-left rise">
+              <h1>
+                Wherever the night <em>happens</em>.
+              </h1>
+              <p class="lede">
+                Lagos Live sells tickets on Vera. This whole site is a demo of
+                the API &mdash; the events below are whatever is on sale in
+                your own workspace, and every screen is a place a real
+                integration calls an endpoint.
+              </p>
+              <div class="cta">
+                <a class="btn" href="#whats-on">See what&rsquo;s on</a>
+                <a
+                  href="/developers/docs/selling-tickets"
+                  target="_blank"
+                  rel="noopener"
+                  style="font-size: 14px; font-weight: 600; text-underline-offset: 4px"
+                >
+                  How this is built &rarr;
+                </a>
+              </div>
+            </div>
+
+            <div class="hero-art rise" style="animation-delay: 0.15s">
+              <div class="strip">
+                <span class="tag green">Admit one</span>
+                <span class="mono muted" style="font-size: 12px">
+                  GET /events
+                </span>
+              </div>
+              <p class="big">Tonight, in Lagos</p>
+              <p class="muted" style="margin: 0">
+                Buy a ticket, scan it at the door, refund it &mdash; against
+                the real API, with your own test key.
+              </p>
+              <hr class="ticket-perforation" style="margin: 22px 0" />
+              <div class="strip">
+                <div>
+                  <p class="muted" style="margin: 0; font-size: 13px">
+                    Powered by
+                  </p>
+                  <p style="margin: 2px 0 0; font-weight: 700">Vera</p>
+                </div>
+                <div class="ticket-dot-texture" style="width: 56px; height: 36px; border-radius: 8px"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section shell" id="whats-on">
+            ${liveBanner()}
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">On sale now</p>
+                <h2 style="font-size:30px;margin-top:8px">What&rsquo;s on</h2>
+              </div>
+              <span class="mono muted" style="font-size:13px">GET /events</span>
+            </div>
+            <div id="events"></div>
+          </section>`;
+
+        const slot = $("events");
+
+        if (!state.key.trim()) {
+          slot.innerHTML = connectCard(
+            "Connect your workspace",
+            "This storefront lists the events in your Vera workspace, so it needs a key before it has anything to show.",
+            "events:read",
+          );
+          wireGate();
+          return;
+        }
+
+        slot.innerHTML =
+          '<div class="events">' +
+          '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>' +
+          "</div>";
+
+        const result = await api("GET", "/events?page=1&limit=12");
+
+        if (!result.ok) {
+          slot.innerHTML = problemNote(result.problem);
+          return;
+        }
+
+        const events = result.body.data || [];
+
+        if (!events.length) {
+          slot.innerHTML = `
+            <div class="card" style="text-align:center">
+              <h3 style="font-size:22px">Nothing on sale yet</h3>
+              <p class="muted" style="margin-top:8px">
+                This workspace has no published events. Create one in the Vera
+                dashboard, then come back and refresh.
+              </p>
+            </div>`;
+          return;
+        }
+
+        slot.innerHTML =
+          '<div class="events">' +
+          events
+            .map(
+              (event) => `
+              <a class="event" href="#/events/${esc(event.id)}">
+                <div class="shot">
+                  ${
+                    event.imageUrl
+                      ? `<img src="${esc(event.imageUrl)}" alt="" loading="lazy" />`
+                      : esc(initials(event.name))
+                  }
+                  <span class="tag ${event.isPaid ? "gold" : "green"} float">
+                    ${event.isPaid ? "Ticketed" : "Free entry"}
+                  </span>
+                </div>
+                <div class="body">
+                  <h3>${esc(event.name)}</h3>
+                  <p class="when">${esc(when(event.startsAt))}</p>
+                  <p class="when">${esc(event.address || "")}</p>
+                  <div class="foot">
+                    <span class="muted">${Number(event.remainingTickets || 0)} left</span>
+                    <span class="tag">${esc(event.salePhase || "on sale")}</span>
+                  </div>
+                </div>
+              </a>`,
+            )
+            .join("") +
+          "</div>";
+      };
+
+      /**
+       * Splits what GET /events/:id/tickets returns.
+       *
+       * The endpoint always answers, even for an event with no categories:
+       * in that case it sends one synthetic row with `id: null` called
+       * "General admission". That row describes the event, it is not a
+       * choice, and sending its null id back as ticketCategoryId is not a
+       * thing the checkout endpoint accepts. So the two cases are separated
+       * here once, rather than guessed at by each screen.
+       */
+      const splitTiers = (rows) => {
+        const list = Array.isArray(rows) ? rows : [];
+        const real = list.filter((tier) => tier && tier.id);
+
+        return {
+          tiers: real,
+          /* Only meaningful when there are no real categories. */
+          general: real.length ? null : list[0] || null,
+          /* Vera requires a category whenever the event has any. */
+          required: real.length > 0,
+        };
+      };
+
+      /* ---------------------------------------------------- 2. one event */
+
+      const eventView = async (eventId) => {
+        view.innerHTML =
+          '<section class="section shell"><div class="skeleton" style="height:360px"></div></section>';
+
+        if (!state.key.trim()) {
+          view.innerHTML =
+            '<section class="section shell">' +
+            connectCard(
+              "Connect your workspace",
+              "Reading an event and its ticket types needs a key.",
+              "events:read",
+            ) +
+            "</section>";
+          wireGate();
+          return;
+        }
+
+        const [eventResult, tiersResult] = await Promise.all([
+          api("GET", "/events/" + eventId),
+          api("GET", "/events/" + eventId + "/tickets"),
+        ]);
+
+        if (!eventResult.ok) {
+          view.innerHTML =
+            '<section class="section shell">' +
+            problemNote(eventResult.problem) +
+            '<p style="margin-top:16px"><a class="btn ghost" href="#/">Back to what&rsquo;s on</a></p>' +
+            "</section>";
+          return;
+        }
+
+        const event = eventResult.body.data;
+        const { tiers, general, required } = splitTiers(
+          tiersResult.ok ? tiersResult.body.data : [],
+        );
+
+        /* Preselected rather than left blank: an event with categories
+           cannot be checked out without one, so opening with nothing chosen
+           only produces a 400 for anyone who does not notice the list. */
+        let chosenTier =
+          (tiers.find((tier) => Number(tier.remainingQuantity) > 0) || {}).id ||
+          "";
+
+        view.innerHTML = `
+          <section class="section shell">
+            <a class="crumb" href="#/">&larr; What&rsquo;s on</a>
+            ${steps(["Choose", "Checkout", "Tickets"], 0)}
+
+            <div class="two wide-left" style="align-items:start">
+              <div class="stack">
+                <div class="event" style="cursor:default">
+                  <div class="shot">
+                    ${
+                      event.imageUrl
+                        ? `<img src="${esc(event.imageUrl)}" alt="" />`
+                        : esc(initials(event.name))
+                    }
+                  </div>
+                </div>
+
+                <div>
+                  <span class="tag ${event.isPaid ? "gold" : "green"}">
+                    ${event.isPaid ? "Ticketed" : "Free entry"}
+                  </span>
+                  <h1 style="font-size:clamp(30px,5vw,44px);margin-top:14px">
+                    ${esc(event.name)}
+                  </h1>
+                  <p class="muted" style="margin-top:10px;font-size:17px">
+                    ${esc(when(event.startsAt))} &middot; ${esc(event.address || "")}
+                  </p>
+                </div>
+
+                <p style="font-size:17px;line-height:1.7">
+                  ${esc(event.description || "No description for this event.")}
+                </p>
+              </div>
+
+              <div class="card" style="position:sticky;top:92px">
+                <p class="eyebrow">Tickets</p>
+
+                <div class="stack tight" style="margin-top:16px" id="tiers">
+                  ${
+                    required
+                      ? tiers
+                          .map(
+                            (tier) => `
+                        <button class="tier" type="button"
+                                data-tier="${esc(tier.id)}"
+                                aria-pressed="${String(tier.id === chosenTier)}"
+                                ${Number(tier.remainingQuantity) <= 0 ? "disabled" : ""}>
+                          <span class="pick"></span>
+                          <span style="flex:1">
+                            <span style="font-weight:700;display:block">${esc(tier.name)}</span>
+                            <span class="muted" style="font-size:13.5px">
+                              ${
+                                Number(tier.remainingQuantity) > 0
+                                  ? Number(tier.remainingQuantity) +
+                                    " of " +
+                                    Number(tier.quantity || 0) +
+                                    " left"
+                                  : "Sold out"
+                              }
+                            </span>
+                          </span>
+                          <span class="price">${money(tier.priceNaira)}</span>
+                        </button>`,
+                          )
+                          .join("")
+                      : `<div class="tier" aria-pressed="false" style="cursor:default">
+                           <span style="flex:1">
+                             <span style="font-weight:700;display:block">
+                               ${esc((general && general.name) || "General admission")}
+                             </span>
+                             <span class="muted" style="font-size:13.5px">
+                               One kind of ticket &mdash; nothing to choose
+                             </span>
+                           </span>
+                           <span class="price">${money(general ? general.priceNaira : 0)}</span>
+                         </div>`
+                  }
+                </div>
+
+                ${
+                  required && !chosenTier
+                    ? `<p class="note bad" style="margin-top:14px;font-size:13.5px">
+                         Every ticket type is sold out, so there is nothing to
+                         check out.
+                       </p>`
+                    : ""
+                }
+
+                <div class="field" style="margin-top:20px">
+                  <label for="qty">How many?</label>
+                  <select id="qty">
+                    ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                      .map((n) => `<option value="${n}">${n}</option>`)
+                      .join("")}
+                  </select>
+                </div>
+
+                <button class="btn" id="go-checkout" style="width:100%;justify-content:center;margin-top:20px">
+                  Get tickets
+                </button>
+
+                <p class="muted" style="font-size:13px;margin-top:14px">
+                  ${Number(event.remainingTickets || 0)} remaining &middot;
+                  <span class="mono">GET /events/:id</span>
+                </p>
+              </div>
+            </div>
+          </section>`;
+
+        for (const button of view.querySelectorAll(".tier[data-tier]")) {
+          button.addEventListener("click", () => {
+            chosenTier = button.dataset.tier;
+            for (const other of view.querySelectorAll(".tier[data-tier]")) {
+              other.setAttribute("aria-pressed", String(other === button));
+            }
+          });
+        }
+
+        /* An event with categories and none of them on sale cannot be
+           bought at all, so the button says so rather than sending a
+           request that is certain to fail. */
+        const buy = $("go-checkout");
+
+        if (required && !chosenTier) {
+          buy.disabled = true;
+          buy.textContent = "Sold out";
+        }
+
+        buy.addEventListener("click", () => {
+          const quantity = $("qty").value;
+          window.location.hash =
+            "#/checkout/" +
+            eventId +
+            "?qty=" +
+            quantity +
+            (chosenTier ? "&tier=" + encodeURIComponent(chosenTier) : "");
+        });
+      };
+
+      /* ----------------------------------------------------- 3. checkout */
+
+      const checkoutView = async (eventId, params) => {
+        if (!state.key.trim()) {
+          view.innerHTML =
+            '<section class="section shell">' +
+            connectCard(
+              "Connect your workspace",
+              "Creating a checkout session needs a secret key.",
+              "checkout:write",
+            ) +
+            "</section>";
+          wireGate();
+          return;
+        }
+
+        /* The tier list is fetched here too, not just carried in the link:
+           arriving straight at this URL, or after a reload, must still be
+           able to name a category — Vera rejects a checkout for an event
+           that has categories unless one is chosen. */
+        const [eventResult, tiersResult] = await Promise.all([
+          api("GET", "/events/" + eventId),
+          api("GET", "/events/" + eventId + "/tickets"),
+        ]);
+
+        if (!eventResult.ok) {
+          view.innerHTML =
+            '<section class="section shell">' +
+            problemNote(eventResult.problem) +
+            "</section>";
+          return;
+        }
+
+        const event = eventResult.body.data;
+        const quantity = Number(params.get("qty") || 1);
+        const { tiers, general, required } = splitTiers(
+          tiersResult.ok ? tiersResult.body.data : [],
+        );
+
+        const fromLink = params.get("tier") || "";
+        let tier = tiers.some((row) => row.id === fromLink) ? fromLink : "";
+
+        /* One category is not a decision, and Vera auto-selects it anyway. */
+        if (required && !tier && tiers.length === 1) {
+          tier = tiers[0].id;
+        }
+
+        const tierOf = (id) => tiers.find((row) => row.id === id) || null;
+
+        view.innerHTML = `
+          <section class="section shell">
+            <a class="crumb" href="#/events/${esc(eventId)}">&larr; ${esc(event.name)}</a>
+            ${steps(["Choose", "Checkout", "Tickets"], 1)}
+            ${liveBanner()}
+
+            <div class="two wide-left" style="align-items:start">
+              <div class="card">
+                <h2 style="font-size:26px">Who are the tickets for?</h2>
+                <p class="muted" style="margin-top:8px">
+                  Vera emails the tickets to this address and holds the seats
+                  for 30 minutes while payment goes through.
+                </p>
+
+                <div class="field" style="margin-top:22px">
+                  <label for="email">Email address</label>
+                  <input id="email" type="email" value="attendee@example.com" />
+                </div>
+
+                <div class="field">
+                  <label for="idem">Idempotency key</label>
+                  <input id="idem" class="mono" spellcheck="false" />
+                  <p class="muted" style="font-size:13px;margin-top:8px">
+                    Sent as the <span class="mono">Idempotency-Key</span> header.
+                    Press <em>Buy</em> twice with the same value and you get the
+                    same session back rather than a second reservation.
+                  </p>
+                </div>
+
+                ${
+                  required
+                    ? `<div class="field">
+                         <label for="tier">Ticket type</label>
+                         <select id="tier">
+                           <option value="">Choose a ticket type</option>
+                           ${tiers
+                             .map(
+                               (row) =>
+                                 `<option value="${esc(row.id)}"
+                                          ${row.id === tier ? "selected" : ""}
+                                          ${Number(row.remainingQuantity) <= 0 ? "disabled" : ""}>
+                                    ${esc(row.name)} — ${money(row.priceNaira)}${
+                                      Number(row.remainingQuantity) <= 0
+                                        ? " (sold out)"
+                                        : ""
+                                    }
+                                  </option>`,
+                             )
+                             .join("")}
+                         </select>
+                         <p class="muted" style="font-size:13px;margin-top:8px">
+                           Sent as <span class="mono">ticketCategoryId</span>.
+                           This event has ticket types, and Vera refuses a
+                           checkout that does not name one.
+                         </p>
+                       </div>`
+                    : ""
+                }
+
+                <button class="btn" id="buy" style="margin-top:22px">
+                  ${event.isPaid ? "Buy tickets" : "Reserve tickets"}
+                </button>
+                <button class="btn ghost" id="newidem" style="margin-top:22px">
+                  New key
+                </button>
+
+                <div id="checkout-problem" style="margin-top:18px"></div>
+              </div>
+
+              <div class="card">
+                <p class="eyebrow">Your order</p>
+                <h3 style="font-size:21px;margin-top:10px">${esc(event.name)}</h3>
+                <p class="muted" style="margin-top:6px;font-size:14.5px">
+                  ${esc(when(event.startsAt))}
+                </p>
+                <hr class="ticket-perforation" style="margin:18px 0" />
+
+                <div id="tier-summary"></div>
+
+                <div style="margin-top:10px;display:flex;justify-content:space-between">
+                  <span class="muted">Quantity</span>
+                  <strong>${quantity}</strong>
+                </div>
+                <p class="muted" style="font-size:13px;margin-top:18px">
+                  Vera prices the order server-side. Nothing this page computes
+                  is trusted &mdash; the total comes back with the session.
+                </p>
+              </div>
+            </div>
+          </section>`;
+
+        const freshIdem = () =>
+          "lagoslive-" +
+          Date.now().toString(36) +
+          "-" +
+          Math.random().toString(36).slice(2, 6);
+
+        $("idem").value = freshIdem();
+        $("newidem").addEventListener("click", () => {
+          $("idem").value = freshIdem();
+        });
+
+        const paintSummary = () => {
+          const picked = tierOf(tier);
+          const line = picked || general;
+
+          $("tier-summary").innerHTML = `
+            <div style="display:flex;justify-content:space-between;gap:16px">
+              <span class="muted">${esc(line ? line.name : "Entry")}</span>
+              <strong>${
+                line ? money(line.priceNaira) : event.isPaid ? "Paid" : "Free"
+              }</strong>
+            </div>`;
+
+          /* Nothing chosen on an event that demands a choice: the request
+             would come back 400, so the button waits instead. */
+          $("buy").disabled = required && !tier;
+        };
+
+        const tierSelect = $("tier");
+
+        if (tierSelect) {
+          tierSelect.addEventListener("change", () => {
+            tier = tierSelect.value;
+            paintSummary();
+          });
+        }
+
+        paintSummary();
+
+        $("buy").addEventListener("click", async () => {
+          const button = $("buy");
+          button.disabled = true;
+          button.textContent = "Reserving…";
+
+          const payload = {
+            eventId,
+            quantity,
+            customerEmail: $("email").value.trim(),
+          };
+
+          if (tier) {
+            payload.ticketCategoryId = tier;
+          }
+
+          const result = await api("POST", "/checkout/sessions", payload, {
+            "Idempotency-Key": $("idem").value.trim(),
+          });
+
+          button.disabled = false;
+          button.textContent = event.isPaid ? "Buy tickets" : "Reserve tickets";
+
+          if (!result.ok) {
+            $("checkout-problem").innerHTML = problemNote(result.problem);
+            return;
+          }
+
+          window.location.hash = "#/order/" + result.body.data.id;
+        });
+      };
+
+      /* -------------------------------------------------------- 4. order */
+
+      const orderView = async (sessionId) => {
+        view.innerHTML =
+          '<section class="section shell"><div class="skeleton" style="height:260px"></div></section>';
+
+        const result = await api("GET", "/checkout/sessions/" + sessionId);
+
+        if (!result.ok) {
+          view.innerHTML =
+            '<section class="section shell">' +
+            problemNote(result.problem) +
+            "</section>";
+          return;
+        }
+
+        const session = result.body.data;
+        const tickets = session.tickets || [];
+        const paid = session.status === "purchased";
+        const awaiting = session.requiresPayment && !paid;
+
+        view.innerHTML = `
+          <section class="section shell">
+            ${steps(["Choose", "Checkout", "Tickets"], 2)}
+
+            <div style="max-width:720px">
+              <span class="tag ${paid ? "green" : awaiting ? "gold" : "rose"}">
+                ${esc(session.status)}
+              </span>
+              <h1 style="font-size:clamp(30px,5vw,42px);margin-top:14px">
+                ${
+                  paid
+                    ? "You&rsquo;re going."
+                    : awaiting
+                      ? "Nearly there."
+                      : "This reservation has lapsed."
+                }
+              </h1>
+
+              <p class="muted" style="margin-top:12px;font-size:17px">
+                ${
+                  paid
+                    ? "Here are your tickets. Take the code to the door &mdash; or try it yourself on the Door screen."
+                    : awaiting
+                      ? "Your seats are held until " +
+                        esc(
+                          session.expiresAt
+                            ? new Date(session.expiresAt).toLocaleTimeString()
+                            : "the window closes",
+                        ) +
+                        ". Pay, then come back and refresh, a buyer reaching this page is not proof of payment, so this site asks the API."
+                      : "The payment window closed and the tickets went back on sale."
+                }
+              </p>
+
+              ${
+                awaiting
+                  ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:26px">
+                       ${
+                         session.checkoutUrl
+                           ? `<a class="btn" href="${esc(session.checkoutUrl)}" target="_blank" rel="noopener">Pay now</a>`
+                           : ""
+                       }
+                       <button class="btn ghost" id="refresh">Refresh status</button>
+                     </div>`
+                  : ""
+              }
+
+              ${
+                tickets.length
+                  ? '<div class="stack" style="margin-top:32px">' +
+                    tickets
+                      .map(
+                        (ticket) => `
+                        <div class="stub">
+                          <div>
+                            <p class="eyebrow">Admit one</p>
+                            <p class="code" style="margin:6px 0 0">${esc(ticket.ticketCode || "—")}</p>
+                            <p class="muted" style="font-size:13.5px;margin:4px 0 0">
+                              ${esc(ticket.attendeeEmail || session.customerEmail || "")}
+                            </p>
+                          </div>
+                          <a class="btn ghost sm" href="#/door?code=${encodeURIComponent(ticket.ticketCode || "")}">
+                            Use at the door
+                          </a>
+                        </div>`,
+                      )
+                      .join("") +
+                    "</div>"
+                  : ""
+              }
+
+              ${
+                session.pricingBreakdown
+                  ? `<div class="card" style="margin-top:28px">
+                       <p class="eyebrow">What was charged</p>
+                       <div style="margin-top:14px;display:grid;gap:9px">
+                         ${Object.entries(session.pricingBreakdown)
+                           .map(
+                             ([name, value]) =>
+                               `<div style="display:flex;justify-content:space-between">
+                                  <span class="muted">${esc(
+                                    name
+                                      .replace(/([A-Z])/g, " $1")
+                                      .replace(/Naira/i, "")
+                                      .trim(),
+                                  )}</span>
+                                  <strong>${money(value)}</strong>
+                                </div>`,
+                           )
+                           .join("")}
+                       </div>
+                     </div>`
+                  : ""
+              }
+
+              <p style="margin-top:30px">
+                <a class="btn ghost" href="#/">Back to what&rsquo;s on</a>
+              </p>
+            </div>
+          </section>`;
+
+        const refresh = $("refresh");
+        if (refresh) {
+          refresh.addEventListener("click", () => orderView(sessionId));
+        }
+      };
+
+      /* --------------------------------------------------------- 5. door */
+
+      const doorView = (params) => {
+        if (!state.key.trim()) {
+          view.innerHTML =
+            '<section class="section shell">' +
+            connectCard(
+              "Sign in to the door",
+              "The scanner checks a ticket code against the API and admits the holder, so it needs a key that is allowed to do both.",
+              "tickets:verify and tickets:checkin",
+            ) +
+            "</section>";
+          wireGate();
+          return;
+        }
+
+        view.innerHTML = `
+          <section class="section shell" style="max-width:72rem;">
+            <p class="eyebrow">Door staff</p>
+            <h1 style="font-size:clamp(28px,5vw,40px);margin-top:10px">
+              Check someone in.
+            </h1>
+            <p class="muted" style="margin-top:12px;font-size:17px">
+              <strong>Verify</strong> asks whether a code is real and changes
+              nothing. <strong>Admit</strong> marks the ticket used. Admit the
+              same code twice to see the refusal that stops one ticket letting
+              in a queue.
+            </p>
+
+            ${liveBanner()}
+
+            <div class="door" style="margin-top:28px">
+              <div class="field">
+                <label for="code">Ticket code</label>
+                <input id="code" class="mono" placeholder="VRA-XXXXXXXX-XXXXX"
+                       value="${esc(params.get("code") || "")}" />
+              </div>
+
+              <div class="field">
+                <label for="eid">Event id <span style="text-transform:none;font-weight:600">(optional, scopes the door to one event)</span></label>
+                <input id="eid" class="mono" placeholder="24 hex characters" />
+              </div>
+
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px">
+                <button class="btn ghost" id="verify">Verify</button>
+                <button class="btn" id="admit">Admit</button>
+                <button class="btn quiet" id="override">Admit anyway</button>
+              </div>
+
+              <div id="verdict" style="margin-top:24px"></div>
+            </div>
+          </section>`;
+
+        const payload = (override) => {
+          const body = { code: $("code").value.trim() };
+          const eventId = $("eid").value.trim();
+          if (eventId) body.eventId = eventId;
+          if (override) body.override = true;
+          return body;
+        };
+
+        const paintVerdict = (data) => {
+          const ticket = data.ticket || {};
+          const welcome = data.valid && !data.alreadyCheckedIn;
+
+          $("verdict").innerHTML = `
+            <div class="verdict ${welcome ? "ok" : "no"}">
+              <div class="mark">${welcome ? "&check;" : "&times;"}</div>
+              <h3 style="font-size:23px">
+                ${welcome ? "Come on in" : data.valid ? "Already inside" : "Not admitted"}
+              </h3>
+              <p style="margin-top:8px">
+                ${esc(
+                  ticket.attendeeName ||
+                    ticket.attendeeEmail ||
+                    data.reason ||
+                    "No ticket holder on record",
+                )}
+              </p>
+              ${
+                ticket.checkedInAt
+                  ? `<p class="muted" style="font-size:13.5px;margin-top:6px">
+                       Admitted ${esc(new Date(ticket.checkedInAt).toLocaleString())}
+                     </p>`
+                  : ""
+              }
+            </div>`;
+        };
+
+        const run = async (path, override) => {
+          const result = await api("POST", path, payload(override));
+
+          if (!result.ok) {
+            $("verdict").innerHTML = problemNote(result.problem);
+            return;
+          }
+
+          paintVerdict(result.body.data);
+        };
+
+        $("verify").addEventListener("click", () =>
+          run("/tickets/verify", false),
+        );
+        $("admit").addEventListener("click", () =>
+          run("/tickets/check-in", false),
+        );
+        $("override").addEventListener("click", () =>
+          run("/tickets/check-in", true),
+        );
+      };
+
+      /* -------------------------------------------------------- 6. admin */
+
+      const adminView = async () => {
+        if (!state.key.trim()) {
+          view.innerHTML =
+            '<section class="section shell">' +
+            connectCard(
+              "Open the back office",
+              "Listing what was sold and refunding it needs a secret key.",
+              "orders:read and refunds:write",
+            ) +
+            "</section>";
+          wireGate();
+          return;
+        }
+
+        view.innerHTML = `
+          <section class="section shell">
+            <p class="eyebrow">Back office</p>
+            <h1 style="font-size:clamp(28px,5vw,40px);margin-top:10px">Orders</h1>
+            <p class="muted" style="margin-top:12px;font-size:17px">
+              Everything sold through this workspace. Pick one to refund it.
+            </p>
+            ${liveBanner()}
+            <div class="card" style="margin-top:26px;padding:20px" id="orders">
+              <div class="skeleton" style="height:180px"></div>
+            </div>
+            <div id="refund-out" style="margin-top:18px"></div>
+          </section>`;
+
+        const result = await api("GET", "/orders?page=1&limit=25");
+
+        if (!result.ok) {
+          $("orders").innerHTML = problemNote(result.problem);
+          return;
+        }
+
+        const orders = result.body.data || [];
+
+        if (!orders.length) {
+          $("orders").innerHTML =
+            '<p class="muted">Nothing sold yet. Buy a ticket on the storefront first.</p>';
+          return;
+        }
+
+        $("orders").innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Ticket</th><th>Holder</th><th>Status</th><th>Total</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${orders
+                .map(
+                  (order) => `
+                <tr data-order="${esc(order.id)}">
+                  <td class="mono" style="font-size:13px">${esc(order.ticketCode || order.id)}</td>
+                  <td>${esc(order.attendeeEmail || order.attendeeName || "—")}</td>
+                  <td>
+                    <span class="tag ${
+                      order.status === "paid"
+                        ? "green"
+                        : order.status === "used"
+                          ? "gold"
+                          : "rose"
+                    }">${esc(order.status)}</span>
+                    ${order.checkedIn ? '<span class="tag">checked in</span>' : ""}
+                  </td>
+                  <td><strong>${money(order.totalPriceNaira)}</strong></td>
+                  <td style="text-align:right;white-space:nowrap">
+                    <button class="btn quiet" data-open="${esc(order.id)}">Open</button>
+                    <button class="btn ghost sm" data-refund="${esc(order.id)}">Refund</button>
+                  </td>
+                </tr>`,
+                )
+                .join("")}
+            </tbody>
+          </table>`;
+
+        /* The single-order read. A list row is a summary; support staff
+           answering "what exactly did this person buy?" want the record
+           itself, which is what GET /orders/:ticketId is for. */
+        for (const button of view.querySelectorAll("[data-open]")) {
+          button.addEventListener("click", async () => {
+            const result = await api("GET", "/orders/" + button.dataset.open);
+
+            if (!result.ok) {
+              $("refund-out").innerHTML = problemNote(result.problem);
+              return;
+            }
+
+            const order = result.body.data;
+            $("refund-out").innerHTML = `
+              <div class="card">
+                <p class="eyebrow">Order</p>
+                <h3 style="font-size:21px;margin-top:10px">
+                  ${esc(order.attendeeName || order.attendeeEmail || "Ticket holder")}
+                </h3>
+                <div style="margin-top:16px;display:grid;gap:9px">
+                  ${[
+                    ["Ticket code", order.ticketCode || "—"],
+                    ["Status", order.status],
+                    ["Quantity", order.quantity],
+                    ["Total", money(order.totalPriceNaira)],
+                    [
+                      "Checked in",
+                      order.checkedInAt
+                        ? new Date(order.checkedInAt).toLocaleString()
+                        : "No",
+                    ],
+                    [
+                      "Purchased",
+                      order.purchasedAt
+                        ? new Date(order.purchasedAt).toLocaleString()
+                        : "—",
+                    ],
+                  ]
+                    .map(
+                      ([name, value]) =>
+                        `<div style="display:flex;justify-content:space-between;gap:16px">
+                           <span class="muted">${esc(name)}</span>
+                           <strong>${esc(value)}</strong>
+                         </div>`,
+                    )
+                    .join("")}
+                </div>
+              </div>`;
+          });
+        }
+
+        for (const button of view.querySelectorAll("[data-refund]")) {
+          button.addEventListener("click", async () => {
+            const ticketId = button.dataset.refund;
+            const row = view.querySelector('[data-order="' + ticketId + '"]');
+
+            for (const other of view.querySelectorAll("tr")) {
+              other.classList.remove("sel");
+            }
+            if (row) row.classList.add("sel");
+
+            button.disabled = true;
+            button.textContent = "Refunding…";
+
+            const refund = await api("POST", "/refunds", {
+              ticketId,
+              reason: "Refunded from the Lagos Live back office",
+            });
+
+            button.disabled = false;
+            button.textContent = "Refund";
+
+            $("refund-out").innerHTML = refund.ok
+              ? '<div class="note good">Refunded. Reload to see the new state. This endpoint takes no idempotency key, so read the order back rather than retrying.</div>'
+              : problemNote(refund.problem);
+
+            if (refund.ok) adminView();
+          });
+        }
+      };
+
+      /* -------------------------------------------------------- settings */
+
+      const settingsView = () => {
+        view.innerHTML =
+          '<section class="section shell">' +
+          connectCard(
+            "Your API key",
+            "Used for every request this site makes. A <strong>test</strong> key is the one you want: everything here is real against whichever workspace the key belongs to.",
+            "",
+          ) +
+          "</section>";
+        wireGate();
+      };
+
+      /* --------------------------------------------------------- router */
+
+      const router = () => {
+        const raw = window.location.hash.replace(/^#/, "") || "/";
+        const [path, search] = raw.split("?");
+        const params = new URLSearchParams(search || "");
+        const parts = path.split("/").filter(Boolean);
+
+        for (const link of document.querySelectorAll("nav.main a")) {
+          const route = link.dataset.route;
+          const active =
+            (route === "home" && !parts.length) ||
+            (route === "door" && parts[0] === "door") ||
+            (route === "admin" && parts[0] === "admin");
+          link.toggleAttribute("aria-current", active);
+          if (active) link.setAttribute("aria-current", "page");
+        }
+
+        window.scrollTo({ top: 0, behavior: "auto" });
+
+        if (!parts.length) return void homeView();
+        if (parts[0] === "events" && parts[1]) return void eventView(parts[1]);
+        if (parts[0] === "checkout" && parts[1])
+          return void checkoutView(parts[1], params);
+        if (parts[0] === "order" && parts[1]) return void orderView(parts[1]);
+        if (parts[0] === "door") return void doorView(params);
+        if (parts[0] === "admin") return void adminView();
+        if (parts[0] === "settings") return void settingsView();
+
+        view.innerHTML =
+          '<section class="section shell"><h1>Nothing here</h1><p class="muted" style="margin-top:10px">That link does not match a screen.</p><p style="margin-top:20px"><a class="btn ghost" href="#/">Back to what&rsquo;s on</a></p></section>';
+      };
+
+      window.addEventListener("hashchange", router);
+
+      /* ------------------------------------------------------- dev panel */
+
+      const openDev = (open) => {
+        $("devpanel").classList.toggle("open", open);
+        $("scrim").classList.toggle("hidden", !open);
+      };
+
+      $("devtoggle").addEventListener("click", () => openDev(true));
+      $("closedev").addEventListener("click", () => openDev(false));
+      $("scrim").addEventListener("click", () => openDev(false));
+      $("clearcalls").addEventListener("click", () => {
+        state.calls = [];
+        paintCalls();
+      });
+      $("keychip").addEventListener("click", () => {
+        window.location.hash = "#/settings";
+      });
+
+      paintKeychip();
+      paintCalls();
+      router();
+    </script>
+  </body>
+</html>

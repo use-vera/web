@@ -13,8 +13,10 @@ import {
   ENDPOINT_GROUPS,
   type EndpointDoc,
 } from "@/lib/developer-docs/endpoints";
-import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { cn, ROUTES } from "@/lib/utils";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 const SANDBOX_KEY_STORAGE = "vera_sandbox_api_key";
 
@@ -266,9 +268,17 @@ const SandboxRequestPanel = ({
   );
 };
 
-const SandboxPage = () => {
+const SandboxWorkbench = () => {
   const [apiKey, setApiKey] = useState(readStoredApiKey);
-  const [selectedId, setSelectedId] = useState(ENDPOINTS[0].id);
+
+  /* "Try it" in the API reference links here with the endpoint it sat next
+     to, so arriving from the docs lands on the right form rather than on
+     whichever endpoint happens to be first. */
+  const requestedId = useSearchParams().get("endpoint");
+  const [selectedId, setSelectedId] = useState(
+    () =>
+      ENDPOINTS.find((item) => item.id === requestedId)?.id ?? ENDPOINTS[0].id,
+  );
   const endpoint =
     ENDPOINTS.find((item) => item.id === selectedId) ?? ENDPOINTS[0];
 
@@ -283,10 +293,42 @@ const SandboxPage = () => {
       <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
         Test the API live.
       </h1>
-      <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-        Requests here go straight from your browser to the real Vera API using
-        the key you paste in, nothing is sent to or stored by Vera beyond this
-        page&apos;s session.
+      <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+        Requests go straight from your browser to the real Vera API using the
+        key you paste in. The key stays in this tab&apos;s session storage and
+        is never sent to Vera&apos;s web servers.
+      </p>
+
+      <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+        No key yet? Create a test one on the{" "}
+        <Link
+          href={ROUTES.DEVELOPERS_KEYS}
+          className="font-semibold text-foreground underline underline-offset-2"
+        >
+          API keys
+        </Link>{" "}
+        page, or read the{" "}
+        <Link
+          href={`${ROUTES.DEVELOPERS_DOCS}/quickstart`}
+          className="font-semibold text-foreground underline underline-offset-2"
+        >
+          quickstart
+        </Link>{" "}
+        first.
+      </p>
+
+      <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+        Want the flows rather than single calls? The{" "}
+        <a
+          href={ROUTES.DEVELOPERS_DEMO}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-foreground underline underline-offset-2"
+        >
+          demo app
+        </a>{" "}
+        strings them together into a working ticket shop, and is one HTML file
+        you can save and build from.
       </p>
 
       <div className="mt-6 flex flex-col gap-2">
@@ -341,5 +383,14 @@ const SandboxPage = () => {
     </div>
   );
 };
+
+/* useSearchParams opts its subtree out of server rendering, so it needs a
+   Suspense boundary. The cost lands on a console that does nothing without
+   JavaScript anyway — unlike the guides, which must arrive as HTML. */
+const SandboxPage = () => (
+  <Suspense fallback={null}>
+    <SandboxWorkbench />
+  </Suspense>
+);
 
 export default SandboxPage;

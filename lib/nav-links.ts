@@ -38,6 +38,34 @@ export const navMenus: NavMenu[] = [
       },
     ],
   },
+  /* The portal used to be reachable only from the signed-in avatar menu,
+     which hid it from the people most likely to want it: developers
+     evaluating Vera before anyone on their team has an account. */
+  {
+    label: "Developers",
+    items: [
+      {
+        href: "/developers/docs",
+        label: "Documentation",
+        description: "Guides that walk through each flow end to end.",
+      },
+      {
+        href: "/developers/api",
+        label: "API reference",
+        description: "Every endpoint, parameter and response.",
+      },
+      {
+        href: "/developers/sandbox",
+        label: "Sandbox",
+        description: "Send real requests from the browser.",
+      },
+      {
+        href: "/developers/keys",
+        label: "API keys",
+        description: "Create and roll your keys. Sign-in required.",
+      },
+    ],
+  },
 ];
 
 /** Every routable nav destination, for mobile menus and active-state checks. */

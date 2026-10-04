@@ -5,6 +5,13 @@ export const ROUTES = Object.freeze({
   DOWNLOAD: "/download",
   TICKETS: "/tickets",
   DEVELOPERS: "/developers",
+  DEVELOPERS_DOCS: "/developers/docs",
+  DEVELOPERS_API: "/developers/api",
+  DEVELOPERS_SANDBOX: "/developers/sandbox",
+  DEVELOPERS_KEYS: "/developers/keys",
+  /* A static single-file demo in public/, not a Next route: it doubles as a
+     template people download and run themselves. */
+  DEVELOPERS_DEMO: "/vera-api-demo.html",
   ORGANIZER: "/organizer",
   FOR_VENDORS: "/for-vendors",
   SIGN_IN: "/sign-in",

@@ -10,6 +10,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { buildExampleCurl } from "@/lib/developer-docs/build-curl";
+import { ROUTES } from "@/lib/utils";
+import { PlayCircle } from "lucide-react";
+import Link from "next/link";
 import {
   type EndpointDoc,
   type EndpointParam,
@@ -70,6 +73,17 @@ const EndpointDocBlock = ({ endpoint }: { endpoint: EndpointDoc }) => (
         {endpoint.path}
       </code>
       <Badge variant="outline">{endpoint.scope}</Badge>
+
+      {/* Reading an endpoint and trying it are a step apart, not a page
+          apart: the sandbox opens on this endpoint with its example values
+          already in the form. */}
+      <Link
+        href={`${ROUTES.DEVELOPERS_SANDBOX}?endpoint=${endpoint.id}`}
+        className="ml-auto flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:border-foreground/25 hover:text-foreground"
+      >
+        <PlayCircle className="h-3.5 w-3.5" />
+        Try it
+      </Link>
     </div>
     <h3 className="mt-3 text-xl font-bold text-foreground">
       {endpoint.summary}

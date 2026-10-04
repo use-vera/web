@@ -1,78 +1,87 @@
 "use client";
 
+import CopyField from "@/components/developers/copy-field";
 import Button from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Check, CircleAlert, Copy } from "lucide-react";
-import { useState } from "react";
+import { type CreateApiKeyResponse } from "@/lib/types/workspace";
+import { CircleAlert } from "lucide-react";
 
 interface RevealSecretDialogProps {
-  secretKey: string | null;
+  /** The freshly created key, or null when the dialog is closed. */
+  createdKey: CreateApiKeyResponse | null;
   onClose: () => void;
 }
 
-const RevealSecretDialog = ({
-  secretKey,
-  onClose,
-}: RevealSecretDialogProps) => {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    if (!secretKey) return;
-    await navigator.clipboard.writeText(secretKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
-  return (
-    <Dialog
-      open={Boolean(secretKey)}
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+/**
+ * Shows both halves of a new key.
+ *
+ * Creating a key mints a pair: a publishable `pk_` and a secret `sk_`. Only
+ * the secret used to appear here, which left people believing Vera issues
+ * one key — and with no way to find the publishable one, which is the half
+ * that is safe to ship to a browser.
+ */
+const RevealSecretDialog = ({ createdKey, onClose }: RevealSecretDialogProps) => (
+  <Dialog
+    open={Boolean(createdKey)}
+    onOpenChange={(open) => {
+      if (!open) onClose();
+    }}
+  >
+    <DialogContent
+      aria-describedby={undefined}
+      className="max-w-lg"
+      showClose={false}
     >
-      <DialogContent
-        aria-describedby={undefined}
-        className="max-w-lg"
-        showClose={false}
-      >
-        <div className="flex flex-col gap-4 p-6">
+      {createdKey ? (
+        <div className="flex flex-col gap-5 p-6">
           <div className="flex items-center gap-2">
             <CircleAlert className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-bold text-foreground">
               Copy your secret key now
             </h2>
           </div>
-          <p className="text-sm text-muted-foreground">
-            This is the only time your secret key will be shown. Store it
-            somewhere safe. If you lose it, you&apos;ll need to create a new
-            key.
-          </p>
 
-          <div className="flex items-center gap-2 rounded-sm border border-border bg-secondary px-4 py-3">
-            <code className="flex-1 overflow-x-auto text-xs break-all text-foreground">
-              {secretKey}
-            </code>
-            <button
-              type="button"
-              onClick={() => void handleCopy()}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
-              aria-label="Copy secret key"
-            >
-              {copied ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </button>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-sm font-semibold text-foreground">
+                Secret key
+              </p>
+              <p className="text-xs font-semibold text-primary">
+                Shown once
+              </p>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Server-side only. Vera stores just a hash, so this is the only
+              time you will see it — if you lose it, create a replacement.
+            </p>
+            <CopyField value={createdKey.secretKey} label="secret key" />
           </div>
 
-          <Button onClick={onClose} className="mt-2">
-            {copied ? "Copied" : "I've saved it"}
-          </Button>
+          <div className="flex flex-col gap-2 border-t border-border pt-5">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-sm font-semibold text-foreground">
+                Publishable key
+              </p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Always available
+              </p>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Safe in a browser or mobile app. It can only read events, so
+              nothing it reaches can move money or admit anyone. You can come
+              back for this one any time.
+            </p>
+            <CopyField
+              value={createdKey.publishableKey}
+              label="publishable key"
+            />
+          </div>
+
+          <Button onClick={onClose}>I&apos;ve saved the secret key</Button>
         </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
+      ) : null}
+    </DialogContent>
+  </Dialog>
+);
 
 export default RevealSecretDialog;

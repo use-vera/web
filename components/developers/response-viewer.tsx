@@ -32,7 +32,14 @@ const ResponseViewer = ({ response }: { response: SandboxResponse | null }) => {
         </span>
         <span className="text-muted-foreground">{response.durationMs}ms</span>
       </div>
-      <CodeBlock code={JSON.stringify(response.body, null, 2)} lang="json" />
+      {/* A response is whatever the server sent back — a page of 100 events
+          is thousands of lines, and left whole it buries the request form
+          and everything under it. */}
+      <CodeBlock
+        code={JSON.stringify(response.body, null, 2)}
+        lang="json"
+        collapsible
+      />
     </div>
   );
 };

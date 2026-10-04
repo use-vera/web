@@ -10,7 +10,12 @@ import type { NextRequest } from "next/server";
  * bearer token to the backend.
  */
 const SESSION_COOKIE = "vera_session";
-const PROTECTED_ROUTES = ["/tickets", "/developers", "/vendors/onboarding", "/vendors/menu", "/vendors/events", "/vendors/orders", "/vendors/money", "/vendors/verification"];
+/* The developer portal is deliberately absent here apart from its keys page:
+   the docs and the API reference are what someone reads while deciding
+   whether to integrate at all, and a sign-in wall in front of them turns
+   away the reader before they have seen anything. Only real keys need an
+   account. */
+const PROTECTED_ROUTES = ["/tickets", "/developers/keys", "/vendors/onboarding", "/vendors/menu", "/vendors/events", "/vendors/orders", "/vendors/money", "/vendors/verification"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -33,8 +38,7 @@ export const config = {
   matcher: [
     "/tickets",
     "/tickets/:path*",
-    "/developers",
-    "/developers/:path*",
+    "/developers/keys",
     "/vendors/onboarding",
     "/vendors/menu",
     "/vendors/menu/:path*",

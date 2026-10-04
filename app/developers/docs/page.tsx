@@ -1,168 +1,92 @@
-import Link from "next/link";
-import DocsToc from "@/components/developers/docs-toc";
-import EndpointDocBlock from "@/components/developers/endpoint-doc";
+import DocsRail from "@/components/developers/docs-rail";
 import Badge from "@/components/ui/badge";
-import CodeBlock from "@/components/ui/code-block";
-import {
-  ENDPOINTS,
-  ENDPOINT_GROUPS,
-  ERROR_CODES,
-} from "@/lib/developer-docs/endpoints";
+import { GUIDES, GUIDE_SECTIONS } from "@/lib/developer-docs/content";
+import { ROUTES } from "@/lib/utils";
+import { ArrowRight, Clock } from "lucide-react";
+import Link from "next/link";
 
-const TOC_SECTIONS = [
-  { id: "authentication", label: "Authentication" },
-  { id: "scopes", label: "Scopes" },
-  { id: "errors", label: "Errors" },
-];
-
-const AUTH_EXAMPLE = `curl "https://api.vera.dev/v1/events" \\
-  -H "Authorization: Bearer sk_live_..."`;
-
-const DevelopersDocsPage = () => {
-  return (
-    <div className="mx-auto flex max-w-6xl gap-10 px-6 py-16">
-      <aside className="hidden w-48 shrink-0 lg:block">
-        <DocsToc
-          topLinks={TOC_SECTIONS}
-          groups={ENDPOINT_GROUPS.map((group) => ({
-            label: group,
-            links: ENDPOINTS.filter((endpoint) => endpoint.group === group).map(
-              (endpoint) => ({ id: endpoint.id, label: endpoint.summary }),
-            ),
-          }))}
-        />
-      </aside>
-
-      <div className="min-w-0 flex-1">
-        <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
-          Vera API reference.
-        </h1>
-        <p className="mt-3 max-w-xl text-base text-muted-foreground">
-          Everything you need to sell tickets from your own site or app, check
-          attendees in, and manage refunds, all over one REST API.
-        </p>
-
-        <section
-          id="authentication"
-          className="scroll-mt-24 border-b border-border py-10"
-        >
-          <h2 className="text-2xl font-bold text-foreground">Authentication</h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Every request needs an <code>Authorization: Bearer</code> header
-            with an API key from your{" "}
-            <Link
-              href="/developers/keys"
-              className="font-semibold text-foreground underline underline-offset-2"
-            >
-              API keys
-            </Link>{" "}
-            page.
-          </p>
-          <div className="mt-4 flex flex-col gap-5 text-sm text-muted-foreground">
-            <p>
-              <code className="font-semibold text-foreground">pk_live_...</code>{" "}
-              publishable keys are safe to use in client-side code. They can
-              only call read-only, <code>events:read</code>, scoped endpoints,
-              regardless of what scopes are stored on the key.
-            </p>
-            <p>
-              <code className="font-semibold text-foreground">sk_live_...</code>{" "}
-              secret keys can call anything their scopes allow. Keep them on
-              your server; never ship one in a browser bundle or mobile app.
-            </p>
-          </div>
-          <div className="mt-4">
-            <CodeBlock code={AUTH_EXAMPLE} lang="bash" />
-          </div>
-        </section>
-
-        <section
-          id="scopes"
-          className="scroll-mt-24 border-b border-border py-10"
-        >
-          <h2 className="text-2xl font-bold text-foreground">Scopes</h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Each key is granted one or more scopes. Requests fail with{" "}
-            <code>403 MISSING_SCOPE</code> if the key doesn&apos;t have every
-            scope an endpoint requires.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {[
-              "events:read",
-              "checkout:write",
-              "orders:read",
-              "tickets:verify",
-              "tickets:checkin",
-              "refunds:write",
-            ].map((scope) => (
-              <Badge key={scope} variant="outline">
-                {scope}
-              </Badge>
-            ))}
-          </div>
-        </section>
-
-        <section
-          id="errors"
-          className="scroll-mt-24 border-b border-border py-10"
-        >
-          <h2 className="text-2xl font-bold text-foreground">Errors</h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Errors always look like this, <code>error.code</code> is
-            machine-readable and stable; <code>error.message</code> is for
-            humans and can change.
-          </p>
-          <div className="mt-4">
-            <CodeBlock
-              code={JSON.stringify(
-                {
-                  success: false,
-                  error: { code: "NOT_FOUND", message: "Order not found" },
-                },
-                null,
-                2,
-              )}
-              lang="json"
-            />
-          </div>
-
-          <div className="mt-6 flex flex-col gap-2">
-            {ERROR_CODES.map((entry) => (
-              <div
-                key={entry.code}
-                className="flex items-center gap-3 px-3 py-2"
-              >
-                <Badge variant="outline" className="shrink-0">
-                  {entry.status}
-                </Badge>
-                <div>
-                  <code className="text-xs font-semibold text-foreground">
-                    {entry.code}
-                  </code>
-                  <p className="text-xs text-muted-foreground">
-                    {entry.meaning}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {ENDPOINT_GROUPS.map((group) => (
-          <div key={group}>
-            <h2 className="mt-10 text-2xl font-bold text-foreground">
-              {group}
-            </h2>
-            {ENDPOINTS.filter((endpoint) => endpoint.group === group).map(
-              (endpoint) => (
-                <EndpointDocBlock key={endpoint.id} endpoint={endpoint} />
-              ),
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+export const metadata = {
+  title: "Vera API documentation",
+  description:
+    "Guides for selling tickets, admitting people at the door and issuing refunds with the Vera API.",
 };
 
-export default DevelopersDocsPage;
+const SECTION_BLURBS: Record<string, string> = {
+  "Getting started": "From nothing to your first authenticated call.",
+  "Core concepts": "The handful of ideas every endpoint assumes you know.",
+  "Build a flow": "Complete journeys, start to finish, with real requests.",
+  "Going live": "What to check before real money moves.",
+};
+
+const DevelopersDocsIndexPage = () => (
+  <div className="mx-auto flex max-w-6xl gap-12 px-6 py-14 sm:px-10">
+    <div className="min-w-0 flex-1">
+    <header className="flex flex-col gap-3">
+      <Badge variant="outline" className="w-fit">
+        Documentation
+      </Badge>
+      <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+        Build on Vera.
+      </h1>
+      <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+        Sell tickets from your own site, admit people at the door, and handle
+        refunds, all over one REST API. Start with the quickstart, then follow
+        the flow you are building.
+      </p>
+    </header>
+
+    <div className="mt-10 flex flex-col gap-10">
+      {GUIDE_SECTIONS.map((section) => {
+        const guides = GUIDES.filter((guide) => guide.section === section);
+
+        if (!guides.length) {
+          return null;
+        }
+
+        return (
+          <section key={section} className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">{section}</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {SECTION_BLURBS[section]}
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {guides.map((guide) => (
+                <Link
+                  key={guide.slug}
+                  href={`${ROUTES.DEVELOPERS_DOCS}/${guide.slug}`}
+                  className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-5 transition-colors hover:border-foreground/20 hover:bg-muted/40"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-[15px] font-bold text-card-foreground">
+                      {guide.title}
+                    </h3>
+                    <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                  </div>
+
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {guide.summary}
+                  </p>
+
+                  {guide.readingMinutes ? (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" aria-hidden />
+                      {guide.readingMinutes} min read
+                    </p>
+                  ) : null}
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+      </div>
+    </div>
+
+    <DocsRail />
+  </div>
+);
+
+export default DevelopersDocsIndexPage;

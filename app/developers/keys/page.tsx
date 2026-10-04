@@ -1,6 +1,8 @@
 "use client";
 
 import CreateApiKeyDialog from "@/components/developers/create-api-key-dialog";
+import CopyField from "@/components/developers/copy-field";
+import SignedInGate from "@/components/developers/signed-in-gate";
 import RevealSecretDialog from "@/components/developers/reveal-secret-dialog";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
@@ -58,9 +60,15 @@ const formatDate = (value?: string | null) => {
   });
 };
 
-const keyPreview = (key: ApiKeyApi) => `${key.publishableKey.slice(0, 12)}···`;
+/* The layout no longer gates the whole portal, so this page carries its own
+   sign-in requirement: it is the only one that needs an account. */
+const ApiKeysPage = () => (
+  <SignedInGate>
+    <ApiKeysWorkspace />
+  </SignedInGate>
+);
 
-const ApiKeysPage = () => {
+const ApiKeysWorkspace = () => {
   const { workspace } = useCurrentWorkspace();
   const workspaceId = workspace?._id ?? null;
   const keysQuery = useApiKeys(workspaceId);
@@ -69,7 +77,10 @@ const ApiKeysPage = () => {
   /* The API returns every key for the workspace in one array, so paging is
      done here rather than with a page parameter. */
   const allKeys = keysQuery.data ?? [];
-  const visibleKeys = allKeys.slice((page - 1) * KEYS_PER_PAGE, page * KEYS_PER_PAGE);
+  const visibleKeys = allKeys.slice(
+    (page - 1) * KEYS_PER_PAGE,
+    page * KEYS_PER_PAGE,
+  );
   const revokeApiKey = useRevokeApiKey(workspaceId);
   const upgradeApiKeyToLive = useUpgradeApiKeyToLive(workspaceId);
 
@@ -107,7 +118,7 @@ const ApiKeysPage = () => {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-16">
+    <div className="mx-auto max-w-6xl px-6 py-16">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="mt-2 text-3xl font-bold text-foreground">
@@ -135,110 +146,118 @@ const ApiKeysPage = () => {
           </div>
         ) : allKeys.length > 0 ? (
           <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Label</TableHead>
-                <TableHead>Key</TableHead>
-                <TableHead>Scopes</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last used</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleKeys.map((key) => (
-                <TableRow key={key._id}>
-                  <TableCell className="font-semibold text-foreground">
-                    <div className="flex items-center gap-2 text-sm">
-                      {key.label || "Untitled key"}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Label</TableHead>
+                  <TableHead>Publishable key</TableHead>
+                  <TableHead>Scopes</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last used</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visibleKeys.map((key) => (
+                  <TableRow key={key._id}>
+                    <TableCell className="font-semibold text-foreground">
+                      <div className="flex items-center gap-2 text-sm">
+                        {key.label || "Untitled key"}
+                        <span
+                          className={cn(
+                            "inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-semibold capitalize",
+                            MODE_STYLES[key.mode],
+                          )}
+                        >
+                          {key.mode}
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex flex-col gap-1.5">
+                        <CopyField
+                          value={key.publishableKey}
+                          label="publishable key"
+                          className="max-w-xs bg-transparent border-0 p-0"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-nowrap items-center gap-1">
+                        {key.scopes.slice(0, 1).map((scope) => (
+                          <Badge
+                            key={scope}
+                            className="shrink-0 whitespace-nowrap text-xs"
+                          >
+                            {scope}
+                          </Badge>
+                        ))}
+                        {key.scopes.length > 2 ? (
+                          <Badge
+                            variant="outline"
+                            className="shrink-0 whitespace-nowrap text-xs"
+                            title={key.scopes.slice(1).join(", ")}
+                          >
+                            +{key.scopes.length - 1}
+                          </Badge>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <span
                         className={cn(
-                          "inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-semibold capitalize",
-                          MODE_STYLES[key.mode],
+                          "inline-flex items-center rounded-full px-2 py-0.5 text-sm font-semibold capitalize",
+                          STATUS_STYLES[key.status],
                         )}
                       >
-                        {key.mode}
+                        {key.status}
                       </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <code className="text-sm text-muted-foreground">
-                      {keyPreview(key)}
-                    </code>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-nowrap items-center gap-1">
-                      {key.scopes.slice(0, 1).map((scope) => (
-                        <Badge
-                          key={scope}
-                          className="shrink-0 whitespace-nowrap text-xs"
-                        >
-                          {scope}
-                        </Badge>
-                      ))}
-                      {key.scopes.length > 2 ? (
-                        <Badge
-                          variant="outline"
-                          className="shrink-0 whitespace-nowrap text-xs"
-                          title={key.scopes.slice(1).join(", ")}
-                        >
-                          +{key.scopes.length - 1}
-                        </Badge>
-                      ) : null}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-sm font-semibold capitalize",
-                        STATUS_STYLES[key.status],
-                      )}
-                    >
-                      {key.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm font-medium text-muted-foreground">
-                    {formatDate(key.lastUsedAt)}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium text-muted-foreground">
-                    {formatDate(key.createdAt)}
-                  </TableCell>
-                  <TableCell>
-                    {key.status === "active" ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
-                          aria-label="Key actions"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {key.mode === "test" ? (
-                            <DropdownMenuItem
-                              onClick={() => setUpgradeTarget(key)}
-                            >
-                              Switch to live
-                            </DropdownMenuItem>
-                          ) : null}
-                          <DropdownMenuItem
-                            onClick={() => setRevokeTarget(key)}
-                            className="text-destructive"
+                    </TableCell>
+                    <TableCell className="text-sm font-medium text-muted-foreground">
+                      {formatDate(key.lastUsedAt)}
+                    </TableCell>
+                    <TableCell className="text-sm font-medium text-muted-foreground">
+                      {formatDate(key.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      {key.status === "active" ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+                            aria-label="Key actions"
                           >
-                            Revoke
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : null}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {key.mode === "test" ? (
+                              <DropdownMenuItem
+                                onClick={() => setUpgradeTarget(key)}
+                              >
+                                Switch to live
+                              </DropdownMenuItem>
+                            ) : null}
+                            <DropdownMenuItem
+                              onClick={() => setRevokeTarget(key)}
+                              className="text-destructive"
+                            >
+                              Revoke
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
             <Pagination
               page={page}
-              totalPages={Math.max(1, Math.ceil(allKeys.length / KEYS_PER_PAGE))}
+              totalPages={Math.max(
+                1,
+                Math.ceil(allKeys.length / KEYS_PER_PAGE),
+              )}
               totalItems={allKeys.length}
               pageSize={KEYS_PER_PAGE}
               onPageChange={setPage}
@@ -268,7 +287,7 @@ const ApiKeysPage = () => {
       ) : null}
 
       <RevealSecretDialog
-        secretKey={revealedKey?.secretKey ?? null}
+        createdKey={revealedKey}
         onClose={() => setRevealedKey(null)}
       />
 
