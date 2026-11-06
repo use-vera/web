@@ -3,14 +3,16 @@
 import { AmountField } from "@/components/organizer/amount-field";
 import {
   ErrorState,
-  Eyebrow,
   SectionLabel,
   Switch,
 } from "@/components/organizer/organizer-primitives";
 import TicketQrCode from "@/components/tickets/ticket-qr-code";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Badge from "@/components/ui/badge";
-import Button from "@/components/ui/button";
+import Button, { buttonVariants } from "@/components/ui/button";
+import { POSTER_TONES, toneFor } from "@/components/vera/event-poster";
+import { shortWhen } from "@/components/vera/event-format";
+import { Eyebrow } from "@/components/vera/display-heading";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getApiErrorMessage } from "@/lib/api/error-message";
@@ -39,6 +41,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const PLATFORM_FEE_PERCENT = 5;
+/* The panels beside the ticket: an edge on the page colour, not a filled card. */
+const PANEL = "rounded-[28px] border-[1.5px] border-border bg-transparent ring-0";
 /* Only used until the event loads. The event carries its own ceiling. */
 const FALLBACK_MARKUP_PERCENT = 25;
 
@@ -156,8 +160,8 @@ const TicketDetailPage = () => {
 
   if (ticketsQuery.isLoading) {
     return (
-      <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <Skeleton className="h-[420px] w-full rounded-sm" />
+      <div>
+        <Skeleton className="h-[420px] w-full rounded-[30px]" />
       </div>
     );
   }
@@ -172,50 +176,35 @@ const TicketDetailPage = () => {
     (bid) => bid.status === "open",
   );
   const highest = Math.max(0, ...bids.map((bid) => bid.amountNaira));
+  const ticketTone = toneFor(event?._id ?? ticket._id);
 
   return (
-    <div className="pb-8">
-      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
+    <div className="flex flex-col gap-8">
+      <header className="flex flex-col gap-4">
         <Link
           href="/account/tickets"
-          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex h-10 w-fit items-center gap-1.5 rounded-full border-[1.5px] border-border px-4 text-sm font-semibold transition-colors hover:border-foreground"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Tickets
+          <ArrowLeft className="h-4 w-4" />
+          Your tickets
         </Link>
-        <h1 className="mt-3.5 text-[26px] leading-tight font-bold tracking-[-0.02em]">
+        <h1 style={{ lineHeight: 0.95 }} className="text-[clamp(36px,5.5vw,72px)] font-extrabold tracking-[-0.045em] text-balance">
           {event?.name ?? "Your ticket"}
         </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           {ticket.ticketCategoryName || "General admission"}
-          {event
-            ? ` · ${new Intl.DateTimeFormat("en-NG", {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              }).format(new Date(event.nextOccurrenceAt))}`
-            : ""}
+          {event ? ` · ${shortWhen(event.nextOccurrenceAt)}` : ""}
+          {event?.address ? ` · ${event.address}` : ""}
         </p>
         {event ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Link
-              href={`/events/${event._id}`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border px-3.5 text-[13px] font-semibold transition-colors hover:bg-secondary"
-            >
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href={`/events/${event._id}`} className={cn(buttonVariants({ variant: "ink", size: "sm" }), "h-11 px-5")}>
               Open the event page
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRight className="h-4 w-4" />
             </Link>
             {directionsUrl ? (
-              <a
-                href={directionsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border px-3.5 text-[13px] font-semibold transition-colors hover:bg-secondary"
-              >
-                <Navigation className="h-3.5 w-3.5" />
+              <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "line", size: "sm" }), "h-11 px-5")}>
+                <Navigation className="h-4 w-4" />
                 Directions
               </a>
             ) : null}
@@ -223,56 +212,51 @@ const TicketDetailPage = () => {
         ) : null}
       </header>
 
-      <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start pt-5 sm:px-6 lg:px-8 lg:pt-6">
-        <div className="w-full lg:w-[380px] lg:shrink-0">
-          <Card className="gap-0 py-0">
-            <div className="p-4 sm:p-5">
-              <Eyebrow>{event?.name}</Eyebrow>
-              <div className="mt-1.5 text-xl font-bold tracking-[-0.01em]">
+      <div className="flex flex-col items-stretch gap-4 lg:flex-row lg:items-start">
+        <div className="w-full lg:sticky lg:top-24 lg:w-[380px] lg:shrink-0">
+          {/* The ticket itself, in the event's colour, with the code on paper so any scanner reads it. */}
+          <div
+            className={cn("flex flex-col rounded-[30px] p-2.5", ticketTone === "cream" && "ring-1 ring-border ring-inset")}
+            style={{ backgroundColor: POSTER_TONES[ticketTone].bg, color: POSTER_TONES[ticketTone].fg }}
+          >
+            <div className="flex flex-col gap-1 px-3 pt-3 pb-4">
+              <span className="text-sm font-semibold opacity-75">{ticket.quantity === 1 ? "Admits one" : `Admits ${ticket.quantity}`}</span>
+              <span style={{ lineHeight: 1 }} className="text-[26px] font-extrabold tracking-[-0.03em]">
                 {ticket.attendeeName}
-              </div>
-              <div className="mt-0.5 text-[13px] text-muted-foreground">
-                {ticket.ticketCategoryName || "General admission"} ·{" "}
-                {ticket.quantity} {ticket.quantity === 1 ? "ticket" : "tickets"}
-              </div>
+              </span>
+              <span className="text-sm font-semibold opacity-75">{ticket.ticketCategoryName || "General admission"}</span>
             </div>
-            <div className="relative">
-              <hr className="ticket-perforation" />
-              <span className="absolute -top-2.5 -left-2.5 h-5 w-5 rounded-full bg-background" />
-              <span className="absolute -top-2.5 -right-2.5 h-5 w-5 rounded-full bg-background" />
+            <div aria-hidden="true" className="mx-3 mb-3 border-t-2 border-dashed border-current opacity-25" />
+            <div className="flex flex-col items-center gap-3 rounded-[22px] bg-white p-6 text-[#16150F]">
+              <TicketQrCode value={ticket.barcodeValue || ticket.ticketCode} size={188} />
+              <div className="font-mono text-xs text-[#16150F]/60">{ticket.ticketCode}</div>
             </div>
-            <div className="flex flex-col items-center gap-3 p-4 sm:p-5">
-              <TicketQrCode
-                value={ticket.barcodeValue || ticket.ticketCode}
-                size={168}
-              />
-              <div className="font-mono text-xs tracking-[0.08em] text-muted-foreground">
-                {ticket.ticketCode}
-              </div>
-            </div>
-          </Card>
+          </div>
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-          <Card className="flex-row items-center gap-4 bg-accent p-4 sm:p-5">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary">
-              <ArrowUp className="h-5 w-5 text-primary-foreground" strokeWidth={2.2} />
+          <div
+            className="flex flex-row items-center gap-4 rounded-[28px] p-4 sm:p-5"
+            style={{ backgroundColor: POSTER_TONES.green.bg, color: POSTER_TONES.green.fg }}
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#0B1D14] text-[#15C67C]">
+              <ArrowUp className="h-5 w-5" strokeWidth={2.4} />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="text-base leading-snug font-semibold">
+              <div className="text-base leading-snug font-bold">
                 Move up a tier
               </div>
-              <p className="mt-0.5 text-[13px] text-accent-foreground">
+              <p className="mt-0.5 text-[13px] font-medium opacity-80">
                 Pay only the difference from what you already paid.
               </p>
             </div>
-            <Button size="sm" onClick={() => setUpgradeOpen(true)}>
+            <Button size="sm" variant="ink" className="bg-[#0B1D14] text-[#F5F3EF]" onClick={() => setUpgradeOpen(true)}>
               Upgrade
             </Button>
-          </Card>
+          </div>
 
           {heldAddOns.length ? (
-            <Card className="gap-0 py-0">
+            <Card className={cn(PANEL, "gap-0 py-0")}>
               <div className="flex items-baseline justify-between gap-3 p-4 sm:p-5">
                 <div className="text-base leading-snug font-semibold">
                   Your add-ons
@@ -336,7 +320,7 @@ const TicketDetailPage = () => {
 
           {isListed ? (
             <>
-              <Card className="gap-0 py-0">
+              <Card className={cn(PANEL, "gap-0 py-0")}>
                 <div className="flex items-start justify-between gap-4 px-4 py-4 sm:px-5 sm:py-[18px]">
                   <div>
                     <div className="flex items-center gap-2">
@@ -387,7 +371,7 @@ const TicketDetailPage = () => {
                 </div>
               </Card>
 
-              <Card className="gap-0 py-0">
+              <Card className={cn(PANEL, "gap-0 py-0")}>
                 <div className="flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4">
                   <div>
                     <span className="text-base leading-snug font-semibold">
@@ -480,7 +464,7 @@ const TicketDetailPage = () => {
               </Card>
             </>
           ) : (
-            <Card className="gap-0 py-0">
+            <Card className={cn(PANEL, "gap-0 py-0")}>
               <div className="px-4 py-4 sm:px-5 sm:py-[18px]">
                 <div className="text-base leading-snug font-semibold">
                   Can&apos;t make it?
@@ -553,8 +537,9 @@ const TicketDetailPage = () => {
                   />
                 </div>
               </div>
-              <div className={cn("bg-muted/60 px-5 py-4")}>
+              <div className="border-t border-border px-5 py-4">
                 <Button
+                  variant="ink"
                   disabled={!priceValid}
                   loading={listForResale.isPending}
                   onClick={submitListing}

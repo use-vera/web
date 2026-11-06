@@ -166,7 +166,7 @@ export const QrScanner = ({
   const isLive = effectiveState === "scanning";
 
   return (
-    <div className="relative h-[300px] overflow-hidden rounded-md border border-border bg-[#16150f]">
+    <div className="relative h-[320px] overflow-hidden rounded-[28px] bg-[#16150f]">
       <video
         ref={videoRef}
         muted

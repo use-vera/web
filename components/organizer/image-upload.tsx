@@ -89,7 +89,7 @@ export const ImageUpload = ({
       />
 
       {value ? (
-        <div className="relative overflow-hidden rounded-md border border-border">
+        <div className="relative overflow-hidden rounded-[24px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
@@ -123,7 +123,7 @@ export const ImageUpload = ({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={upload.isPending}
-          className="flex aspect-[16/9] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background transition-colors hover:border-primary hover:bg-muted/40 disabled:cursor-wait"
+          className="flex aspect-[16/9] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[24px] border-[1.5px] border-dashed border-border bg-transparent transition-colors hover:border-foreground disabled:cursor-wait"
         >
           {upload.isPending ? (
             <Loader2 className="h-6 w-6 animate-spin text-primary" />

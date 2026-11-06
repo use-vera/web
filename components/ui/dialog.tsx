@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 const Dialog = BaseDialog.Root;
 const DialogTrigger = BaseDialog.Trigger;
 const DialogClose = BaseDialog.Close;
+const DialogTitle = BaseDialog.Title;
 
 interface DialogContentProps extends BaseDialog.Popup.Props {
   showClose?: boolean;
@@ -43,4 +44,4 @@ const DialogContent = ({
   );
 };
 
-export { Dialog, DialogClose, DialogContent, DialogTrigger };
+export { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger };

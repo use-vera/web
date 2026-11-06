@@ -1,10 +1,8 @@
 "use client";
 
-import {
-  Meter,
-  StatStrip,
-} from "@/components/organizer/organizer-primitives";
-import { Card } from "@/components/ui/card";
+import { MenuTile } from "@/components/header-menu";
+import { Meter, Panel, PanelHeader, StatStrip } from "@/components/organizer/organizer-primitives";
+import { POSTER_TONES, type PosterTone } from "@/components/vera/event-poster";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SalesBarChart } from "@/components/organizer/sales-bar-chart";
 import { buildDailySeries } from "@/lib/organizer-series";
@@ -16,12 +14,10 @@ import {
   useOrganizerEvent,
   useUpdateEvent,
 } from "@/lib/hooks/use-organizer";
-import Button, { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import Button from "@/components/ui/button";
 import {
   ChevronRight,
   Download,
-  ExternalLink,
   Globe,
   Megaphone,
   ScanLine,
@@ -34,30 +30,35 @@ import { toast } from "sonner";
 
 const NEXT_STEPS: {
   icon: typeof ScanLine;
+  tone: PosterTone;
   title: string;
   description: string;
   href: (eventId: string) => string;
 }[] = [
   {
     icon: ScanLine,
+    tone: "green",
     title: "Scan people in at the door",
     description: "Open door mode when doors open",
     href: (id) => `/organizer/events/${id}/check-in`,
   },
   {
     icon: Download,
+    tone: "blue",
     title: "Build the guest list",
     description: "Export attendees as CSV",
     href: (id) => `/organizer/events/${id}/exports`,
   },
   {
     icon: Megaphone,
+    tone: "yellow",
     title: "Feature this event",
     description: "Put it in front of more people",
     href: (id) => `/organizer/events/${id}/promote`,
   },
   {
     icon: Globe,
+    tone: "pink",
     title: "Build a page for it",
     description: "Your own address at vera.tickets",
     /* Outside the event's tab chrome. It is a full-screen editor. */
@@ -112,9 +113,13 @@ const EventOverviewPage = () => {
 
   if (eventQuery.isLoading || !event) {
     return (
-      <div className="flex flex-col gap-3.5 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
-        <Skeleton className="h-[92px] w-full rounded-sm" />
-        <Skeleton className="h-[280px] w-full rounded-sm" />
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-[118px] rounded-[24px]" />
+          ))}
+        </div>
+        <Skeleton className="h-[300px] w-full rounded-[28px]" />
       </div>
     );
   }
@@ -127,27 +132,25 @@ const EventOverviewPage = () => {
   const daysToDoors = daysUntil(event.nextOccurrenceAt);
 
   return (
-    <div className="flex flex-col gap-3.5 px-4 py-5 pb-8 sm:px-6 lg:px-8 lg:py-6">
+    <div className="flex flex-col gap-4">
       {event.status === "draft" ? (
-        <Card className="flex-col items-start gap-4 border-0 bg-accent p-4 sm:p-5 shadow-[inset_0_0_0_2px_var(--primary)] sm:flex-row sm:items-center">
+        <section
+          aria-label="Draft"
+          className="flex flex-col items-start gap-4 rounded-[28px] p-[clamp(20px,2.4vw,28px)] sm:flex-row sm:items-center"
+          style={{ backgroundColor: POSTER_TONES.yellow.bg, color: POSTER_TONES.yellow.fg }}
+        >
           <div className="min-w-0 flex-1">
-            <div className="text-base font-semibold text-accent-foreground">
-              This event is still a draft
-            </div>
-            <p className="mt-1 text-[13px] leading-relaxed text-pretty text-accent-foreground/85">
-              Nobody can find it, open it, or buy a ticket until you publish.
-              Everything is already set up. Publishing puts it on sale
-              straight away.
+            <h2 style={{ lineHeight: 1 }} className="text-[clamp(24px,2.6vw,32px)] font-extrabold tracking-[-0.035em]">
+              still a draft.
+            </h2>
+            <p className="mt-1.5 max-w-xl text-[15px] font-medium opacity-80">
+              Nobody can find it, open it, or buy a ticket until you publish. Everything is already set up, and publishing puts it on sale straight away.
             </p>
           </div>
-          <Button
-            className="shrink-0"
-            loading={publishEvent.isPending}
-            onClick={publish}
-          >
+          <Button variant="ink" className="shrink-0 bg-[#16150F] text-[#F5F3EF]" loading={publishEvent.isPending} onClick={publish}>
             Publish event
           </Button>
-        </Card>
+        </section>
       ) : null}
 
       <StatStrip
@@ -160,15 +163,12 @@ const EventOverviewPage = () => {
           {
             label: "Gross sales",
             value: formatNairaCompact(derived.gross),
-            note: "from tickets loaded here",
+            note: "from the latest 50 tickets",
           },
           {
             label: "Admitted",
             value: derived.admitted.toLocaleString("en-NG"),
-            note:
-              daysToDoors > 0
-                ? `doors open in ${daysToDoors} ${daysToDoors === 1 ? "day" : "days"}`
-                : "doors are open",
+            note: daysToDoors > 0 ? `doors open in ${daysToDoors} ${daysToDoors === 1 ? "day" : "days"}` : "doors have opened",
           },
           {
             label: "On resale",
@@ -178,151 +178,88 @@ const EventOverviewPage = () => {
         ]}
       />
 
-      <div className="flex flex-col gap-3.5 lg:flex-row lg:items-stretch">
-        <Card className="min-w-0 flex-1 gap-0 py-0">
-          <div className="flex items-baseline justify-between px-4 py-3.5 sm:px-5 sm:py-4">
-            <div>
-              <div className="text-base leading-snug font-semibold">
-                Sales this week
-              </div>
-              <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-                {weekTotal} {weekTotal === 1 ? "ticket" : "tickets"} in the last
-                7 days
-              </div>
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">
-              Tickets per day
-            </span>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <Panel>
+          <PanelHeader
+            title="Sales this week"
+            description={`${weekTotal} ${weekTotal === 1 ? "ticket" : "tickets"} in the last 7 days`}
+            action={<span className="text-[13px] font-semibold text-muted-foreground">Tickets per day</span>}
+          />
+          <div className="px-5 pb-5 sm:px-6">
+            {ticketsQuery.isLoading ? <Skeleton className="h-[170px] w-full rounded-[20px]" /> : <SalesBarChart points={week} />}
           </div>
-          <div className="px-5 pb-4">
-            {ticketsQuery.isLoading ? (
-              <Skeleton className="h-[170px] w-full rounded-md" />
-            ) : (
-              <SalesBarChart points={week} />
-            )}
-          </div>
-          <hr className="ticket-perforation" />
-          <div className="px-4 py-3 sm:px-5 sm:py-3.5">
-            <Meter percent={percent} className="h-2" />
-            <div className="mt-2.5 flex justify-between text-xs text-muted-foreground tabular-nums">
+          <div className="border-t-[1.5px] border-dashed border-border px-5 py-4 sm:px-6">
+            <div className="mb-2.5 flex justify-between text-sm font-bold tabular-nums">
               <span>{sold.toLocaleString("en-NG")} sold</span>
-              <span>{remaining.toLocaleString("en-NG")} left</span>
+              <span className="text-muted-foreground">
+                {percent}% · {remaining.toLocaleString("en-NG")} left
+              </span>
             </div>
+            <Meter percent={percent} className="h-2.5" />
           </div>
-        </Card>
+        </Panel>
 
-        <Card className="w-full lg:w-[360px] lg:shrink-0 gap-0 py-0">
-          <div className="px-4 py-3.5 sm:px-5 sm:py-4">
-            <div className="text-base leading-snug font-semibold">
-              Before doors open
-            </div>
-            <div className="mt-0.5 text-xs text-muted-foreground">
-              Where to go next on this event.
-            </div>
-          </div>
-          <hr className="ticket-perforation" />
-          <div className="flex flex-col px-3 py-1.5">
+        <Panel className="flex flex-col">
+          <PanelHeader title="Before doors open" description="Where to go next on this event." />
+          <div className="flex flex-col gap-1 px-2.5 pb-2.5">
             {NEXT_STEPS.map((step) => (
               <Link
                 key={step.title}
                 href={step.href(eventId)}
-                className="flex items-center gap-3 rounded-sm px-2 py-3 transition-colors hover:bg-muted/60"
+                className="group flex items-center gap-3.5 rounded-[18px] p-2.5 transition-colors hover:bg-secondary"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                  <step.icon className="h-[15px] w-[15px]" />
-                </span>
+                <MenuTile icon={step.icon} tone={step.tone} />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] font-semibold">
-                    {step.title}
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {step.description}
-                  </span>
+                  <span className="block text-[15px] font-bold">{step.title}</span>
+                  <span className="block text-[13px] text-muted-foreground">{step.description}</span>
                 </span>
-                <ChevronRight className="h-[15px] w-[15px] shrink-0 text-muted-foreground" />
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
               </Link>
             ))}
           </div>
-          <div className="mt-auto flex items-center gap-2.5 bg-muted/50 px-4 py-3 sm:px-5 sm:py-3.5">
-            <TriangleAlert className="h-[15px] w-[15px] shrink-0 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">
-              Cancelling refunds every ticket automatically.
-            </span>
-          </div>
-        </Card>
+          <p className="mt-auto flex items-center gap-2.5 border-t-[1.5px] border-dashed border-border px-5 py-4 text-[13px] text-muted-foreground sm:px-6">
+            <TriangleAlert className="h-4 w-4 shrink-0" />
+            Cancelling refunds every ticket automatically.
+          </p>
+        </Panel>
       </div>
 
-      <Card className="gap-0 py-0">
-        <div className="flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4">
-          <div className="text-base leading-snug font-semibold">
-            Latest tickets
-          </div>
-          <Link
-            href={`${base}/attendees`}
-            className="text-xs font-semibold text-primary underline-offset-4 hover:underline"
-          >
-            See all {derived.sampled.toLocaleString("en-NG")}
-          </Link>
-        </div>
-        <hr className="ticket-perforation" />
-        <div className="px-5 pt-1 pb-3">
+      <Panel>
+        <PanelHeader
+          title="Latest tickets"
+          action={
+            <Link href={`${base}/attendees`} className="flex h-9 items-center rounded-full border-[1.5px] border-border px-3.5 text-[13px] font-semibold transition-colors hover:border-foreground">
+              See all {derived.sampled.toLocaleString("en-NG")}
+            </Link>
+          }
+        />
+        <div className="px-2.5 pb-2.5">
           {ticketsQuery.isLoading ? (
-            Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="my-2.5 h-10 w-full rounded-md" />
-            ))
+            Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="m-2.5 h-10 rounded-2xl" />)
           ) : tickets.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No tickets sold yet.
-            </p>
+            <p className="px-2.5 pb-4 text-[15px] text-muted-foreground">No tickets sold yet.</p>
           ) : (
-            tickets.slice(0, 4).map((ticket) => (
-              <div
-                key={ticket._id}
-                className="flex items-center gap-3 py-2.5"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground outline outline-foreground/10 -outline-offset-1">
+            tickets.slice(0, 5).map((ticket) => (
+              <div key={ticket._id} className="flex items-center gap-3 rounded-[18px] px-2.5 py-2.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold">
                   {ticket.attendeeName
                     .split(" ")
                     .map((part) => part[0])
                     .slice(0, 2)
                     .join("")}
                 </span>
-                <span className="min-w-0 flex-1 text-[13px]">
-                  <span className="font-semibold">{ticket.attendeeName}</span>{" "}
+                <span className="min-w-0 flex-1 truncate text-[15px]">
+                  <span className="font-bold">{ticket.attendeeName}</span>{" "}
                   <span className="text-muted-foreground">
-                    bought {ticket.quantity} &times;{" "}
-                    {ticket.ticketCategoryName || "ticket"}
+                    bought {ticket.quantity} &times; {ticket.ticketCategoryName || "ticket"}
                   </span>
                 </span>
-                <span className="shrink-0 text-[13px] font-semibold tabular-nums">
-                  {formatNairaCompact(ticket.totalPriceNaira)}
-                </span>
+                <span className="shrink-0 text-[15px] font-bold tabular-nums">{formatNairaCompact(ticket.totalPriceNaira)}</span>
               </div>
             ))
           )}
         </div>
-      </Card>
-
-      <div className="flex justify-end gap-2">
-        {/* The public route only serves published events, so a draft's link
-            would 404. */}
-        {event.status === "published" ? (
-          <Link
-            href={`/events/${eventId}`}
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-          >
-            <ExternalLink className="h-4 w-4" />
-            View public page
-          </Link>
-        ) : null}
-        <Link
-          href={`${base}/check-in`}
-          className={cn(buttonVariants({ size: "sm" }))}
-        >
-          <ScanLine className="h-4 w-4" />
-          Open door mode
-        </Link>
-      </div>
+      </Panel>
     </div>
   );
 };

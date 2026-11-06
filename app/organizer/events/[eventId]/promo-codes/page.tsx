@@ -2,7 +2,11 @@
 
 import { AmountField } from "@/components/organizer/amount-field";
 import { OrganizerField } from "@/components/organizer/organizer-field";
-import { Eyebrow, Switch } from "@/components/organizer/organizer-primitives";
+import {
+  Eyebrow,
+  Switch,
+  PANEL,
+} from "@/components/organizer/organizer-primitives";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -92,9 +96,7 @@ const PromoCodesPage = () => {
   const [draft, setDraft] = useState<PromoDraft | null>(null);
 
   const codes = promoCodesQuery.data?.items ?? [];
-  const ticketPrice = Number(
-    eventQuery.data?.event?.ticketPriceNaira || 0,
-  );
+  const ticketPrice = Number(eventQuery.data?.event?.ticketPriceNaira || 0);
   const feePercent = Number(eventQuery.data?.event?.platformFeePercent || 5);
 
   /* What this code would do to one ticket at the headline price. The
@@ -200,35 +202,45 @@ const PromoCodesPage = () => {
     );
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-[-0.02em]">Promo codes</h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <h2
+            style={{ lineHeight: 1 }}
+            className="text-[clamp(26px,2.6vw,34px)] font-extrabold tracking-[-0.035em]"
+          >
+            promo codes.
+          </h2>
+          <p className="mt-2 max-w-xl text-[15px] text-muted-foreground">
             Money off, for people you choose to give it to. A discount comes out
             of what you keep &mdash; Vera&apos;s fee is still worked out on the
             full price.
           </p>
         </div>
         {draft ? null : (
-          <Button size="sm" onClick={() => setDraft(emptyDraft())}>
+          <Button
+            variant="ink"
+            size="sm"
+            className="h-11 px-5"
+            onClick={() => setDraft(emptyDraft())}
+          >
             <Plus className="h-4 w-4" />
             New code
           </Button>
         )}
       </div>
 
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           {draft ? (
-            <Card className="gap-0 p-5">
+            <Card className={cn(PANEL, "gap-0 p-5")}>
               <Eyebrow>New code</Eyebrow>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
                   <label
                     htmlFor="promo-name"
-                    className="mb-1.5 block text-xs font-semibold text-muted-foreground"
+                    className="mb-2 block text-sm font-bold"
                   >
                     Name
                   </label>
@@ -248,7 +260,7 @@ const PromoCodesPage = () => {
                 <div>
                   <label
                     htmlFor="promo-code"
-                    className="mb-1.5 block text-xs font-semibold text-muted-foreground"
+                    className="mb-2 block text-sm font-bold"
                   >
                     Code
                   </label>
@@ -262,7 +274,7 @@ const PromoCodesPage = () => {
                       })
                     }
                     placeholder="EARLY10"
-                    className="font-semibold tracking-[0.06em]"
+                    className="font-semibold"
                   />
                   <p className="mt-1.5 text-xs text-muted-foreground">
                     What attendees type. Case does not matter.
@@ -272,10 +284,10 @@ const PromoCodesPage = () => {
 
               <div className="mt-4 grid gap-4 sm:grid-cols-[220px_minmax(0,1fr)]">
                 <div>
-                  <span className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                  <span className="mb-2 block text-sm font-bold">
                     How much off
                   </span>
-                  <div className="inline-flex gap-1 rounded-md bg-muted p-1">
+                  <div className="inline-flex gap-1.5">
                     {(["percent", "fixed"] as DiscountType[]).map((option) => (
                       <button
                         key={option}
@@ -285,10 +297,10 @@ const PromoCodesPage = () => {
                           setDraft({ ...draft, discountType: option })
                         }
                         className={cn(
-                          "inline-flex h-10 cursor-pointer items-center rounded-sm px-4 text-[13px] font-semibold transition-colors",
+                          "inline-flex h-11 cursor-pointer items-center rounded-full border-[1.5px] px-4 text-sm font-semibold transition-colors",
                           draft.discountType === option
-                            ? "bg-card text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground",
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-border text-foreground hover:border-foreground",
                         )}
                       >
                         {option === "percent" ? "Percent" : "Naira"}
@@ -300,7 +312,7 @@ const PromoCodesPage = () => {
                 <div>
                   <label
                     htmlFor="promo-value"
-                    className="mb-1.5 block text-xs font-semibold text-muted-foreground"
+                    className="mb-2 block text-sm font-bold"
                   >
                     {draft.discountType === "percent"
                       ? "Percent off"
@@ -313,13 +325,15 @@ const PromoCodesPage = () => {
                       setDraft({ ...draft, discountValue: digits })
                     }
                     prefix={draft.discountType === "fixed" ? "₦" : undefined}
-                    placeholder={draft.discountType === "percent" ? "10" : "5000"}
+                    placeholder={
+                      draft.discountType === "percent" ? "10" : "5000"
+                    }
                   />
                 </div>
               </div>
 
               <div className="mt-4">
-                <span className="mb-2 block text-xs font-semibold text-muted-foreground">
+                <span className="mb-2 block text-sm font-bold">
                   Take it off
                 </span>
                 <div className="grid gap-2.5 sm:grid-cols-2">
@@ -335,18 +349,13 @@ const PromoCodesPage = () => {
                           setDraft({ ...draft, appliesTo: option.value })
                         }
                         className={cn(
-                          "cursor-pointer rounded-md p-3.5 text-left transition-colors",
+                          "cursor-pointer rounded-[18px] border-[1.5px] p-3.5 text-left transition-colors",
                           selected
-                            ? "bg-accent shadow-[inset_0_0_0_2px_var(--primary)]"
-                            : "shadow-[inset_0_0_0_1px_var(--border)] hover:bg-muted/50",
+                            ? "border-foreground bg-secondary"
+                            : "border-border hover:border-foreground",
                         )}
                       >
-                        <span
-                          className={cn(
-                            "block text-[13px] font-semibold",
-                            selected && "text-accent-foreground",
-                          )}
-                        >
+                        <span className={cn("block text-[15px] font-bold")}>
                           {option.label}
                         </span>
                         <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -365,7 +374,7 @@ const PromoCodesPage = () => {
               <div className="mt-4 max-w-[220px]">
                 <label
                   htmlFor="promo-uses"
-                  className="mb-1.5 block text-xs font-semibold text-muted-foreground"
+                  className="mb-2 block text-sm font-bold"
                 >
                   How many uses
                 </label>
@@ -382,7 +391,7 @@ const PromoCodesPage = () => {
                 </p>
               </div>
 
-              <div className="mt-4 flex items-center gap-4 rounded-md bg-muted/50 p-3.5">
+              <div className="mt-4 flex items-center gap-4 rounded-[18px] bg-secondary p-3.5">
                 <div className="min-w-0 flex-1">
                   <span className="block text-[13px] font-semibold">
                     Show it on the event
@@ -401,32 +410,33 @@ const PromoCodesPage = () => {
 
               <div className="mt-5 flex gap-2.5">
                 <Button
+                  variant="ink"
                   onClick={() => void addCode()}
                   loading={updateEvent.isPending}
                 >
                   Save code
                 </Button>
-                <Button variant="outline" onClick={() => setDraft(null)}>
+                <Button variant="line" onClick={() => setDraft(null)}>
                   Cancel
                 </Button>
               </div>
             </Card>
           ) : null}
 
-          <Card className="gap-0 py-0">
+          <Card className={cn(PANEL, "gap-0 py-0")}>
             {promoCodesQuery.isLoading ? (
               <div className="flex flex-col gap-3 p-5">
                 {Array.from({ length: 3 }).map((_, index) => (
-                  <Skeleton key={index} className="h-12 w-full rounded-md" />
+                  <Skeleton key={index} className="h-12 w-full rounded-2xl" />
                 ))}
               </div>
             ) : codes.length === 0 ? (
-              <p className="px-5 py-12 text-center text-sm text-muted-foreground">
+              <p className="px-6 py-10 text-[15px] text-muted-foreground">
                 No promo codes yet. A code is money off for people you choose to
                 give it to.
               </p>
             ) : (
-              <div className="divide-y divide-border/60">
+              <div className="divide-y-[1.5px] divide-border">
                 {codes.map((promo) => (
                   <div
                     key={promo._id}
@@ -436,7 +446,7 @@ const PromoCodesPage = () => {
                       <div className="flex items-center gap-2">
                         <span
                           className={cn(
-                            "text-sm font-semibold tracking-[0.04em]",
+                            "text-base font-extrabold",
                             !promo.active && "text-muted-foreground",
                           )}
                         >
@@ -474,12 +484,15 @@ const PromoCodesPage = () => {
                     <div className="flex items-center gap-1.5">
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="line"
                         onClick={() =>
                           void save(
                             codes.map((item) =>
                               item._id === promo._id
-                                ? { ...toPayload(item), isPublic: !item.isPublic }
+                                ? {
+                                    ...toPayload(item),
+                                    isPublic: !item.isPublic,
+                                  }
                                 : toPayload(item),
                             ),
                             promo.isPublic
@@ -492,7 +505,7 @@ const PromoCodesPage = () => {
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="line"
                         onClick={() => void togglePaused(promo)}
                       >
                         {promo.active ? "Pause" : "Resume"}
@@ -513,9 +526,11 @@ const PromoCodesPage = () => {
           </Card>
         </div>
 
-        <Card className="w-full gap-0 p-5 lg:w-[300px] lg:shrink-0">
+        <Card
+          className={cn(PANEL, "w-full gap-0 p-5 lg:w-[300px] lg:shrink-0")}
+        >
           <Eyebrow>Given away so far</Eyebrow>
-          <div className="mt-2.5 text-3xl font-bold tracking-[-0.02em] tabular-nums">
+          <div className="mt-1.5 text-[40px] leading-none font-extrabold tracking-[-0.045em] tabular-nums">
             {formatNairaAmount(promoCodesQuery.data?.givenAwayNaira ?? 0)}
           </div>
           <div className="mt-0.5 text-xs text-muted-foreground">
@@ -548,7 +563,8 @@ const PromoCodesPage = () => {
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">
-                    Vera&apos;s {feePercent}% of {formatNairaAmount(ticketPrice)}
+                    Vera&apos;s {feePercent}% of{" "}
+                    {formatNairaAmount(ticketPrice)}
                   </dt>
                   <dd className="tabular-nums">
                     &minus;{formatNairaAmount(veraFee)}

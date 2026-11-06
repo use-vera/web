@@ -1,3 +1,4 @@
+import { DESK } from "@/components/organizer/desk";
 import VendorVerification from "@/components/vendors/vendor-verification";
 import type { Metadata } from "next";
 
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function VendorVerificationPage() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-10">
+    <div className={DESK}>
       <VendorVerification />
     </div>
   );

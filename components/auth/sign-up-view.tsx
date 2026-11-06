@@ -89,9 +89,10 @@ const SignUpView = ({
       <div className="flex flex-col gap-3">
         <Button
           size="lg"
+          variant="ink"
           type="submit"
           disabled={register.isPending}
-          className="w-full justify-center rounded-lg"
+          className="h-14 w-full justify-center rounded-full text-base"
         >
           {register.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -103,7 +104,7 @@ const SignUpView = ({
           )}
         </Button>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Already have an account?{" "}
           {switchToSignInHref ? (
             <Link

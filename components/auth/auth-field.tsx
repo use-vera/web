@@ -20,7 +20,7 @@ const AuthField = ({ label, className, id, ...props }: AuthFieldProps) => {
       <input
         id={inputId}
         className={cn(
-          "h-12 w-full rounded-md border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground/70 transition-colors focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50",
+          "h-14 w-full rounded-2xl border-[1.5px] border-border bg-transparent px-4 text-base text-foreground placeholder:text-muted-foreground/70 transition-colors focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50",
           className,
         )}
         {...props}

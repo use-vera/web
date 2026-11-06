@@ -29,17 +29,17 @@ const CopyField = ({ value, label, className }: CopyFieldProps) => {
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-2",
+        "flex items-center gap-2 rounded-2xl bg-secondary py-2 pr-2 pl-4",
         className,
       )}
     >
-      <code className="flex-1 overflow-x-auto text-sm break-all text-foreground font-sans font-medium">
+      <code className="min-w-0 flex-1 font-mono text-[13px] font-medium break-all text-foreground">
         {value}
       </code>
       <button
         type="button"
         onClick={() => void handleCopy()}
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
+        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-background text-muted-foreground transition-colors hover:text-foreground"
         aria-label={copied ? `${label} copied` : `Copy ${label}`}
       >
         {copied ? (

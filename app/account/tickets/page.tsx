@@ -1,39 +1,97 @@
 "use client";
 
-import {
-  EmptyState,
-  ErrorState,
-} from "@/components/organizer/organizer-primitives";
+import { ErrorState } from "@/components/organizer/organizer-primitives";
 import { Pagination } from "@/components/pagination";
-import Badge from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cloudinaryVariant } from "@/lib/cloudinary";
+import EventPoster, { POSTER_TONES, toneFor } from "@/components/vera/event-poster";
+import { shortWhen } from "@/components/vera/event-format";
 import { formatNairaAmount } from "@/lib/format-currency";
 import { useMyTickets } from "@/lib/hooks/use-tickets";
-import {
-  type MyTicketApi,
-  type TicketEventSummaryApi,
-} from "@/lib/types/event";
+import { type MyTicketApi, type TicketEventSummaryApi } from "@/lib/types/event";
 import { cn } from "@/lib/utils";
-import { ChevronRight, Clock, MapPin, Ticket } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 /* Refunded and cancelled lines are not the holder's any more, so the card
    only advertises what they can actually collect. */
-const heldAddOns = (ticket: MyTicketApi) =>
-  (ticket.addOns ?? []).filter((purchase) =>
-    ["paid", "redeemed"].includes(purchase.status),
-  );
+const heldAddOns = (ticket: MyTicketApi) => (ticket.addOns ?? []).filter((purchase) => ["paid", "redeemed"].includes(purchase.status));
 
 const PAGE_SIZE = 20;
 
-const eventOf = (
-  eventId: MyTicketApi["eventId"],
-): TicketEventSummaryApi | null =>
-  typeof eventId === "string" ? null : eventId;
+const eventOf = (eventId: MyTicketApi["eventId"]): TicketEventSummaryApi | null => (typeof eventId === "string" ? null : eventId);
+
+const isPast = (event: TicketEventSummaryApi | null) => (event?.nextOccurrenceEndsAt ? new Date(event.nextOccurrenceEndsAt).getTime() < Date.now() : false);
+
+const Chip = ({ children }: { children: React.ReactNode }) => (
+  <span className="flex h-7 items-center rounded-full bg-background px-3 text-xs font-bold text-foreground">{children}</span>
+);
+
+/** A ticket as the app draws it: the event's poster colour all round, the artwork inset, the stub underneath. */
+const TicketCard = ({ ticket }: { ticket: MyTicketApi }) => {
+  const event = eventOf(ticket.eventId);
+  const seed = event?._id ?? ticket._id;
+  const tone = toneFor(seed);
+  const colours = POSTER_TONES[tone];
+  const past = isPast(event);
+  const addOns = heldAddOns(ticket);
+
+  return (
+    <Link
+      href={`/account/tickets/${ticket._id}`}
+      className={cn(
+        "group flex flex-col gap-1 rounded-[30px] p-2.5 transition-transform duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none",
+        tone === "cream" && "ring-1 ring-border ring-inset",
+        past && "opacity-70 hover:opacity-100",
+      )}
+      style={{ backgroundColor: colours.bg, color: colours.fg }}
+    >
+      <EventPoster
+        seed={seed}
+        tone={event?.imageUrl ? tone : "ink"}
+        title={event?.name ?? "Event"}
+        tag={event ? shortWhen(event.nextOccurrenceAt) : undefined}
+        imageUrl={event?.imageUrl}
+        className="aspect-[16/10] w-full rounded-[22px]"
+        titleClassName="text-[clamp(26px,2.6vw,36px)]"
+        badge={
+          ticket.resaleStatus === "listed" ? (
+            <Chip>Listed for resale</Chip>
+          ) : ticket.status === "used" ? (
+            <Chip>Checked in</Chip>
+          ) : past ? (
+            <Chip>Been</Chip>
+          ) : null
+        }
+      />
+
+      <div className="flex flex-col gap-1.5 px-3 pt-3">
+        <span style={{ lineHeight: 1.05 }} className="line-clamp-2 text-[22px] font-extrabold tracking-[-0.03em]">
+          {event?.name ?? "Event"}
+        </span>
+        {event ? (
+          <span className="truncate text-sm font-semibold opacity-75">{[shortWhen(event.nextOccurrenceAt), event.address].filter(Boolean).join(" · ")}</span>
+        ) : null}
+      </div>
+
+      {/* The tear between ticket and stub, cut in the card's own colour. */}
+      <div aria-hidden="true" className="relative mx-3 my-3 border-t-2 border-dashed border-current opacity-25" />
+
+      <div className="flex items-center justify-between gap-3 px-3 pb-2">
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate text-[15px] font-bold">
+            {ticket.ticketCategoryName || "General"}
+            {ticket.quantity > 1 ? ` × ${ticket.quantity}` : ""}
+          </span>
+          {addOns.length ? (
+            <span className="truncate text-[13px] font-semibold opacity-75">+ {addOns.map((purchase) => purchase.name).join(", ")}</span>
+          ) : null}
+        </span>
+        <span className="shrink-0 text-[17px] font-extrabold tabular-nums">{formatNairaAmount(ticket.totalPriceNaira)}</span>
+      </div>
+    </Link>
+  );
+};
 
 const AccountTicketsPage = () => {
   const [page, setPage] = useState(1);
@@ -41,159 +99,44 @@ const AccountTicketsPage = () => {
   const tickets = ticketsQuery.data?.items ?? [];
 
   return (
-    <div className="pb-8">
-      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
-        <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em]">
-          Tickets
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Everything you have bought, and anything you have listed for resale.
-        </p>
-      </header>
-
-      <div className="flex flex-col gap-2.5 px-4 pt-5 sm:px-6 lg:px-8 lg:pt-6">
-        {ticketsQuery.isLoading ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-[88px] w-full rounded-sm" />
-          ))
-        ) : ticketsQuery.isError ? (
-          <ErrorState
-            message="Couldn't load your tickets."
-            onRetry={() => ticketsQuery.refetch()}
+    <section aria-label="Your tickets" className="flex flex-col gap-6">
+      {ticketsQuery.isLoading ? (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-[380px] w-full rounded-[30px]" />
+          ))}
+        </div>
+      ) : ticketsQuery.isError ? (
+        <ErrorState message="Couldn't load your tickets." onRetry={() => ticketsQuery.refetch()} />
+      ) : tickets.length === 0 ? (
+        <div className="flex flex-col items-start gap-4 rounded-[30px] px-[clamp(20px,4vw,48px)] py-[clamp(28px,5vw,56px)]" style={{ backgroundColor: POSTER_TONES.yellow.bg, color: POSTER_TONES.yellow.fg }}>
+          <h2 style={{ lineHeight: 0.95 }} className="text-[clamp(32px,4.5vw,56px)] font-extrabold tracking-[-0.045em]">
+            no tickets yet.
+          </h2>
+          <p className="max-w-md text-base font-semibold opacity-80">Tickets you buy show up here, with the QR you scan at the door.</p>
+          <Link href="/events" className={cn(buttonVariants({ variant: "ink" }), "mt-2")}>
+            Find an event
+          </Link>
+        </div>
+      ) : (
+        <>
+          <p className="text-[15px] text-muted-foreground">Everything you have bought, and anything you have listed for resale.</p>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {tickets.map((ticket) => (
+              <TicketCard key={ticket._id} ticket={ticket} />
+            ))}
+          </div>
+          <Pagination
+            page={ticketsQuery.data?.page ?? 1}
+            totalPages={ticketsQuery.data?.totalPages ?? 1}
+            totalItems={ticketsQuery.data?.totalItems ?? 0}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+            noun="ticket"
           />
-        ) : tickets.length === 0 ? (
-          <EmptyState
-            icon={<Ticket className="h-6 w-6" />}
-            title="No tickets yet"
-            description="Tickets you buy show up here, with the QR you scan at the door."
-            action={
-              <Link href="/events" className={cn(buttonVariants())}>
-                Find an event
-              </Link>
-            }
-          />
-        ) : (
-          tickets.map((ticket) => {
-            const event = eventOf(ticket.eventId);
-            const listed = ticket.resaleStatus === "listed";
-
-            return (
-              <Card key={ticket._id} className="gap-0 py-0">
-                <Link
-                  href={`/account/tickets/${ticket._id}`}
-                  className="flex items-center gap-4 rounded-sm p-4 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus-visible:outline-none"
-                >
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                    {event?.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={cloudinaryVariant(event.imageUrl, "thumb")}
-                        alt=""
-                        className="h-full w-full object-cover rounded-sm"
-                      />
-                    ) : (
-                      <Ticket className="h-5.5 w-5.5 rounded-sm" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate text-base leading-snug font-semibold">
-                        {event?.name ?? "Event"}
-                      </span>
-                      {listed ? <Badge>Listed for resale</Badge> : null}
-                      {ticket.status === "used" ? (
-                        <Badge variant="outline">Checked in</Badge>
-                      ) : null}
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-3.5 text-[13px] text-muted-foreground">
-                      {event ? (
-                        <>
-                          <span className="inline-flex min-w-0 items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5 shrink-0" />
-                            <span className="truncate">{event.address}</span>
-                          </span>
-                          <span className="inline-flex shrink-0 items-center gap-1.5">
-                            <Clock className="h-3.5 w-3.5" />
-                            {new Intl.DateTimeFormat("en-NG", {
-                              weekday: "short",
-                              day: "numeric",
-                              month: "short",
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: true,
-                            }).format(new Date(event.nextOccurrenceAt))}
-                          </span>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <div className="text-sm font-semibold tabular-nums">
-                      {formatNairaAmount(ticket.totalPriceNaira)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {ticket.ticketCategoryName || "General"}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </Link>
-                {heldAddOns(ticket).length ? (
-                  <div className="flex flex-wrap items-center gap-1.5 border-t border-border/60 px-4 py-2.5">
-                    <span className="mr-0.5 text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
-                      Also included
-                    </span>
-                    {heldAddOns(ticket).map((purchase) => {
-                      const collected =
-                        purchase.redeemedQuantity >= purchase.quantity;
-
-                      return (
-                        <span
-                          key={purchase._id}
-                          className={cn(
-                            "rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold",
-                            collected
-                              ? "bg-muted text-muted-foreground line-through decoration-border"
-                              : purchase.redemption === "door"
-                                ? "bg-accent text-accent-foreground"
-                                : "bg-secondary text-muted-foreground",
-                          )}
-                        >
-                          {purchase.name}
-                          {purchase.variantName ? ` · ${purchase.variantName}` : ""}
-                        </span>
-                      );
-                    })}
-                  </div>
-                ) : null}
-
-                {event ? (
-                  <div className="border-t border-border/60 px-4 py-2">
-                    <Link
-                      href={`/events/${event._id}`}
-                      className="text-xs font-semibold text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
-                    >
-                      Open the event page
-                    </Link>
-                  </div>
-                ) : null}
-              </Card>
-            );
-          })
-        )}
-      </div>
-
-      {!ticketsQuery.isLoading && tickets.length > 0 ? (
-        <Pagination
-          page={ticketsQuery.data?.page ?? 1}
-          totalPages={ticketsQuery.data?.totalPages ?? 1}
-          totalItems={ticketsQuery.data?.totalItems ?? 0}
-          pageSize={PAGE_SIZE}
-          onPageChange={setPage}
-          noun="ticket"
-          className="px-4 pt-4 sm:px-6 lg:px-8"
-        />
-      ) : null}
-    </div>
+        </>
+      )}
+    </section>
   );
 };
 

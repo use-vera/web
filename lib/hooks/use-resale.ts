@@ -2,11 +2,12 @@ import { resaleService } from "@/lib/services/resale.service";
 import { type CreateResalePayload } from "@/lib/types/organizer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const useResaleMarketplace = (eventId: string, page = 1) =>
+/* The backend only serves resale listings to signed-in people, so callers pass whether there is a session. */
+export const useResaleMarketplace = (eventId: string, page = 1, enabled = true) =>
   useQuery({
     queryKey: ["resale", "marketplace", eventId, page],
     queryFn: () => resaleService.listMarketplace(eventId, { page, limit: 20 }),
-    enabled: Boolean(eventId),
+    enabled: Boolean(eventId) && enabled,
   });
 
 export const useListTicketForResale = (ticketId: string) => {

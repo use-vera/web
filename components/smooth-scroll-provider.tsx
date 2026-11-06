@@ -1,6 +1,8 @@
 "use client";
 
+import { useScrollToTop } from "@/lib/hooks/use-scroll-to-top";
 import { ReactLenis, useLenis } from "lenis/react";
+import { usePathname } from "next/navigation";
 import { useEffect, useSyncExternalStore } from "react";
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
@@ -137,6 +139,22 @@ const LenisContentResizeSync = () => {
   return null;
 };
 
+/**
+ * Next resets window scroll on navigation, but Lenis keeps its own target
+ * and drifts back to where the last page was. Every new page eases back to
+ * the top through Lenis instead.
+ */
+const LenisRouteScrollTop = () => {
+  const pathname = usePathname();
+  const scrollToTop = useScrollToTop();
+
+  useEffect(() => {
+    scrollToTop();
+  }, [pathname, scrollToTop]);
+
+  return null;
+};
+
 const SmoothScrollProvider = ({ children }: { children: React.ReactNode }) => {
   const prefersReducedMotion = useSyncExternalStore(
     subscribe,
@@ -170,6 +188,7 @@ const SmoothScrollProvider = ({ children }: { children: React.ReactNode }) => {
       <LenisRafDriver />
       <LenisScrollLockSync />
       <LenisContentResizeSync />
+      <LenisRouteScrollTop />
       {children}
     </ReactLenis>
   );

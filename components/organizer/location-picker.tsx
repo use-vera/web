@@ -144,7 +144,7 @@ export const LocationPicker = ({
         </div>
 
         {debouncedQuery.length >= 2 && hasResults ? (
-          <div className="mt-2 overflow-hidden rounded-md border border-border bg-card">
+          <div className="mt-2 overflow-hidden rounded-[20px] border-[1.5px] border-border bg-background">
             {venues.map((venue) => (
               <button
                 key={venue._id}
@@ -159,7 +159,7 @@ export const LocationPicker = ({
                   });
                   setQuery("");
                 }}
-                className="flex w-full cursor-pointer items-center gap-3 border-b border-border/60 px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted/60"
+                className="flex w-full cursor-pointer items-center gap-3 border-b border-border/60 px-4 py-3 text-left transition-colors last:border-0 hover:bg-secondary"
               >
                 <MapPin className="h-4 w-4 shrink-0 text-primary" />
                 <span className="min-w-0 flex-1">
@@ -192,7 +192,7 @@ export const LocationPicker = ({
                   });
                   setQuery("");
                 }}
-                className="flex w-full cursor-pointer items-center gap-3 border-b border-border/60 px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted/60"
+                className="flex w-full cursor-pointer items-center gap-3 border-b border-border/60 px-4 py-3 text-left transition-colors last:border-0 hover:bg-secondary"
               >
                 <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="min-w-0 flex-1">
@@ -234,7 +234,7 @@ export const LocationPicker = ({
         <span className="mb-2 block text-[13px] font-semibold">
           Check-in radius
         </span>
-        <div className="inline-flex gap-1 rounded-full bg-muted p-1">
+        <div className="inline-flex flex-wrap gap-2">
           {RADII.map((radius) => (
             <button
               key={radius}
@@ -243,10 +243,10 @@ export const LocationPicker = ({
                 onChange({ ...value, geofenceRadiusMeters: radius })
               }
               className={cn(
-                "inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-semibold transition-colors",
+                "inline-flex h-10 cursor-pointer items-center rounded-full border-[1.5px] px-4 text-sm font-semibold transition-colors",
                 value.geofenceRadiusMeters === radius
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border text-foreground hover:border-foreground",
               )}
             >
               {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}

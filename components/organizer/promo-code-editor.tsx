@@ -139,7 +139,7 @@ export const PromoCodeEditor = ({
           className="rounded-md bg-card p-4 shadow-[inset_0_0_0_1px_var(--border)]"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground/70">
+            <span className="text-[13px] font-semibold text-muted-foreground/70">
               Code {index + 1}
             </span>
             <button
@@ -156,22 +156,16 @@ export const PromoCodeEditor = ({
 
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div>
-              <span className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                Name
-              </span>
+              <span className="mb-2 block text-sm font-bold">Name</span>
               <OrganizerField
                 value={draft.name}
-                onChange={(input) =>
-                  update(index, "name", input.target.value)
-                }
+                onChange={(input) => update(index, "name", input.target.value)}
                 placeholder="Early bird"
                 aria-label={`Promo code ${index + 1} name`}
               />
             </div>
             <div>
-              <span className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                Code
-              </span>
+              <span className="mb-2 block text-sm font-bold">Code</span>
               <OrganizerField
                 value={draft.code}
                 onChange={(input) =>
@@ -179,17 +173,15 @@ export const PromoCodeEditor = ({
                 }
                 placeholder="EARLY10"
                 aria-label={`Promo code ${index + 1}`}
-                className="font-semibold tracking-[0.06em]"
+                className="font-semibold"
               />
             </div>
           </div>
 
           <div className="mt-3 grid gap-3 sm:grid-cols-[200px_minmax(0,1fr)]">
             <div>
-              <span className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                How much off
-              </span>
-              <div className="inline-flex gap-1 rounded-md bg-muted p-1">
+              <span className="mb-2 block text-sm font-bold">How much off</span>
+              <div className="inline-flex gap-1.5">
                 {(["percent", "fixed"] as PromoDiscountType[]).map((option) => (
                   <button
                     key={option}
@@ -197,10 +189,10 @@ export const PromoCodeEditor = ({
                     aria-pressed={draft.discountType === option}
                     onClick={() => update(index, "discountType", option)}
                     className={cn(
-                      "inline-flex h-10 cursor-pointer items-center rounded-sm px-4 text-[13px] font-semibold transition-colors",
+                      "inline-flex h-11 cursor-pointer items-center rounded-full border-[1.5px] px-4 text-sm font-semibold transition-colors",
                       draft.discountType === option
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border text-foreground hover:border-foreground",
                     )}
                   >
                     {option === "percent" ? "Percent" : "Naira"}
@@ -209,8 +201,10 @@ export const PromoCodeEditor = ({
               </div>
             </div>
             <div>
-              <span className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                {draft.discountType === "percent" ? "Percent off" : "Amount off"}
+              <span className="mb-2 block text-sm font-bold">
+                {draft.discountType === "percent"
+                  ? "Percent off"
+                  : "Amount off"}
               </span>
               <AmountField
                 value={draft.discountValue}
@@ -225,9 +219,7 @@ export const PromoCodeEditor = ({
           </div>
 
           <div className="mt-3">
-            <span className="mb-2 block text-xs font-semibold text-muted-foreground">
-              Take it off
-            </span>
+            <span className="mb-2 block text-sm font-bold">Take it off</span>
             <div className="grid gap-2.5 sm:grid-cols-2">
               {APPLIES_TO.map((option) => {
                 const selected = draft.appliesTo === option.value;
@@ -241,16 +233,11 @@ export const PromoCodeEditor = ({
                     className={cn(
                       "cursor-pointer rounded-md p-3 text-left transition-colors",
                       selected
-                        ? "bg-accent shadow-[inset_0_0_0_2px_var(--primary)]"
-                        : "shadow-[inset_0_0_0_1px_var(--border)] hover:bg-muted/50",
+                        ? "border-foreground bg-secondary"
+                        : "border-border hover:border-foreground",
                     )}
                   >
-                    <span
-                      className={cn(
-                        "block text-[13px] font-semibold",
-                        selected && "text-accent-foreground",
-                      )}
-                    >
+                    <span className={cn("block text-[15px] font-bold")}>
                       {option.label}
                     </span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -264,7 +251,7 @@ export const PromoCodeEditor = ({
 
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div>
-              <span className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+              <span className="mb-2 block text-sm font-bold">
                 How many uses
               </span>
               <AmountField
@@ -278,7 +265,7 @@ export const PromoCodeEditor = ({
               </p>
             </div>
 
-            <div className="flex items-center gap-4 self-start rounded-md bg-muted/50 p-3.5">
+            <div className="flex items-center gap-4 self-start rounded-[18px] bg-secondary p-3.5">
               <div className="min-w-0 flex-1">
                 <span className="block text-[13px] font-semibold">
                   Show it on the event
@@ -301,7 +288,7 @@ export const PromoCodeEditor = ({
       <button
         type="button"
         onClick={() => onChange([...drafts, emptyPromoCode()])}
-        className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border-strong p-3.5 text-[13px] font-semibold text-primary transition-colors hover:bg-muted/50"
+        className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border-strong p-3.5 text-[13px] font-semibold text-primary transition-colors hover:bg-secondary"
       >
         <Plus className="h-4 w-4" />
         {drafts.length ? "Add another" : "Add a promo code"}

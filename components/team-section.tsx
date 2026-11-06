@@ -1,6 +1,8 @@
 "use client";
 
 import Reveal from "@/components/motion/reveal";
+import DisplayHeading, { Eyebrow } from "@/components/vera/display-heading";
+import { POSTER_TONES, toneFor } from "@/components/vera/event-poster";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { TEAM_MEMBERS, type TeamMember } from "@/lib/team-members";
 import { cn } from "@/lib/utils";
@@ -22,14 +24,17 @@ const getInitials = (name: string) => {
 };
 
 const MemberPortrait = ({ member, size }: MemberPortraitProps) => {
-  const dimensions = size === "card" ? "h-72 w-full" : "h-88 w-80";
+  const dimensions = size === "card" ? "aspect-[4/4.4] w-full" : "h-88 w-80";
+  /* No photo yet: initials on a poster colour, the same as an event without artwork. */
+  const tone = POSTER_TONES[toneFor(member.name)];
 
   return (
     <div
       className={cn(
-        "relative shrink-0 overflow-hidden rounded-2xl",
+        "relative shrink-0 overflow-hidden rounded-[28px]",
         dimensions,
       )}
+      style={member.imageUrl ? undefined : { backgroundColor: tone.bg, color: tone.fg }}
     >
       {member.imageUrl ? (
         <Image
@@ -42,8 +47,8 @@ const MemberPortrait = ({ member, size }: MemberPortraitProps) => {
       ) : (
         <div
           className={cn(
-            "flex h-full w-full items-center justify-center bg-accent font-bold text-accent-foreground",
-            size === "card" ? "text-6xl" : "text-7xl",
+            "flex h-full w-full items-end p-6 font-extrabold tracking-[-0.04em]",
+            size === "card" ? "text-7xl" : "text-8xl",
           )}
         >
           {getInitials(member?.name)}
@@ -57,17 +62,13 @@ const TeamSection = () => {
   const [selected, setSelected] = useState<TeamMember | null>(null);
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-16 flex flex-col gap-4">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-          The team
-        </span>
-        <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
-          Built by people who go out too.
-        </h2>
+    <section className="mx-auto flex max-w-[1240px] flex-col gap-4 px-[clamp(16px,4vw,40px)] py-[clamp(48px,7vw,96px)]">
+      <div className="flex flex-col gap-5">
+        <Eyebrow>The team</Eyebrow>
+        <DisplayHeading lead="built by people who" accent="go out too." breakBeforeAccent />
       </div>
 
-      <div className="mt-12 flex items-stretch justify-center flex-wrap gap-8">
+      <div className="mt-10 grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-10">
         {TEAM_MEMBERS.map((member, index) => (
           <Reveal key={member.name} delay={index * 0.08} y={20}>
             <motion.button
@@ -75,18 +76,18 @@ const TeamSection = () => {
               onClick={() => setSelected(member)}
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
-              className="flex w-94 flex-col items-center gap-4 rounded-2xl p-4 text-center transition-colors hover:bg-secondary/60"
+              className="flex w-full cursor-pointer flex-col items-start gap-3.5 text-left"
             >
               <MemberPortrait member={member} size="card" />
               <div className="flex flex-col gap-0.5">
-                <span className="text-base font-bold text-foreground">
+                <span className="text-xl font-bold tracking-[-0.015em] text-foreground">
                   {member.name}
                 </span>
-                <span className="text-sm font-semibold text-primary">
+                <span className="text-sm font-semibold text-muted-foreground">
                   {member.title}
                 </span>
               </div>
-              <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+              <p className="line-clamp-2 text-[15px] leading-relaxed text-muted-foreground">
                 {member.bio}
               </p>
             </motion.button>

@@ -1,6 +1,10 @@
 "use client";
 
-import Button from "@/components/ui/button";
+import { OrganizerField } from "@/components/organizer/organizer-field";
+import { EmptyState, PageHeader, Panel } from "@/components/organizer/organizer-primitives";
+import Button, { buttonVariants } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { POSTER_TONES, type PosterTone } from "@/components/vera/event-poster";
 import Switch from "@/components/ui/switch";
 import { formatNairaAmount } from "@/lib/format-currency";
 import { useVendorOrderRealtime } from "@/lib/hooks/use-vendor-order-realtime";
@@ -13,10 +17,10 @@ import {
   useVendorQueue,
 } from "@/lib/hooks/use-vendor";
 import { type VendorOrder } from "@/lib/types/vendor";
-import { cn, ROUTES } from "@/lib/utils";
+import { ROUTES } from "@/lib/utils";
 import {
-  ArrowLeft,
   Clock,
+  ListChecks,
   Loader2,
   MessageSquare,
   Minus,
@@ -36,26 +40,14 @@ const minutesAgo = (value: string) => {
   return `${minutes} min ago`;
 };
 
+const formatDate = (value: string) =>
+  new Intl.DateTimeFormat("en-NG", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(value));
+
 const COLUMNS = [
-  {
-    key: "paid",
-    title: "New",
-    action: "Start preparing",
-    empty: "Nothing new right now.",
-  },
-  {
-    key: "preparing",
-    title: "Preparing",
-    action: "Mark as ready",
-    empty: "Nothing being prepared.",
-  },
-  {
-    key: "ready",
-    title: "Ready for pickup",
-    action: "Hand over",
-    empty: "Nobody waiting to collect.",
-  },
-] as const;
+  { key: "paid", title: "New", action: "Start preparing", empty: "Nothing new right now.", tone: "green" },
+  { key: "preparing", title: "Preparing", action: "Mark as ready", empty: "Nothing being prepared.", tone: "yellow" },
+  { key: "ready", title: "Ready for pickup", action: "Hand over", empty: "Nobody waiting to collect.", tone: "blue" },
+] as const satisfies readonly { key: string; title: string; action: string; empty: string; tone: PosterTone }[];
 
 const OrderCard = ({ order }: { order: VendorOrder }) => {
   const advance = useAdvanceOrder();
@@ -91,77 +83,69 @@ const OrderCard = ({ order }: { order: VendorOrder }) => {
   const pending = advance.isPending || collect.isPending;
 
   return (
-    <article className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
+    <article className="flex flex-col gap-3 rounded-[22px] border-[1.5px] border-border bg-background p-4">
       <div className="flex items-baseline gap-2">
-        <span className="text-xl font-extrabold tabular-nums text-card-foreground">
-          {order.pickupCode}
-        </span>
-        <span className="ml-auto text-xs text-muted-foreground">
-          {minutesAgo(order.createdAt)}
-        </span>
+        <span className="text-[30px] leading-none font-extrabold tracking-[-0.04em] tabular-nums">{order.pickupCode}</span>
+        <span className="ml-auto text-[13px] font-semibold text-muted-foreground">{minutesAgo(order.createdAt)}</span>
       </div>
 
       <ul className="flex flex-col gap-1">
         {order.lines.map((line) => (
-          <li key={line.itemId} className="text-sm text-card-foreground">
-            {line.quantity} × {line.name}
+          <li key={line.itemId} className="flex gap-2 text-[15px]">
+            <span className="font-bold tabular-nums">{line.quantity}×</span>
+            <span className="min-w-0">{line.name}</span>
           </li>
         ))}
       </ul>
 
       {order.note ? (
-        <p className="flex items-start gap-2 rounded-lg bg-[#fff7de] p-2.5 text-xs leading-relaxed text-[#8a5f10]">
+        <p
+          className="flex items-start gap-2 rounded-[14px] p-3 text-[13px] leading-relaxed font-semibold"
+          style={{ backgroundColor: POSTER_TONES.yellow.bg, color: POSTER_TONES.yellow.fg }}
+        >
           <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           {order.note}
         </p>
       ) : null}
 
       {isReady ? (
-        <label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
-          Their pickup code
-          <input
+        <label className="block">
+          <span className="mb-2 block text-sm font-bold">Their pickup code</span>
+          <OrganizerField
             value={code}
-            onChange={(event) =>
-              setCode(event.target.value.replace(/[^0-9]/g, "").slice(0, 4))
-            }
+            onChange={(event) => setCode(event.target.value.replace(/[^0-9]/g, "").slice(0, 4))}
             inputMode="numeric"
+            autoComplete="off"
             placeholder="4 digits"
-            className="h-11 rounded-md border border-border bg-background px-3 text-base text-foreground outline-none focus-visible:border-primary"
+            className="text-lg font-bold tracking-normal tabular-nums"
           />
         </label>
       ) : null}
 
-      <div className="flex items-center gap-2">
-        <span className="flex-1 text-sm font-bold tabular-nums text-card-foreground">
-          {formatNairaAmount(order.pricing.totalChargedNaira)}
-          <span className="ml-1.5 text-xs font-semibold text-primary">
-            Paid
-          </span>
+      <div className="flex items-center gap-2 border-t-[1.5px] border-dashed border-border pt-3">
+        <span className="flex flex-1 flex-col">
+          <span className="text-[15px] font-bold tabular-nums">{formatNairaAmount(order.pricing.totalChargedNaira)}</span>
+          <span className="text-xs font-semibold text-primary">Paid</span>
         </span>
 
-        <Button
-          size="sm"
-          variant={isReady ? "outline" : "default"}
-          loading={pending}
-          disabled={isReady && code.trim().length !== 4}
-          onClick={handleAction}
-        >
+        <Button size="sm" variant="ink" loading={pending} disabled={isReady && code.trim().length !== 4} onClick={handleAction}>
           {COLUMNS.find((column) => column.key === order.status)?.action}
         </Button>
       </div>
 
       <button
         type="button"
+        disabled={cancel.isPending}
         onClick={() =>
           cancel.mutate(
             { orderId: order._id, reason: "Vendor could not fulfil it" },
             {
-              onSuccess: () =>
-                toast.success("Order cancelled. The buyer is refunded."),
+              onSuccess: () => toast.success("Order cancelled. The buyer is refunded."),
+              onError: () => toast.error("Couldn't cancel that order. Try again."),
             },
           )
         }
-        className="self-start text-xs font-semibold text-muted-foreground hover:text-destructive"
+        className="cursor-pointer self-start text-[13px] font-semibold text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
       >
         Can&apos;t make this one
       </button>
@@ -190,135 +174,116 @@ const VendorOrderQueueBoard = ({ eventId }: { eventId: string }) => {
 
   useVendorOrderRealtime();
 
+  const stepWait = (step: number) => {
+    if (!booking) {
+      return;
+    }
+
+    setService.mutate({ bookingId: booking._id, payload: { prepMinutes: Math.max(0, (booking.prepMinutes ?? 10) + step) } });
+  };
+
   if (bookingsQuery.isSuccess && !booking) {
     return (
-      <div className="rounded-2xl border border-dashed border-border p-10 text-center">
-        <p className="text-sm font-semibold text-foreground">
-          You&apos;re not confirmed for this event
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Only events an organizer has confirmed you for can take orders.
-        </p>
-        <Link
-          href={ROUTES.VENDOR_ORDERS}
-          className="mt-4 inline-block text-sm font-semibold text-accent-foreground underline-offset-4 hover:underline"
-        >
-          Back to your events
-        </Link>
+      <div className="pt-[clamp(20px,3vw,40px)]">
+        <Panel>
+          <EmptyState
+            icon={<ListChecks className="h-6 w-6" />}
+            title="you're not confirmed for this event"
+            description="Only events an organizer has confirmed your stall for can take orders."
+            action={
+              <Link href={ROUTES.VENDOR_ORDERS} className={buttonVariants({ variant: "ink", size: "sm" })}>
+                Back to your events
+              </Link>
+            }
+          />
+        </Panel>
       </div>
     );
   }
 
+  const event = booking?.event;
+  const accepting = Boolean(booking?.acceptingOrders ?? true);
+
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5">
-        <div>
-          <Link
-            href={ROUTES.VENDOR_ORDERS}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            All events
-          </Link>
-          <p className="mt-1.5 text-xs font-bold uppercase text-primary">
-            {booking?.event?.name ?? "Your event"}
-          </p>
-          <h1 className="mt-1 text-xl font-bold text-card-foreground">
-            Orders
-            {queueQuery.isFetching ? (
-              <Loader2 className="ml-2 inline h-4 w-4 animate-spin text-muted-foreground" />
-            ) : null}
-          </h1>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-5">
-          <label className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-card-foreground">
-              Taking orders
+    <div className="flex flex-col pb-10">
+      <PageHeader
+        back={{ href: ROUTES.VENDOR_ORDERS, label: "All events" }}
+        lead="the"
+        accent="queue."
+        description={
+          event ? (
+            <span className="flex items-center gap-2">
+              {event.name} · {formatDate(event.startsAt)}
+              {queueQuery.isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             </span>
-            <Switch
-              checked={Boolean(booking?.acceptingOrders ?? true)}
-              disabled={!booking || setService.isPending}
-              onCheckedChange={(checked) =>
-                booking &&
-                setService.mutate({
-                  bookingId: booking._id,
-                  payload: { acceptingOrders: checked },
-                })
-              }
-              aria-label="Taking orders"
-            />
-          </label>
+          ) : (
+            <Skeleton className="h-4 w-56" />
+          )
+        }
+        actions={
+          <>
+            <label
+              className="flex h-12 cursor-pointer items-center gap-3 rounded-full border-[1.5px] border-border pr-2 pl-4 transition-colors"
+              style={accepting ? undefined : { backgroundColor: POSTER_TONES.pink.bg, color: POSTER_TONES.pink.fg, borderColor: "transparent" }}
+            >
+              <span className="text-sm font-bold">{accepting ? "Taking orders" : "Paused"}</span>
+              <Switch
+                checked={accepting}
+                disabled={!booking || setService.isPending}
+                onCheckedChange={(checked) => booking && setService.mutate({ bookingId: booking._id, payload: { acceptingOrders: checked } })}
+                aria-label="Taking orders"
+              />
+            </label>
 
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Wait</span>
-            <span className="min-w-14 text-sm font-bold tabular-nums text-card-foreground">
-              {booking?.prepMinutes ? `${booking.prepMinutes} min` : "—"}
-            </span>
             {/* The wait time is the vendor's to set: we never guess it. */}
-            {([-5, 5] as const).map((step) => (
+            <div className="flex h-12 items-center gap-1 rounded-full border-[1.5px] border-border px-1.5">
               <button
-                key={step}
                 type="button"
-                aria-label={step < 0 ? "Shorter wait" : "Longer wait"}
+                aria-label="Shorter wait"
                 disabled={!booking}
-                onClick={() =>
-                  booking &&
-                  setService.mutate({
-                    bookingId: booking._id,
-                    payload: {
-                      prepMinutes: Math.max(
-                        0,
-                        (booking.prepMinutes ?? 10) + step,
-                      ),
-                    },
-                  })
-                }
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-foreground hover:bg-secondary"
+                onClick={() => stepWait(-5)}
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-secondary disabled:opacity-50"
               >
-                {step < 0 ? (
-                  <Minus className="h-4 w-4" />
-                ) : (
-                  <Plus className="h-4 w-4" />
-                )}
+                <Minus className="h-4 w-4" />
               </button>
-            ))}
-          </div>
-        </div>
-      </div>
+              <span className="flex min-w-[112px] items-center justify-center gap-1.5 text-sm font-bold tabular-nums">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                {booking?.prepMinutes ? `${booking.prepMinutes} min` : "Wait not set"}
+              </span>
+              <button
+                type="button"
+                aria-label="Longer wait"
+                disabled={!booking}
+                onClick={() => stepWait(5)}
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-secondary disabled:opacity-50"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          </>
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-3">
         {COLUMNS.map((column) => {
           const cards = orders.filter((order) => order.status === column.key);
+          const colours = POSTER_TONES[column.tone];
 
           return (
-            <section
-              key={column.key}
-              className="flex min-h-40 flex-col gap-3 rounded-2xl bg-secondary/50 p-3"
-            >
-              <div className="flex items-center gap-2 px-1">
-                <h2 className="text-sm font-bold text-foreground">
-                  {column.title}
-                </h2>
-                <span
-                  className={cn(
-                    "rounded-full px-2 py-0.5 text-xs font-bold tabular-nums",
-                    column.key === "paid" && cards.length > 0
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-border text-foreground",
-                  )}
-                >
-                  {cards.length}
-                </span>
+            <section key={column.key} aria-label={column.title} className="flex min-h-48 flex-col gap-2.5 rounded-[28px] border-[1.5px] border-border p-2.5">
+              <div className="flex items-center justify-between rounded-[20px] px-4 py-3" style={{ backgroundColor: colours.bg, color: colours.fg }}>
+                <h2 className="text-[15px] font-bold">{column.title}</h2>
+                <span className="text-[22px] leading-none font-extrabold tracking-[-0.03em] tabular-nums">{cards.length}</span>
               </div>
+
+              {queueQuery.isPending ? <Skeleton className="h-40 rounded-[22px]" /> : null}
 
               {cards.map((order) => (
                 <OrderCard key={order._id} order={order} />
               ))}
 
-              {cards.length === 0 ? (
-                <p className="px-1 py-8 text-center text-xs text-muted-foreground">
+              {!queueQuery.isPending && cards.length === 0 ? (
+                <p className="flex flex-1 items-center justify-center rounded-[22px] border-[1.5px] border-dashed border-border px-4 py-10 text-center text-[13px] font-semibold text-muted-foreground">
                   {column.empty}
                 </p>
               ) : null}

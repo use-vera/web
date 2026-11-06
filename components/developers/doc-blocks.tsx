@@ -1,4 +1,7 @@
 import { DIAGRAMS } from "@/components/developers/doc-diagrams";
+import MethodBadge from "@/components/developers/method-badge";
+import { MenuTile } from "@/components/header-menu";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import CodeBlock from "@/components/ui/code-block";
 import Image from "next/image";
 import {
@@ -24,7 +27,7 @@ const withInlineCode = (body: string): ReactNode =>
     index % 2 === 1 ? (
       <code
         key={index}
-        className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.85em] text-foreground"
+        className="rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[0.85em] text-foreground"
       >
         {piece}
       </code>
@@ -33,22 +36,11 @@ const withInlineCode = (body: string): ReactNode =>
     ),
   );
 
+/* Callouts sit on poster colours: green for a tip, blue for a note, pink for a warning. */
 const CALLOUT_STYLES = {
-  tip: {
-    icon: Lightbulb,
-    wrap: "border-primary/25 bg-primary/5",
-    mark: "text-primary",
-  },
-  note: {
-    icon: Info,
-    wrap: "border-border bg-muted/50",
-    mark: "text-muted-foreground",
-  },
-  warning: {
-    icon: TriangleAlert,
-    wrap: "border-destructive/25 bg-destructive/5",
-    mark: "text-destructive",
-  },
+  tip: { icon: Lightbulb, tone: "green" },
+  note: { icon: Info, tone: "blue" },
+  warning: { icon: TriangleAlert, tone: "pink" },
 } as const;
 
 const Callout = ({
@@ -58,13 +50,14 @@ const Callout = ({
 }: Extract<DocBlock, { kind: "callout" }>) => {
   const style = CALLOUT_STYLES[tone];
   const Icon = style.icon;
+  const colours = POSTER_TONES[style.tone];
 
   return (
-    <div className={cn("flex gap-3 rounded-sm border p-4", style.wrap)}>
-      <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", style.mark)} />
+    <div className="flex gap-3 rounded-[22px] p-5" style={{ backgroundColor: colours.bg, color: colours.fg }}>
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-foreground">{title}</p>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+        <p className="text-[15px] font-bold">{title}</p>
+        <p className="mt-1 text-sm leading-relaxed font-medium opacity-85">
           {withInlineCode(body)}
         </p>
       </div>
@@ -87,7 +80,7 @@ const Screenshot = ({
         alt={alt}
         width={width ?? 1200}
         height={height ?? 700}
-        className="w-full rounded-xl border border-border"
+        className="w-full rounded-[22px] border-[1.5px] border-border"
         /* Never above the fold on a guide page, and the first screen is
            prose, so these wait their turn. */
         loading="lazy"
@@ -100,7 +93,7 @@ const Screenshot = ({
         role="img"
         aria-label={alt}
         className={cn(
-          "flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/40 p-6 text-center",
+          "flex flex-col items-center justify-center gap-2 rounded-[22px] border-[1.5px] border-dashed border-border p-6 text-center",
           ratio === "wide" ? "aspect-16/7" : "aspect-4/3",
         )}
       >
@@ -111,7 +104,7 @@ const Screenshot = ({
       </div>
     )}
     {caption ? (
-      <figcaption className="text-xs text-muted-foreground">
+      <figcaption className="text-[13px] text-muted-foreground">
         {caption}
       </figcaption>
     ) : null}
@@ -131,21 +124,19 @@ const EndpointLinks = ({
   }
 
   return (
-    <div className="rounded-sm border border-border">
-      <p className="border-b border-border px-4 py-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+    <div className="overflow-hidden rounded-[22px] border-[1.5px] border-border">
+      <p className="border-b-[1.5px] border-border px-5 py-3 text-[13px] font-bold">
         {title ?? "Reference"}
       </p>
-      <ul className="divide-y divide-border">
+      <ul className="divide-y-[1.5px] divide-border">
         {rows.map((endpoint) => (
           <li key={endpoint.id}>
             <Link
               href={`${ROUTES.DEVELOPERS_API}#${endpoint.id}`}
-              className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50"
+              className="group flex items-center gap-3 px-5 py-3 transition-colors hover:bg-secondary"
             >
-              <span className="w-14 shrink-0 font-mono text-[11px] font-bold text-muted-foreground">
-                {endpoint.method}
-              </span>
-              <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">
+              <MethodBadge method={endpoint.method} size="sm" />
+              <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-foreground">
                 {endpoint.path}
               </span>
               <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5" />
@@ -163,7 +154,7 @@ const Block = ({ block }: { block: DocBlock }) => {
       return (
         <h2
           id={headingId(block.text)}
-          className="scroll-mt-24 pt-4 text-xl font-bold text-foreground"
+          className="scroll-mt-24 pt-6 text-[26px] leading-tight font-extrabold tracking-[-0.035em] text-foreground"
         >
           {block.text}
         </h2>
@@ -171,7 +162,7 @@ const Block = ({ block }: { block: DocBlock }) => {
 
     case "text":
       return (
-        <p className="text-[15px] leading-relaxed text-muted-foreground">
+        <p className="text-base leading-relaxed text-muted-foreground">
           {withInlineCode(block.body)}
         </p>
       );
@@ -180,7 +171,7 @@ const Block = ({ block }: { block: DocBlock }) => {
       return (
         <div className="flex flex-col gap-2">
           {block.label ? (
-            <p className="text-xs font-semibold text-muted-foreground">
+            <p className="text-[13px] font-bold text-foreground">
               {block.label}
             </p>
           ) : null}
@@ -200,11 +191,11 @@ const Block = ({ block }: { block: DocBlock }) => {
           {block.items.map((item) => (
             <li
               key={item}
-              className="flex gap-3 text-[15px] leading-relaxed text-muted-foreground"
+              className="flex gap-3 text-base leading-relaxed text-muted-foreground"
             >
               <span
                 aria-hidden
-                className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-border"
+                className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
               />
               <span>{withInlineCode(item)}</span>
             </li>
@@ -217,14 +208,14 @@ const Block = ({ block }: { block: DocBlock }) => {
         <ol className="flex flex-col gap-5">
           {block.items.map((item, index) => (
             <li key={item.title} className="flex gap-4">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-foreground text-[13px] font-extrabold text-background tabular-nums">
                 {index + 1}
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-2 pt-0.5">
-                <p className="text-[15px] font-semibold text-foreground">
+                <p className="text-base font-bold text-foreground">
                   {item.title}
                 </p>
-                <p className="text-[15px] leading-relaxed text-muted-foreground">
+                <p className="text-base leading-relaxed text-muted-foreground">
                   {withInlineCode(item.body)}
                 </p>
                 {item.code ? (
@@ -241,29 +232,29 @@ const Block = ({ block }: { block: DocBlock }) => {
 
     case "table":
       return (
-        <div className="overflow-hidden rounded-sm border border-border">
+        <div className="overflow-x-auto rounded-[22px] border-[1.5px] border-border">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
+              <tr className="border-b-[1.5px] border-border">
                 {block.columns.map((column) => (
                   <th
                     key={column}
                     scope="col"
-                    className="px-4 py-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                    className="px-5 py-3.5 text-[13px] font-semibold text-muted-foreground"
                   >
                     {column}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y-[1.5px] divide-border">
               {block.rows.map((row) => (
                 <tr key={row.join("|")} className="align-top">
                   {row.map((cell, index) => (
                     <td
                       key={index}
                       className={cn(
-                        "px-4 py-3 leading-relaxed",
+                        "px-5 py-3.5 leading-relaxed",
                         index === 0
                           ? "font-sans text-xs font-semibold whitespace-nowrap text-foreground"
                           : "text-muted-foreground",
@@ -291,13 +282,11 @@ const Block = ({ block }: { block: DocBlock }) => {
           href={block.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20 hover:bg-muted/40"
+          className="group flex items-center gap-4 rounded-[22px] border-[1.5px] border-border p-4 transition-colors hover:border-foreground"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent">
-            <PlayCircle className="h-4 w-4 text-primary" />
-          </span>
+          <MenuTile icon={PlayCircle} tone="pink" />
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold text-card-foreground">
+            <span className="block text-[15px] font-bold text-foreground">
               {block.title}
             </span>
             <span className="mt-0.5 block text-sm leading-relaxed text-muted-foreground">
@@ -315,11 +304,11 @@ const Block = ({ block }: { block: DocBlock }) => {
 
     case "errorCodes":
       return (
-        <div className="overflow-hidden rounded-sm border border-border">
-          <ul className="divide-y divide-border">
+        <div className="overflow-hidden rounded-[22px] border-[1.5px] border-border">
+          <ul className="divide-y-[1.5px] divide-border">
             {ERROR_CODES.map((entry) => (
-              <li key={entry.code} className="flex items-start gap-3 px-4 py-3">
-                <span className="w-10 shrink-0 pt-0.5 font-mono text-xs font-bold text-muted-foreground">
+              <li key={entry.code} className="flex items-start gap-3 px-5 py-3.5">
+                <span className="w-10 shrink-0 pt-0.5 font-mono text-[13px] font-extrabold">
                   {entry.status}
                 </span>
                 <div className="min-w-0">
@@ -339,7 +328,7 @@ const Block = ({ block }: { block: DocBlock }) => {
 };
 
 const DocBlocks = ({ guide }: { guide: Guide }) => (
-  <div className="flex flex-col gap-5 ">
+  <div className="flex flex-col gap-6">
     {guide.blocks.map((block, index) => (
       <Block key={index} block={block} />
     ))}

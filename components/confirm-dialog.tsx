@@ -2,6 +2,7 @@
 
 import Button from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import { TriangleAlert } from "lucide-react";
 import { type ReactNode } from "react";
 
@@ -30,27 +31,26 @@ export const ConfirmDialog = ({
   loading?: boolean;
 }) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent showClose={false} className="max-w-md">
+    <DialogContent showClose={false} className="max-w-md rounded-[28px] border-[1.5px] border-border bg-background">
       <div className="p-6">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-destructive/12 text-destructive">
+        <div className="flex h-11 w-11 items-center justify-center rounded-[14px]" style={{ backgroundColor: POSTER_TONES.pink.bg, color: POSTER_TONES.pink.fg }}>
           <TriangleAlert className="h-5 w-5" />
         </div>
-        <h2 className="mt-4 text-lg font-bold tracking-[-0.01em]">{title}</h2>
-        <div className="mt-2 text-sm leading-relaxed text-pretty text-muted-foreground">
+        <h2 className="mt-4 text-[22px] leading-tight font-extrabold tracking-[-0.03em]">{title}</h2>
+        <div className="mt-2 text-[15px] leading-relaxed text-pretty text-muted-foreground">
           {description}
         </div>
         <div className="mt-6 flex justify-end gap-2.5">
           <DialogClose
             render={
-              <Button size="sm" variant="outline" disabled={loading}>
+              <Button size="sm" variant="line" disabled={loading}>
                 {cancelLabel}
               </Button>
             }
           />
           <Button
             size="sm"
-            variant="outline"
-            className="border-destructive/60 text-destructive hover:bg-destructive/10"
+            className="bg-destructive text-white hover:opacity-90"
             loading={loading}
             onClick={onConfirm}
           >

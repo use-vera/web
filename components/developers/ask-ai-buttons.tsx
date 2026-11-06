@@ -60,7 +60,7 @@ const AskAiButtons = ({ title, path, plainText }: AskAiButtonsProps) => {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="outline" size="sm" className="gap-1.5">
+          <Button variant="line" size="sm" className="gap-1.5">
             {/* <Sparkles className="h-3.5 w-3.5" /> */}
             Ask AI
             <ChevronDown className="h-3.5 w-3.5 opacity-60" />

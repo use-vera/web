@@ -1,17 +1,12 @@
 import { cn } from "@/lib/utils";
 import * as React from "react";
 
-/**
- * The Developer Portal's form field. Rounded-md to match AuthField (the
- * app's real input convention for actual form fields), not the shared
- * Input component's rounded-full, which is a deliberate one-off reserved
- * for the events search bar.
- */
+/** The portal's form field, drawn like the dashboards' fields: an outline on the page colour that turns ink on focus. */
 const DevInput = ({ className, type, ...props }: React.ComponentProps<"input">) => (
   <input
     type={type}
     className={cn(
-      "h-11 w-full rounded-md border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/70 transition-colors focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50",
+      "h-12 w-full rounded-2xl border-[1.5px] border-border bg-transparent px-4 text-[15px] text-foreground transition-colors placeholder:text-muted-foreground/70 focus-visible:border-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     {...props}

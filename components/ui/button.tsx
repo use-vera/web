@@ -15,6 +15,11 @@ export const buttonVariants = cva(
           "border border-border bg-transparent text-foreground hover:bg-secondary",
         ghost: "bg-transparent text-foreground hover:bg-secondary",
         link: "bg-transparent text-primary underline-offset-4 hover:underline p-0 h-auto",
+        /* The app's main button: the text colour as the fill, so it reads
+           ink on paper pages and paper on dark ones. Public pages use these
+           two; the dashboards keep the green default for now. */
+        ink: "bg-foreground text-background hover:opacity-90",
+        line: "border-[1.5px] border-foreground bg-transparent text-foreground hover:bg-foreground/5",
       },
       size: {
         default: "h-[50px] px-6 text-[15px]",

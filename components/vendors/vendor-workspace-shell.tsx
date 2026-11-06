@@ -1,26 +1,64 @@
 "use client";
 
-import LogoMark from "@/components/logo-mark";
-import VendorUserMenu from "@/components/vendors/vendor-user-menu";
+import { DashboardShell, type DashboardNavItem } from "@/components/dashboard-shell";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import { useMyVendor } from "@/lib/hooks/use-vendor";
-import { cn, ROUTES } from "@/lib/utils";
-import {
-  ArrowLeft,
-  CalendarDays,
-  ListChecks,
-  ShieldCheck,
-  UtensilsCrossed,
-  Wallet,
-} from "lucide-react";
-import Link from "next/link";
+import { type Vendor } from "@/lib/types/vendor";
+import { ROUTES } from "@/lib/utils";
+import { ArrowUpRight, CalendarDays, ListChecks, ShieldCheck, UtensilsCrossed, Wallet } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+const NAV: DashboardNavItem[] = [
+  { href: ROUTES.VENDOR_ORDERS, label: "Orders", icon: ListChecks },
+  { href: ROUTES.VENDOR_MENU, label: "Menu", icon: UtensilsCrossed },
+  { href: ROUTES.VENDOR_EVENTS, label: "Events", icon: CalendarDays },
+  { href: ROUTES.VENDOR_MONEY, label: "Money", icon: Wallet },
+  { href: ROUTES.VENDOR_VERIFICATION, label: "Limits", icon: ShieldCheck },
+];
+
+const LEVEL_LABEL: Record<Vendor["verificationLevel"], string> = {
+  starter: "Starter",
+  verified: "Verified",
+  registered: "Registered business",
+};
+
+/** The business this desk belongs to, at the top of the rail. */
+const BusinessCard = ({ vendor }: { vendor: Vendor }) => (
+  <div className="flex items-center gap-3 rounded-[22px] bg-secondary p-2.5">
+    <span
+      className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] text-base font-extrabold"
+      style={{ backgroundColor: POSTER_TONES.yellow.bg, color: POSTER_TONES.yellow.fg }}
+    >
+      {vendor.logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={vendor.logoUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        vendor.businessName.charAt(0).toUpperCase()
+      )}
+    </span>
+    <span className="flex min-w-0 flex-1 flex-col">
+      <span className="truncate text-sm font-bold">{vendor.businessName}</span>
+      <span className="truncate text-xs text-muted-foreground">{LEVEL_LABEL[vendor.verificationLevel]}</span>
+    </span>
+    {vendor.slug ? (
+      <a
+        href={`/vendors/${vendor.slug}`}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="View your public page"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+      >
+        <ArrowUpRight className="h-4 w-4" />
+      </a>
+    ) : null}
+  </div>
+);
+
 /**
- * Chrome for the vendor workspace.
- *
- * Every section a vendor has: tonight's orders, their menu, their events and
- * their money.
+ * The vendor's desk: the same dark rail as the organizer's, holding their
+ * business and the five things a vendor does. Until they have a vendor
+ * account the rail stays empty and the page walks them through setup.
  */
 const VendorWorkspaceShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
@@ -42,80 +80,17 @@ const VendorWorkspaceShell = ({ children }: { children: React.ReactNode }) => {
   }, [vendor, vendorQuery.isSuccess, onOnboarding, router]);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <LogoMark className="h-7 w-7" />
-            <span className="text-base font-bold text-foreground">Vera</span>
-          </Link>
-
-          <span className="hidden text-sm text-muted-foreground sm:inline">
-            /
-          </span>
-          <span className="hidden truncate text-sm font-semibold text-foreground sm:inline">
-            {vendor?.businessName ?? "Vendor setup"}
-          </span>
-
-          {vendor ? (
-            <nav className="ml-auto flex items-center gap-1">
-              {[
-                {
-                  href: ROUTES.VENDOR_ORDERS,
-                  label: "Orders",
-                  Icon: ListChecks,
-                },
-                {
-                  href: ROUTES.VENDOR_MENU,
-                  label: "Menu",
-                  Icon: UtensilsCrossed,
-                },
-                {
-                  href: ROUTES.VENDOR_EVENTS,
-                  label: "Events",
-                  Icon: CalendarDays,
-                },
-                { href: ROUTES.VENDOR_MONEY, label: "Money", Icon: Wallet },
-                {
-                  href: ROUTES.VENDOR_VERIFICATION,
-                  label: "Limits",
-                  Icon: ShieldCheck,
-                },
-              ].map(({ href, label, Icon }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  aria-current={pathname === href ? "page" : undefined}
-                  className={cn(
-                    "flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors",
-                    pathname === href
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </Link>
-              ))}
-            </nav>
-          ) : (
-            <Link
-              href="/"
-              className="ml-auto flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Vera
-            </Link>
-          )}
-
-          <div className="ml-2 shrink-0">
-            <VendorUserMenu />
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1">{children}</main>
-    </div>
+    <DashboardShell
+      nav={vendor ? NAV : []}
+      role="Vendor"
+      railContext={vendor ? <BusinessCard vendor={vendor} /> : null}
+      redirectTo={ROUTES.VENDOR_ORDERS}
+      signedOutLead="sign in to run your"
+      signedOutAccent="stall."
+      signedOutDescription="Take orders at events, keep your menu up to date, and see what you've earned."
+    >
+      {children}
+    </DashboardShell>
   );
 };
 

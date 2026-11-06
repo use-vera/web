@@ -40,7 +40,11 @@ export const ImageCropper = ({
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [zoom, setZoom] = useState(1);
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
-  const dragRef = useRef<{ pointerX: number; pointerY: number; perPixel: number } | null>(null);
+  const dragRef = useRef<{
+    pointerX: number;
+    pointerY: number;
+    perPixel: number;
+  } | null>(null);
 
   const reset = () => {
     setLoaded(null);
@@ -162,7 +166,7 @@ export const ImageCropper = ({
           </p>
 
           <div
-            className="relative mt-5 w-full touch-none overflow-hidden rounded-md bg-muted select-none"
+            className="relative mt-5 w-full touch-none overflow-hidden rounded-[20px] bg-secondary select-none"
             style={{ aspectRatio: String(COVER_ASPECT) }}
             onPointerDown={(event) => {
               if (!loaded) {
@@ -260,7 +264,8 @@ export const ImageCropper = ({
           </div>
 
           <p className="mt-2 text-xs text-muted-foreground tabular-nums">
-            Drag to reposition &middot; saved at {OUTPUT_WIDTH}&times;{OUTPUT_HEIGHT}
+            Drag to reposition &middot; saved at {OUTPUT_WIDTH}&times;
+            {OUTPUT_HEIGHT}
           </p>
 
           <div className="mt-6 flex justify-end gap-2.5">
@@ -276,6 +281,7 @@ export const ImageCropper = ({
               Cancel
             </Button>
             <Button
+              variant="ink"
               size="sm"
               disabled={!loaded || isUploading}
               loading={isUploading}

@@ -43,7 +43,7 @@ export const ThemePanel = ({
   const accentIsFaint = accentContrast < 3;
 
   return (
-    <aside className="w-full shrink-0 border-t border-border bg-card lg:min-h-0 lg:w-[300px] lg:overflow-y-auto lg:border-t-0 lg:border-l">
+    <aside className="w-full shrink-0 border-t border-border bg-background lg:min-h-0 lg:w-[300px] lg:overflow-y-auto lg:border-t-0 lg:border-l">
       <div className="border-b border-border px-4 py-3.5">
         <span className="text-[14px] font-bold">Look</span>
         <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
@@ -71,7 +71,7 @@ export const ThemePanel = ({
                     onChange({ ...theme, preset: option.value, accent: "" })
                   }
                   className={cn(
-                    "cursor-pointer overflow-hidden rounded-sm text-left transition-shadow",
+                    "cursor-pointer overflow-hidden rounded-xl text-left transition-shadow",
                     selected
                       ? "ring-2 ring-primary ring-inset"
                       : "ring-1 ring-foreground/10 ring-inset hover:ring-foreground/25",
@@ -139,7 +139,7 @@ export const ThemePanel = ({
           <div className="mt-3 flex items-center gap-2">
             <label
               htmlFor={pickerId}
-              className="relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-sm ring-1 ring-border ring-inset"
+              className="relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-[1.5px] border-border"
               style={{ background: active.accent }}
               title="Pick any colour"
             >
@@ -163,7 +163,7 @@ export const ThemePanel = ({
               spellCheck={false}
               aria-label="Accent colour hex"
               placeholder="#0fb26e"
-              className="h-9 w-full rounded-sm border border-border bg-background px-3 font-mono text-[12.5px] uppercase outline-none focus:border-primary"
+              className="h-10 w-full rounded-xl border-[1.5px] border-border bg-transparent px-3 font-mono text-[12.5px] uppercase outline-none focus:border-foreground"
             />
           </div>
 
@@ -195,7 +195,7 @@ export const ThemePanel = ({
                   aria-pressed={selected}
                   onClick={() => onChange({ ...theme, font: font.value })}
                   className={cn(
-                    "flex cursor-pointer flex-col gap-0.5 rounded-sm px-3 py-2.5 text-left transition-colors",
+                    "flex cursor-pointer flex-col gap-0.5 rounded-xl px-3 py-2.5 text-left transition-colors",
                     selected
                       ? "bg-accent ring-2 ring-primary ring-inset"
                       : "ring-1 ring-foreground/10 ring-inset hover:bg-muted/50",

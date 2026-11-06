@@ -19,13 +19,7 @@ import {
   OrganizerField,
   OrganizerTextarea,
 } from "@/components/organizer/organizer-field";
-import {
-  Eyebrow,
-  FieldError,
-  IssueSummary,
-  SectionLabel,
-  Switch,
-} from "@/components/organizer/organizer-primitives";
+import { Eyebrow, FieldError, IssueSummary, SectionLabel, Switch, PANEL, SELECT_FIELD } from "@/components/organizer/organizer-primitives";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -134,7 +128,7 @@ const Select = ({
       value={value}
       aria-label={label}
       onChange={(input) => onChange(input.target.value)}
-      className="h-12 w-full cursor-pointer appearance-none rounded-md border border-border bg-background px-4 pr-10 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
+      className={SELECT_FIELD}
     >
       <option value="">Select…</option>
       {options.map((option) => (
@@ -364,7 +358,7 @@ const NewEventPage = () => {
         onConfirm={() => router.push("/organizer/events")}
       />
 
-      <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
+      <header className="sticky top-16 z-20 flex flex-wrap items-center justify-between gap-3 border-b-[1.5px] border-border bg-background px-[clamp(16px,3vw,40px)] py-4 lg:top-0">
         <div className="flex items-center gap-3.5">
           <button
             type="button"
@@ -372,15 +366,15 @@ const NewEventPage = () => {
             onClick={() =>
               isDirty ? setConfirmLeave(true) : router.push("/organizer/events")
             }
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-[1.5px] border-border text-foreground transition-colors hover:border-foreground"
           >
             <X className="h-4 w-4" />
           </button>
           <div>
-            <div className="text-[15px] font-semibold">
+            <div className="text-base font-bold">
               {draft.name.trim() || "New event"}
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-[13px] text-muted-foreground">
               Step {step + 1} of {STEPS.length} &middot; {STEPS[step]}
             </div>
           </div>
@@ -390,6 +384,7 @@ const NewEventPage = () => {
             <Button
               size="sm"
               variant="ghost"
+              className="h-11"
               onClick={() => {
                 setShowIssues(false);
                 setStep((current) => current - 1);
@@ -400,7 +395,9 @@ const NewEventPage = () => {
           ) : null}
           {step < STEPS.length - 1 ? (
             <Button
+              variant="ink"
               size="sm"
+              className="h-11 px-5"
               onClick={() => {
                 if (!stepValid) {
                   setShowIssues(true);
@@ -418,7 +415,8 @@ const NewEventPage = () => {
             <>
               <Button
                 size="sm"
-                variant="outline"
+                variant="line"
+                className="h-11 px-5"
                 loading={createEvent.isPending}
                 onClick={() => submit("draft")}
               >
@@ -426,6 +424,8 @@ const NewEventPage = () => {
               </Button>
               <Button
                 size="sm"
+                variant="ink"
+                className="h-11 px-5"
                 loading={createEvent.isPending}
                 onClick={() => submit("published")}
               >
@@ -436,10 +436,8 @@ const NewEventPage = () => {
         </div>
       </header>
 
-      <hr className="ticket-perforation" />
-
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <aside className="w-full border-b border-border px-4 py-3 lg:w-[280px] lg:shrink-0 lg:border-b-0 lg:px-6 lg:py-8">
+        <aside className="w-full border-b-[1.5px] border-border px-[clamp(16px,3vw,40px)] py-3 lg:sticky lg:top-[78px] lg:w-[280px] lg:shrink-0 lg:self-start lg:border-b-0 lg:py-8 lg:pr-4">
           {/* Horizontal on a phone so the form starts near the top; the next
               step peeks past the edge so the row reads as scrollable. */}
           <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:px-0 lg:pb-0">
@@ -454,19 +452,19 @@ const NewEventPage = () => {
                   disabled={index > step}
                   onClick={() => setStep(index)}
                   className={cn(
-                    "flex h-11 shrink-0 items-center gap-2.5 rounded-sm px-3 text-left transition-colors lg:h-10 lg:w-full lg:shrink lg:gap-3",
-                    now && "bg-muted",
+                    "flex h-11 shrink-0 items-center gap-2.5 rounded-full px-3 text-left transition-colors lg:w-full lg:shrink lg:gap-3",
+                    now && "bg-secondary",
                     index > step ? "cursor-default" : "cursor-pointer",
                   )}
                 >
                   <span
                     className={cn(
-                      "flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                       done && "bg-primary text-primary-foreground",
                       now && "bg-foreground text-background",
                       !done &&
                         !now &&
-                        "text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
+                        "border-[1.5px] border-border text-muted-foreground",
                     )}
                   >
                     {done ? (
@@ -491,17 +489,17 @@ const NewEventPage = () => {
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-5 sm:gap-7 px-4 py-6 sm:px-6 lg:flex-row lg:py-8 lg:pr-8 lg:pl-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-6 px-[clamp(16px,3vw,40px)] py-8 lg:flex-row lg:pl-4">
           <div className="w-full min-w-0 lg:max-w-[700px] lg:flex-1">
             <IssueSummary
               messages={showIssues ? issues.map((issue) => issue.message) : []}
             />
             {step === 0 ? (
               <>
-                <h2 className="text-[22px] leading-tight font-bold tracking-[-0.02em]">
-                  The basics
+                <h2 style={{ lineHeight: 0.95 }} className="text-[clamp(32px,3.6vw,48px)] font-extrabold tracking-[-0.045em]">
+                  the basics.
                 </h2>
-                <p className="mt-1.5 mb-6 text-sm text-muted-foreground">
+                <p className="mt-3 mb-7 text-[15px] text-muted-foreground">
                   What it is called, what it looks like, and where it belongs.
                 </p>
 
@@ -541,7 +539,7 @@ const NewEventPage = () => {
                       }
                       rows={5}
                       maxLength={1200}
-                      placeholder="Who is playing, what the night looks like, anything people should turn up knowing."
+                      placeholder="Who is playing, what the day looks like, anything people should turn up knowing."
                     />
                   </label>
 
@@ -560,10 +558,10 @@ const NewEventPage = () => {
 
             {step === 1 ? (
               <>
-                <h2 className="text-[22px] leading-tight font-bold tracking-[-0.02em]">
-                  Where it happens
+                <h2 style={{ lineHeight: 0.95 }} className="text-[clamp(32px,3.6vw,48px)] font-extrabold tracking-[-0.045em]">
+                  where it happens.
                 </h2>
-                <p className="mt-1.5 mb-6 text-sm text-muted-foreground">
+                <p className="mt-3 mb-7 text-[15px] text-muted-foreground">
                   Search a venue, use your location, or drop a pin on the map.
                 </p>
 
@@ -644,10 +642,10 @@ const NewEventPage = () => {
 
             {step === 2 ? (
               <>
-                <h2 className="text-[22px] leading-tight font-bold tracking-[-0.02em]">
-                  When it happens
+                <h2 style={{ lineHeight: 0.95 }} className="text-[clamp(32px,3.6vw,48px)] font-extrabold tracking-[-0.045em]">
+                  when it happens.
                 </h2>
-                <p className="mt-1.5 mb-6 text-sm text-muted-foreground">
+                <p className="mt-3 mb-7 text-[15px] text-muted-foreground">
                   Doors open, doors close, and whether it happens again.
                 </p>
 
@@ -688,7 +686,7 @@ const NewEventPage = () => {
 
                 <div className="mt-7">
                   <SectionLabel>Does it repeat?</SectionLabel>
-                  <div className="inline-flex gap-1 rounded-full bg-muted p-1">
+                  <div className="inline-flex flex-wrap gap-2">
                     {[
                       { value: "none" as const, label: "One-off" },
                       { value: "weekly" as const, label: "Weekly" },
@@ -699,10 +697,10 @@ const NewEventPage = () => {
                         type="button"
                         onClick={() => set("recurrenceType", option.value)}
                         className={cn(
-                          "inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-semibold transition-colors",
+                          "inline-flex h-11 cursor-pointer items-center rounded-full border-[1.5px] px-4 text-sm font-semibold transition-colors",
                           draft.recurrenceType === option.value
-                            ? "bg-card text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground",
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-border text-foreground hover:border-foreground",
                         )}
                       >
                         {option.label}
@@ -734,10 +732,10 @@ const NewEventPage = () => {
                               )
                             }
                             className={cn(
-                              "h-10 w-12 cursor-pointer rounded-md text-[13px] font-semibold transition-colors",
+                              "h-11 w-12 cursor-pointer rounded-full text-sm font-semibold transition-colors",
                               selected
-                                ? "bg-primary text-primary-foreground"
-                                : "border border-border text-muted-foreground hover:bg-muted",
+                                ? "bg-foreground text-background"
+                                : "border-[1.5px] border-border text-foreground hover:border-foreground",
                             )}
                           >
                             {day}
@@ -768,14 +766,14 @@ const NewEventPage = () => {
 
             {step === 3 ? (
               <>
-                <h2 className="text-[22px] leading-tight font-bold tracking-[-0.02em]">
-                  Tickets &amp; pricing
+                <h2 style={{ lineHeight: 0.95 }} className="text-[clamp(32px,3.6vw,48px)] font-extrabold tracking-[-0.045em]">
+                  tickets &amp; pricing.
                 </h2>
-                <p className="mt-1.5 mb-6 text-sm text-muted-foreground">
+                <p className="mt-3 mb-7 text-[15px] text-muted-foreground">
                   Set what people pay and what lands in your wallet.
                 </p>
 
-                <div className="mb-6 inline-flex gap-1 rounded-full bg-muted p-1">
+                <div className="mb-6 inline-flex flex-wrap gap-2">
                   {[
                     { paid: false, label: "Free entry" },
                     { paid: true, label: "Paid tickets" },
@@ -785,10 +783,10 @@ const NewEventPage = () => {
                       type="button"
                       onClick={() => set("isPaid", option.paid)}
                       className={cn(
-                        "inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-semibold transition-colors",
+                        "inline-flex h-11 cursor-pointer items-center rounded-full border-[1.5px] px-4 text-sm font-semibold transition-colors",
                         draft.isPaid === option.paid
-                          ? "bg-card text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground",
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border text-foreground hover:border-foreground",
                       )}
                     >
                       {option.label}
@@ -814,14 +812,14 @@ const NewEventPage = () => {
                 <div className="flex flex-col gap-2">
                   {/* Column headings so "100" and "5,000" are never ambiguous. */}
                   <div className="hidden gap-3 px-4 sm:flex">
-                    <span className="flex-1 text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
+                    <span className="flex-1 text-[13px] font-semibold text-muted-foreground">
                       Tier name
                     </span>
-                    <span className="w-[100px] shrink-0 text-right text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
+                    <span className="w-[100px] shrink-0 text-right text-[13px] font-semibold text-muted-foreground">
                       Tickets
                     </span>
                     {draft.isPaid ? (
-                      <span className="w-[120px] shrink-0 text-right text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground">
+                      <span className="w-[120px] shrink-0 text-right text-[13px] font-semibold text-muted-foreground">
                         Price (₦)
                       </span>
                     ) : null}
@@ -908,7 +906,7 @@ const NewEventPage = () => {
                       <div className="flex w-full flex-col gap-2.5 sm:mt-2.5 sm:w-full sm:border-t sm:border-border sm:pt-3">
                         {tier.availableFrom || tier.availableUntil ? (
                           <div className="flex flex-col gap-2.5">
-                            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-[11px] font-semibold text-accent-foreground">
+                            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">
                               <Zap className="h-3 w-3" />
                               Sells on its own schedule
                             </span>
@@ -1069,10 +1067,10 @@ const NewEventPage = () => {
                             type="button"
                             onClick={() => set("feeMode", option.mode)}
                             className={cn(
-                              "flex-1 cursor-pointer rounded-sm p-4 text-left transition-colors",
+                              "flex-1 cursor-pointer rounded-[20px] border-[1.5px] p-4 text-left transition-colors",
                               selected
-                                ? "bg-accent shadow-[inset_0_0_0_2px_var(--primary)]"
-                                : "bg-card shadow-[inset_0_0_0_1px_var(--border)] hover:bg-muted/50",
+                                ? "border-foreground bg-secondary"
+                                : "border-border hover:border-foreground",
                             )}
                           >
                             <span className="flex items-center gap-2">
@@ -1080,8 +1078,8 @@ const NewEventPage = () => {
                                 className={cn(
                                   "flex h-4 w-4 shrink-0 items-center justify-center rounded-full",
                                   selected
-                                    ? "bg-primary text-primary-foreground"
-                                    : "shadow-[inset_0_0_0_1px_var(--border)]",
+                                    ? "bg-foreground text-background"
+                                    : "border-[1.5px] border-border",
                                 )}
                               >
                                 {selected ? (
@@ -1093,8 +1091,7 @@ const NewEventPage = () => {
                               </span>
                               <span
                                 className={cn(
-                                  "text-sm font-semibold",
-                                  selected && "text-accent-foreground",
+                                  "text-[15px] font-bold",
                                 )}
                               >
                                 {option.title}
@@ -1179,7 +1176,7 @@ const NewEventPage = () => {
                       />
                     </div>
 
-                    <Card className="mt-3 gap-0 py-0">
+                    <Card className={cn(PANEL, "mt-3 gap-0 py-0")}>
                       <div className="flex items-center justify-between px-4 py-3.5">
                         <div>
                           <span className="block text-sm font-semibold">
@@ -1250,16 +1247,16 @@ const NewEventPage = () => {
 
             {step === 4 ? (
               <>
-                <h2 className="text-[22px] leading-tight font-bold tracking-[-0.02em]">
-                  Review &amp; publish
+                <h2 style={{ lineHeight: 0.95 }} className="text-[clamp(32px,3.6vw,48px)] font-extrabold tracking-[-0.045em]">
+                  review &amp; publish.
                 </h2>
-                <p className="mt-1.5 mb-6 text-sm text-muted-foreground">
+                <p className="mt-3 mb-7 text-[15px] text-muted-foreground">
                   Everything you have set, the way attendees will meet it.
                   Publish puts it on sale straight away.
                 </p>
 
                 {/* How the event card reads in the feed */}
-                <Card className="gap-0 overflow-hidden py-0">
+                <Card className={cn(PANEL, "gap-0 overflow-hidden py-0")}>
                   {draft.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -1268,11 +1265,11 @@ const NewEventPage = () => {
                       className="h-[220px] w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-[120px] items-center justify-center bg-muted text-xs text-muted-foreground">
+                    <div className="flex h-[120px] items-center justify-center bg-secondary text-xs text-muted-foreground">
                       No cover image. It will show a placeholder in the feed
                     </div>
                   )}
-                  <div className="px-4 py-3.5 sm:px-5 sm:py-4">
+                  <div className="px-5 py-4 sm:px-6 sm:py-5">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xl font-bold tracking-[-0.01em]">
                         {draft.name || "Untitled event"}
@@ -1355,7 +1352,7 @@ const NewEventPage = () => {
                 {/* Every tier, priced out */}
                 <div className="mt-5">
                   <SectionLabel>Tickets</SectionLabel>
-                  <Card className="gap-0 py-0">
+                  <Card className={cn(PANEL, "gap-0 py-0")}>
                     {draft.tiers.map((tier, index) => (
                       <div key={index}>
                         {index > 0 ? (
@@ -1406,7 +1403,7 @@ const NewEventPage = () => {
                     <SectionLabel hint="Sold alongside a ticket, collected at the event.">
                       Add-ons
                     </SectionLabel>
-                    <Card className="gap-0 py-0">
+                    <Card className={cn(PANEL, "gap-0 py-0")}>
                       {(draft.addOns ?? []).map((addOn, index) => {
                         const options = parseVariantNames(addOn.variantNames);
                         const stock = options.length
@@ -1450,7 +1447,7 @@ const NewEventPage = () => {
                     <SectionLabel hint="A discount comes out of what you keep.">
                       Promo codes
                     </SectionLabel>
-                    <Card className="gap-0 py-0">
+                    <Card className={cn(PANEL, "gap-0 py-0")}>
                       {(draft.promoCodes ?? []).map((promo, index) => (
                         <div key={index}>
                           {index > 0 ? (
@@ -1459,7 +1456,7 @@ const NewEventPage = () => {
                           <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="truncate text-[13px] font-semibold tracking-[0.04em]">
+                                <span className="truncate text-sm font-bold">
                                   {promo.code.toUpperCase() || "NO CODE"}
                                 </span>
                                 {promo.isPublic ? (
@@ -1491,7 +1488,7 @@ const NewEventPage = () => {
                 {/* The settings that are easy to get wrong */}
                 <div className="mt-5">
                   <SectionLabel>Everything else</SectionLabel>
-                  <Card className="gap-0 py-0">
+                  <Card className={cn(PANEL, "gap-0 py-0")}>
                     {[
                       ["Ends", endLabel],
                       ["Timezone", draft.timezone],
@@ -1551,7 +1548,7 @@ const NewEventPage = () => {
                 </div>
 
                 {warnings.length > 0 ? (
-                  <div className="mt-5 rounded-sm bg-muted/60 p-4">
+                  <div className="mt-5 rounded-[18px] bg-secondary p-4">
                     <span className="flex items-center gap-2 text-[13px] font-semibold">
                       <TriangleAlert className="h-4 w-4 text-muted-foreground" />
                       Worth a look before you publish
@@ -1573,11 +1570,11 @@ const NewEventPage = () => {
           </div>
 
           {step === 3 || step === 4 ? (
-            <div className="w-full lg:sticky lg:top-8 lg:w-[308px] lg:shrink-0 lg:self-start">
-              <Card className="gap-0 py-0">
+            <div className="w-full lg:sticky lg:top-[110px] lg:w-[320px] lg:shrink-0 lg:self-start">
+              <Card className={cn(PANEL, "gap-0 py-0")}>
                 <div className="px-4 py-4">
                   <Eyebrow>If it sells out</Eyebrow>
-                  <div className="mt-1.5 text-[28px] font-bold tracking-[-0.02em] tabular-nums">
+                  <div className="mt-1.5 text-[36px] leading-none font-extrabold tracking-[-0.045em] tabular-nums">
                     {formatNairaCompact(gross)}
                   </div>
                   <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
@@ -1615,7 +1612,7 @@ const NewEventPage = () => {
                     </div>
                   ) : null}
                 </div>
-                <div className="flex items-center justify-between bg-muted px-4 py-3.5">
+                <div className="flex items-center justify-between bg-primary px-5 py-4 text-primary-foreground">
                   <span className="text-[13px] font-semibold">
                     Lands in your wallet
                   </span>
@@ -1629,10 +1626,10 @@ const NewEventPage = () => {
                   above: they are priced, capped and sold separately, and on a
                   free event they are the only thing here that earns. */}
               {addOnLines.length > 0 ? (
-                <Card className="mt-3.5 gap-0 py-0">
+                <Card className={cn(PANEL, "mt-3.5 gap-0 py-0")}>
                   <div className="px-4 py-4">
                     <Eyebrow>If add-ons sell out</Eyebrow>
-                    <div className="mt-1.5 text-[28px] font-bold tracking-[-0.02em] tabular-nums">
+                    <div className="mt-1.5 text-[36px] leading-none font-extrabold tracking-[-0.045em] tabular-nums">
                       {formatNairaCompact(addOnGross)}
                     </div>
                     <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
@@ -1665,7 +1662,7 @@ const NewEventPage = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between bg-muted px-4 py-3.5">
+                  <div className="flex items-center justify-between bg-primary px-5 py-4 text-primary-foreground">
                     <span className="text-[13px] font-semibold">
                       Lands in your wallet
                     </span>

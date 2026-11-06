@@ -1,6 +1,8 @@
 "use client";
 
+import { StatStrip } from "@/components/organizer/organizer-primitives";
 import Button from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import Switch from "@/components/ui/switch";
 import { formatNairaAmount } from "@/lib/format-currency";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
@@ -111,6 +113,7 @@ const VendorRow = ({
             Decline
           </Button>
           <Button
+            variant="ink"
             size="sm"
             loading={decide.isPending}
             onClick={() =>
@@ -156,37 +159,35 @@ const InviteSearch = ({ eventId }: { eventId: string }) => {
   const invite = useInviteVendor(eventId);
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5">
+    <div className="flex flex-col gap-3 rounded-[28px] border-[1.5px] border-border p-5">
       <div>
-        <h2 className="text-sm font-bold text-card-foreground">
-          Invite a vendor
-        </h2>
+        <h2 className="text-[17px] font-bold">Invite a vendor</h2>
         <p className="mt-1 text-xs text-muted-foreground">
           They see your terms in full and choose whether to accept.
         </p>
       </div>
 
-      <div className="flex items-center gap-2 rounded-sm border border-border bg-background px-4">
+      <div className="flex items-center gap-2.5 rounded-full border-[1.5px] border-border px-4 transition-colors focus-within:border-foreground">
         <Search className="h-4 w-4 text-muted-foreground" />
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search vendors by name"
-          className="h-11 flex-1 bg-transparent text-sm text-foreground outline-none"
+          className="h-12 flex-1 bg-transparent text-[15px] text-foreground outline-none"
         />
         {directory.isFetching ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
         ) : null}
       </div>
 
-      <label className="flex flex-col gap-1.5 text-xs font-semibold text-muted-foreground">
+      <label className="flex flex-col gap-2 text-sm font-bold text-foreground">
         Stall for this invite (optional)
         <input
           value={stallLabel}
           onChange={(event) => setStallLabel(event.target.value)}
           placeholder="Stall 7, by the main stage"
           maxLength={80}
-          className="h-11 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus-visible:border-primary"
+          className="h-12 rounded-2xl border-[1.5px] border-border bg-transparent px-4 text-[15px] font-medium text-foreground outline-none focus-visible:border-foreground"
         />
       </label>
 
@@ -207,6 +208,7 @@ const InviteSearch = ({ eventId }: { eventId: string }) => {
               </span>
             </span>
             <Button
+              variant="ink"
               size="sm"
               loading={invite.isPending}
               onClick={() =>
@@ -253,7 +255,14 @@ const EventVendorsPanel = ({ eventId }: { eventId: string }) => {
 
   if (vendorsQuery.isPending) {
     return (
-      <p className="p-6 text-sm text-muted-foreground">Loading vendors…</p>
+      <div className="flex flex-col gap-4" aria-busy="true">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-[118px] rounded-[24px]" />
+          ))}
+        </div>
+        <Skeleton className="h-[240px] rounded-[28px]" />
+      </div>
     );
   }
 
@@ -268,34 +277,38 @@ const EventVendorsPanel = ({ eventId }: { eventId: string }) => {
   );
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          ["Confirmed", data?.counts.confirmed ?? 0],
-          ["Invited", data?.counts.invited ?? 0],
-          ["Applications", data?.counts.applied ?? 0],
-          ["Spots", settings?.spots || "No limit"],
-        ].map(([label, value]) => (
-          <div
-            key={String(label)}
-            className="rounded-2xl border border-border bg-card p-4"
-          >
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="mt-1 text-2xl font-bold tabular-nums text-card-foreground">
-              {value}
-            </p>
-          </div>
-        ))}
-      </div>
+    <div className="flex flex-col gap-5">
+      <StatStrip
+        cells={[
+          {
+            label: "Confirmed",
+            value: data?.counts.confirmed ?? 0,
+            note: "coming to sell",
+          },
+          {
+            label: "Invited",
+            value: data?.counts.invited ?? 0,
+            note: "yet to answer",
+          },
+          {
+            label: "Applications",
+            value: data?.counts.applied ?? 0,
+            note: "waiting for you",
+          },
+          {
+            label: "Spots",
+            value: settings?.spots || "No limit",
+            note: "vendor places",
+          },
+        ]}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_22rem]">
         <div className="flex flex-col gap-5">
           {waiting.length > 0 ? (
             <section>
-              <h2 className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                Waiting for you
-              </h2>
-              <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+              <h2 className="mb-3 text-[17px] font-bold">Waiting for you</h2>
+              <ul className="divide-y-[1.5px] divide-border overflow-hidden rounded-[28px] border-[1.5px] border-border">
                 {waiting.map((booking) => (
                   <VendorRow
                     key={booking._id}
@@ -308,9 +321,7 @@ const EventVendorsPanel = ({ eventId }: { eventId: string }) => {
           ) : null}
 
           <section>
-            <h2 className="mb-2 text-xs font-bold uppercase text-muted-foreground">
-              Vendors
-            </h2>
+            <h2 className="mb-3 text-[17px] font-bold">Vendors</h2>
             {active.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-8 text-center">
                 <p className="text-sm font-semibold text-foreground">
@@ -321,7 +332,7 @@ const EventVendorsPanel = ({ eventId }: { eventId: string }) => {
                 </p>
               </div>
             ) : (
-              <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+              <ul className="divide-y-[1.5px] divide-border overflow-hidden rounded-[28px] border-[1.5px] border-border">
                 {active.map((booking) => (
                   <VendorRow
                     key={booking._id}
@@ -335,10 +346,8 @@ const EventVendorsPanel = ({ eventId }: { eventId: string }) => {
 
           {closed.length > 0 ? (
             <section>
-              <h2 className="mb-2 text-xs font-bold uppercase text-muted-foreground">
-                Closed
-              </h2>
-              <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card opacity-70">
+              <h2 className="mb-3 text-[17px] font-bold">Closed</h2>
+              <ul className="divide-y-[1.5px] divide-border overflow-hidden rounded-[28px] border-[1.5px] border-border opacity-70">
                 {closed.map((booking) => (
                   <VendorRow
                     key={booking._id}
@@ -352,18 +361,16 @@ const EventVendorsPanel = ({ eventId }: { eventId: string }) => {
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5">
+          <div className="flex flex-col gap-4 rounded-[28px] border-[1.5px] border-border p-5">
             <div>
-              <h2 className="text-sm font-bold text-card-foreground">
-                Your terms
-              </h2>
+              <h2 className="text-[17px] font-bold">Your terms</h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 The stall fee is all you charge a vendor. Deals already agreed
                 do not change.
               </p>
             </div>
 
-            <label className="flex flex-col gap-1.5 text-xs font-semibold text-muted-foreground">
+            <label className="flex flex-col gap-2 text-sm font-bold text-foreground">
               Stall fee (₦)
               <input
                 value={stallFee ?? String(settings?.stallFeeNaira ?? 0)}
@@ -375,11 +382,11 @@ const EventVendorsPanel = ({ eventId }: { eventId: string }) => {
                   updateSettings.mutate({ stallFeeNaira: Number(stallFee) })
                 }
                 inputMode="numeric"
-                className="h-11 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary"
+                className="h-12 rounded-2xl border-[1.5px] border-border bg-transparent px-4 text-[15px] text-foreground outline-none focus-visible:border-foreground"
               />
             </label>
 
-            <label className="flex flex-col gap-1.5 text-xs font-semibold text-muted-foreground">
+            <label className="flex flex-col gap-2 text-sm font-bold text-foreground">
               Vendor spots
               <input
                 value={spots ?? String(settings?.spots ?? 0)}
@@ -391,14 +398,14 @@ const EventVendorsPanel = ({ eventId }: { eventId: string }) => {
                   updateSettings.mutate({ spots: Number(spots) })
                 }
                 inputMode="numeric"
-                className="h-11 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary"
+                className="h-12 rounded-2xl border-[1.5px] border-border bg-transparent px-4 text-[15px] text-foreground outline-none focus-visible:border-foreground"
               />
-              <span className="font-medium normal-case">
+              <span className="text-[13px] font-medium text-muted-foreground">
                 0 means no limit. Confirmed vendors stop at this number.
               </span>
             </label>
 
-            <div className="flex items-center gap-3 border-t border-border pt-4">
+            <div className="flex items-center gap-3 border-t-[1.5px] border-dashed border-border pt-4">
               <div className="flex-1">
                 <p className="text-sm font-semibold text-card-foreground">
                   Take applications

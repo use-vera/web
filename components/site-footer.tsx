@@ -1,5 +1,4 @@
-import LogoMark from "@/components/logo-mark";
-import Separator from "@/components/ui/separator";
+import Wordmark from "@/components/vera/wordmark";
 import Link from "next/link";
 
 const socialLinks = [
@@ -10,12 +9,19 @@ const socialLinks = [
 
 const footerColumns = [
   {
-    title: "Product",
+    title: "Going out",
     links: [
       { href: "/events", label: "Events & Tickets" },
       { href: "/how-it-works", label: "How it works" },
-      { href: "/for-organizers", label: "For Organizers" },
       { href: "/download", label: "Download" },
+    ],
+  },
+  {
+    title: "Sell on Vera",
+    links: [
+      { href: "/for-organizers", label: "For Organizers" },
+      { href: "/for-vendors", label: "For Vendors" },
+      { href: "/developers/docs", label: "Developers" },
     ],
   },
   {
@@ -34,59 +40,51 @@ const footerColumns = [
   },
 ];
 
+/** Links on a hairline, then the name set huge, the way the app signs off. */
 const SiteFooter = () => {
   return (
-    <footer className="bg-background">
-      <div className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid grid-cols-2 gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <footer className="bg-background text-foreground">
+      <div className="mx-auto flex max-w-[1240px] flex-col gap-10 px-[clamp(16px,4vw,40px)] pt-16 pb-12">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 border-t border-border pt-8 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
           <div className="col-span-2 flex flex-col gap-3 md:col-span-1">
-            <div className="flex items-center gap-2">
-              <LogoMark />
-              <span className="text-lg font-bold text-foreground">Vera</span>
-            </div>
-            <p className="max-w-55 text-sm text-muted-foreground font-medium">
-              Real events, real moments.
-            </p>
+            <Wordmark />
+            <p className="max-w-60 text-[15px] text-muted-foreground">Real events, real moments.</p>
           </div>
 
           {footerColumns.map((column) => (
-            <div key={column.title} className="flex flex-col gap-3">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {column.title}
-              </span>
-              <ul className="flex flex-col gap-2">
+            <nav key={column.title} aria-label={column.title} className="flex flex-col gap-3">
+              <span className="text-sm font-semibold text-muted-foreground">{column.title}</span>
+              <ul className="flex flex-col gap-2.5">
                 {column.links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-foreground/80 transition-colors hover:text-foreground"
-                    >
+                    <Link href={link.href} className="text-[15px] font-medium transition-colors hover:text-primary">
                       {link.label}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
           ))}
         </div>
 
-        <Separator className="my-10" />
-
-        <div className="flex flex-col-reverse items-center justify-between gap-4 md:flex-row">
-          <span className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Vera. All rights reserved.
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <span aria-hidden="true" className="text-[clamp(96px,20vw,280px)] leading-[0.8] font-extrabold tracking-[-0.06em]">
+            vera<span className="text-primary">.</span>
           </span>
-          <div className="flex items-center gap-4 text-muted-foreground">
-            {socialLinks.map((social) => (
-              <Link
-                key={social.label}
-                href={social.href}
-                aria-label={`Vera on ${social.label}`}
-                className="text-xs font-semibold transition-colors hover:text-foreground"
-              >
-                {social.label}
-              </Link>
-            ))}
+          <div className="flex flex-col items-start gap-3 md:items-end">
+            <div className="flex items-center gap-4">
+              {socialLinks.map((social) => (
+                <Link
+                  key={social.label}
+                  href={social.href}
+                  aria-label={`Vera on ${social.label}`}
+                  className="text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {social.label}
+                </Link>
+              ))}
+            </div>
+            <span className="text-sm text-muted-foreground">© {new Date().getFullYear()} Vera · Lagos</span>
           </div>
         </div>
       </div>

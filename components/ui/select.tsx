@@ -10,13 +10,13 @@ export interface SelectOption {
 }
 
 const triggerClass =
-  "flex h-12 w-full items-center justify-between gap-2 rounded-md border border-border bg-background px-4 text-left text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[popup-open]:border-primary";
+  "flex h-14 w-full cursor-pointer items-center justify-between gap-2 rounded-2xl border-[1.5px] border-border bg-transparent px-4 text-left text-base text-foreground transition-colors focus-visible:border-foreground focus-visible:outline-none data-[popup-open]:border-foreground";
 
 const popupClass =
-  "max-h-100 min-w-[var(--anchor-width)] overflow-y-auto rounded-md border border-border bg-popover p-1.5 shadow-xl outline-none transition-[transform,opacity] data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0";
+  "max-h-100 min-w-[var(--anchor-width)] overflow-y-auto rounded-[22px] border-[1.5px] border-border bg-background p-1.5 shadow-[0_18px_40px_-18px_rgba(22,21,15,0.28)] outline-none transition-[transform,opacity] data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0";
 
 const itemClass =
-  "flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2.5 text-sm font-medium text-foreground outline-none data-[highlighted]:bg-secondary data-[selected]:font-semibold";
+  "flex cursor-pointer items-center gap-2 rounded-[14px] px-3 py-2.5 text-[15px] font-medium text-foreground outline-none data-[highlighted]:bg-secondary data-[selected]:font-semibold";
 
 const Options = ({ options }: { options: SelectOption[] }) => (
   <BaseSelect.List>

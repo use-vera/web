@@ -1,14 +1,7 @@
 "use client";
 
-import { cn, ROUTES } from "@/lib/utils";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-
-const SECTIONS = [
-  { href: ROUTES.DEVELOPERS_DOCS, label: "Docs" },
-  { href: ROUTES.DEVELOPERS_API, label: "API" },
-];
 
 /** How far down the viewport a heading counts as "the one being read". */
 const ACTIVE_LINE_PX = 140;
@@ -55,18 +48,11 @@ const useActiveHeading = (headingIds: string[]) => {
 
       /* The last heading wins once the page is scrolled to the bottom, which
          it otherwise never would when the final section is short. */
-      const scroller = document.getElementById(ids[0])?.closest<HTMLElement>(
-        "[data-docs-scroll]",
-      );
+      const scroller = document.documentElement;
+      const atBottom = window.scrollY + window.innerHeight >= scroller.scrollHeight - 24;
 
-      if (scroller) {
-        const atBottom =
-          scroller.scrollTop + scroller.clientHeight >=
-          scroller.scrollHeight - 24;
-
-        if (atBottom) {
-          current = ids[ids.length - 1];
-        }
+      if (atBottom) {
+        current = ids[ids.length - 1];
       }
 
       setActiveId(current);
@@ -80,9 +66,8 @@ const useActiveHeading = (headingIds: string[]) => {
 
     measure();
 
-    /* Capture phase: the portal scrolls an inner element, not the window,
-       and scroll events do not bubble. Capturing catches it wherever it
-       happens, so this keeps working if the layout ever changes. */
+    /* Capture phase, so this still hears the scroll if a page ever moves it
+       into an inner element (scroll events do not bubble). */
     window.addEventListener("scroll", schedule, true);
     window.addEventListener("resize", schedule);
 
@@ -104,77 +89,42 @@ interface DocsRailProps {
 }
 
 /**
- * The right-hand rail: which half of the portal you are in, then where you
- * are inside the page.
- *
- * The section switch used to sit in the left sidebar above its nav, where it
- * read as a third level of navigation stacked on two others. Here it pairs
- * with the contents list, and the left sidebar is left to do one job.
+ * The right-hand rail: where you are on this page. Which part of the portal
+ * you are in lives in the left rail.
  */
 const DocsRail = ({ headings = [] }: DocsRailProps) => {
-  const pathname = usePathname();
   const activeId = useActiveHeading(headings.map((heading) => heading.id));
 
+  if (headings.length < 2) {
+    return null;
+  }
+
   return (
-    <aside className="hidden w-52 shrink-0 xl:block">
-      <div className="sticky top-14 flex flex-col gap-6">
-        <div
-          role="tablist"
-          aria-label="Documentation section"
-          className="flex rounded-full bg-muted p-1"
-        >
-          {SECTIONS.map((section) => {
-            const active = pathname.startsWith(section.href);
+    <aside className="hidden w-56 shrink-0 xl:block">
+      <nav aria-label="On this page" className="sticky top-10 flex flex-col gap-3 pt-[clamp(20px,3vw,40px)]">
+        <p className="px-3 text-[13px] font-bold">On this page</p>
+        <ul className="flex flex-col gap-0.5">
+          {headings.map((heading) => {
+            const active = heading.id === activeId;
 
             return (
-              <Link
-                key={section.href}
-                href={section.href}
-                role="tab"
-                aria-selected={active}
-                className={cn(
-                  "flex-1 rounded-full px-3 py-1.5 text-center text-sm font-semibold transition-colors",
-                  active
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {section.label}
-              </Link>
+              <li key={heading.id}>
+                <a
+                  href={`#${heading.id}`}
+                  aria-current={active ? "location" : undefined}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-colors",
+                    active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", active ? "bg-primary" : "bg-border")} />
+                  {heading.label}
+                </a>
+              </li>
             );
           })}
-        </div>
-
-        {headings.length > 1 ? (
-          <nav aria-label="On this page" className="flex flex-col gap-2">
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              On this page
-            </p>
-            <ul className="flex flex-col border-l border-border">
-              {headings.map((heading) => {
-                const active = heading.id === activeId;
-
-                return (
-                  <li key={heading.id}>
-                    <a
-                      href={`#${heading.id}`}
-                      aria-current={active ? "location" : undefined}
-                      className={cn(
-                        "-ml-px block border-l py-1 pl-3 text-sm transition-colors",
-                        active
-                          ? "border-foreground font-semibold text-foreground"
-                          : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
-                      )}
-                    >
-                      {heading.label}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        ) : null}
-      </div>
+        </ul>
+      </nav>
     </aside>
   );
 };

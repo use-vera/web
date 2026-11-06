@@ -1,6 +1,7 @@
 "use client";
 
 import { Eyebrow } from "@/components/organizer/organizer-primitives";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import { cn } from "@/lib/utils";
 import { Check, TriangleAlert } from "lucide-react";
 
@@ -43,58 +44,45 @@ export const ScanResultPanel = ({
   note?: string;
 }) => (
   <div
-    className={cn(
-      "rounded-sm px-4 pt-5 pb-6.5 outline outline-foreground/10 -outline-offset-1 sm:px-5.5",
-      ok ? "bg-accent" : "bg-destructive/12",
-    )}
+    className="rounded-[28px] px-4 pt-5 pb-6.5 sm:px-5.5"
+    style={{ backgroundColor: ok ? POSTER_TONES.green.bg : POSTER_TONES.pink.bg, color: ok ? POSTER_TONES.green.fg : POSTER_TONES.pink.fg }}
   >
     <div className="flex items-center gap-2.5">
       <span
-        className={cn(
-          "flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full",
-          ok
-            ? "bg-primary text-primary-foreground"
-            : "bg-destructive text-destructive-foreground",
-        )}
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-current"
       >
         {ok ? (
-          <Check className="h-[15px] w-[15px]" strokeWidth={3} />
+          <Check className="h-4 w-4 text-[#15C67C]" strokeWidth={3} />
         ) : (
-          <TriangleAlert className="h-[15px] w-[15px]" />
+          <TriangleAlert className="h-4 w-4 text-[#F0B9C7]" />
         )}
       </span>
       <span
-        className={cn(
-          "text-[17px] font-bold tracking-[-0.01em]",
-          ok ? "text-accent-foreground" : "text-destructive",
-        )}
+        className="text-[22px] font-extrabold tracking-[-0.03em]"
       >
         {headline}
       </span>
       <span
-        className={cn(
-          "ml-auto text-[13px] font-semibold tabular-nums",
-          ok ? "text-accent-foreground" : "text-destructive",
-        )}
+        className="ml-auto text-sm font-bold tabular-nums opacity-75"
       >
         {headlineTime}
       </span>
     </div>
 
     <div className="mt-4.5 flex flex-col sm:flex-row sm:items-stretch">
-      <div className="min-w-0 flex-1 rounded-t-sm bg-card px-5 py-4.5 outline outline-foreground/10 -outline-offset-1 sm:rounded-l-sm sm:rounded-tr-none">
-        {eventName ? <Eyebrow>{eventName}</Eyebrow> : null}
-        <div className="mt-1.5 text-[19px] font-bold tracking-[-0.01em]">
+      <div className="min-w-0 flex-1 rounded-t-[20px] bg-[#F5F3EF] px-5 py-4.5 text-[#16150F] sm:rounded-l-[20px] sm:rounded-tr-none">
+        {eventName ? <Eyebrow className="text-[#16150F]/55">{eventName}</Eyebrow> : null}
+        <div className="mt-1 text-[22px] font-extrabold tracking-[-0.025em]">
           {attendeeName}
         </div>
-        <div className="mt-0.5 text-[13px] text-muted-foreground">
+        <div className="mt-0.5 text-sm text-[#16150F]/65">
           {detailLine}
         </div>
         {reference || secondaryValue ? (
           <div className="mt-4 flex gap-5.5">
             {reference ? (
               <div>
-                <Eyebrow className="text-[10px]">Reference</Eyebrow>
+                <Eyebrow className="text-xs text-[#16150F]/55">Reference</Eyebrow>
                 <div className="mt-0.5 font-mono text-[13px] font-semibold">
                   {reference}
                 </div>
@@ -102,7 +90,7 @@ export const ScanResultPanel = ({
             ) : null}
             {secondaryValue ? (
               <div>
-                <Eyebrow className="text-[10px]">{secondaryLabel}</Eyebrow>
+                <Eyebrow className="text-xs text-[#16150F]/55">{secondaryLabel}</Eyebrow>
                 <div className="mt-0.5 text-[13px] font-semibold tabular-nums">
                   {secondaryValue}
                 </div>
@@ -117,36 +105,31 @@ export const ScanResultPanel = ({
         <hr className="ticket-perforation sm:hidden" />
         <div className="ticket-perforation-vertical hidden h-full sm:block" />
         <span
-          className={cn(
-            "absolute -top-2.5 -left-2.5 h-5 w-5 rounded-full",
-            ok ? "bg-accent" : "bg-destructive/12",
-          )}
+          className="absolute -top-2.5 -left-2.5 h-5 w-5 rounded-full"
+          style={{ backgroundColor: ok ? POSTER_TONES.green.bg : POSTER_TONES.pink.bg }}
         />
         <span
-          className={cn(
-            "absolute -top-2.5 -right-2.5 h-5 w-5 rounded-full sm:-right-auto sm:-bottom-2.5 sm:-left-2.5 sm:top-auto",
-            ok ? "bg-accent" : "bg-destructive/12",
-          )}
+          className="absolute -top-2.5 -right-2.5 h-5 w-5 rounded-full sm:-right-auto sm:-bottom-2.5 sm:-left-2.5 sm:top-auto"
+          style={{ backgroundColor: ok ? POSTER_TONES.green.bg : POSTER_TONES.pink.bg }}
         />
       </div>
 
       <div
         className={cn(
-          "w-full rounded-b-sm bg-card p-4.5 outline outline-foreground/10 -outline-offset-1",
-          "sm:w-[186px] sm:shrink-0 sm:origin-left sm:rounded-r-sm sm:rounded-bl-none",
-          "shadow-[0_2px_4px_rgba(22,21,15,0.05),0_12px_32px_rgba(22,21,15,0.10)]",
+          "w-full rounded-b-[20px] bg-[#F5F3EF] p-4.5 text-[#16150F]",
+          "sm:w-[186px] sm:shrink-0 sm:origin-left sm:rounded-r-[20px] sm:rounded-bl-none",
           "transition-transform duration-300 ease-out motion-reduce:transform-none",
           /* Only a genuine admission tears off. */
           ok ? "sm:translate-x-3.5 sm:translate-y-2.5 sm:rotate-[2.4deg]" : "",
         )}
       >
-        <Eyebrow className="text-[10px]">{stubLabel}</Eyebrow>
-        <div className="mt-1 text-sm font-semibold tabular-nums">{stubTime}</div>
-        <div className="mt-3.5 flex h-9 items-center justify-center gap-[3px] rounded bg-muted px-2.5">
+        <Eyebrow className="text-xs text-[#16150F]/55">{stubLabel}</Eyebrow>
+        <div className="mt-1 text-base font-extrabold tabular-nums">{stubTime}</div>
+        <div className="mt-3.5 flex h-9 items-center justify-center gap-[3px] rounded-lg bg-[#16150F]/8 px-2.5">
           {Array.from({ length: 22 }).map((_, index) => (
             <span
               key={index}
-              className="bg-foreground/55"
+              className="bg-[#16150F]/60"
               style={{
                 width: index % 4 === 0 ? 3 : index % 3 === 0 ? 2 : 1,
                 height: 18 + ((index * 7) % 12),
@@ -155,7 +138,7 @@ export const ScanResultPanel = ({
           ))}
         </div>
         {reference ? (
-          <div className="mt-1.5 text-center font-mono text-[10px] tracking-[0.08em] text-muted-foreground">
+          <div className="mt-1.5 text-center font-mono text-[10px] text-[#16150F]/55">
             {reference}
           </div>
         ) : null}
@@ -164,10 +147,7 @@ export const ScanResultPanel = ({
 
     {note ? (
       <p
-        className={cn(
-          "mt-3.5 text-xs",
-          ok ? "text-accent-foreground/85" : "text-muted-foreground",
-        )}
+        className="mt-3.5 text-[13px] font-semibold opacity-75"
       >
         {note}
       </p>

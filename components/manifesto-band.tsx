@@ -13,7 +13,7 @@ const ManifestoBand = () => {
         </p>
 
         <p className="mt-6 text-xl leading-relaxed text-foreground sm:text-2xl">
-          So Vera puts the whole night in one place: find it, buy it at a
+          So Vera puts the whole event in one place: find it, buy it at a
           real price, get in with one scan, and keep the moment after.
         </p>
 

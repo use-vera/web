@@ -169,7 +169,7 @@ const VendorItemForm = ({
         <div className="flex flex-col gap-1.5">
           <label
             htmlFor="item-category"
-            className="text-sm font-semibold text-foreground"
+            className="text-sm font-bold text-foreground"
           >
             Category
           </label>
@@ -182,7 +182,7 @@ const VendorItemForm = ({
             options={categoryOptions}
             placeholder="Choose a category"
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             Vera&apos;s list. How attendees filter and organizers find you.
           </p>
         </div>
@@ -190,7 +190,7 @@ const VendorItemForm = ({
         <div className="flex flex-col gap-1.5">
           <label
             htmlFor="item-section"
-            className="text-sm font-semibold text-foreground"
+            className="text-sm font-bold text-foreground"
           >
             Section on your menu
           </label>
@@ -214,11 +214,13 @@ const VendorItemForm = ({
                 }}
                 placeholder="Section name"
                 maxLength={60}
-                className="h-12 flex-1 rounded-md border border-border bg-background px-4 text-sm text-foreground outline-none focus-visible:border-primary"
+                className="h-12 min-w-0 flex-1 rounded-2xl border-[1.5px] border-border bg-transparent px-4 text-[15px] text-foreground outline-none focus-visible:border-foreground"
               />
               <Button
                 type="button"
                 size="sm"
+                variant="ink"
+                className="h-12"
                 loading={addSection.isPending}
                 onClick={() => void handleAddSection()}
               >
@@ -231,7 +233,7 @@ const VendorItemForm = ({
                   setAddingSection(false);
                   setNewSection("");
                 }}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+                className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -248,9 +250,9 @@ const VendorItemForm = ({
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="line"
                 size="sm"
-                className="h-12 shrink-0 px-3"
+                className="h-12 shrink-0 px-4"
                 onClick={() => setAddingSection(true)}
               >
                 <Plus className="h-4 w-4" />
@@ -259,18 +261,18 @@ const VendorItemForm = ({
             </div>
           )}
 
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             Your own heading. Attendees scroll through these.
           </p>
         </div>
       </div>
 
-      <label className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4">
+      <label className="flex cursor-pointer items-center gap-3 rounded-[22px] border-[1.5px] border-border p-4">
         <span className="flex-1">
-          <span className="block text-sm font-semibold text-foreground">
+          <span className="block text-sm font-bold text-foreground">
             18+ only
           </span>
-          <span className="block text-xs text-muted-foreground">
+          <span className="mt-0.5 block text-[13px] text-muted-foreground">
             For alcohol and anything else a minor may not buy. We check the
             buyer&apos;s age before the order is taken.
           </span>
@@ -283,7 +285,7 @@ const VendorItemForm = ({
       </label>
 
       <div className="flex items-center gap-3">
-        <Button type="submit" loading={pending} className="min-w-36">
+        <Button type="submit" variant="ink" loading={pending} className="min-w-36">
           {submitLabel}
         </Button>
         {onCancel ? (

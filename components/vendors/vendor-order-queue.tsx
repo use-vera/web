@@ -27,7 +27,8 @@ const VISIBLE = 3;
 const ARRIVAL_MS = 4200;
 
 const initialOrders: QueuedOrder[] = ORDER_POOL.slice(0, VISIBLE).map(
-  (order, index) => ({ ...order, key: index }),
+  // Newest on top carries the highest key, so the next arrival's key is always unused.
+  (order, index) => ({ ...order, key: VISIBLE - 1 - index }),
 );
 
 const VendorOrderQueue = ({ className }: { className?: string }) => {
@@ -59,7 +60,7 @@ const VendorOrderQueue = ({ className }: { className?: string }) => {
   return (
     <div
       className={cn(
-        "w-full overflow-hidden rounded-3xl border border-border bg-card shadow-2xl shadow-black/20",
+        "w-full overflow-hidden rounded-3xl border border-border bg-card",
         className,
       )}
       aria-hidden="true"

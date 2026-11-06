@@ -4,9 +4,11 @@ import CreateApiKeyDialog from "@/components/developers/create-api-key-dialog";
 import CopyField from "@/components/developers/copy-field";
 import SignedInGate from "@/components/developers/signed-in-gate";
 import RevealSecretDialog from "@/components/developers/reveal-secret-dialog";
-import Badge from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { DESK, EmptyState, ErrorState, PageHeader, Panel, StatStrip, TABLE_HEAD } from "@/components/organizer/organizer-primitives";
 import Button from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,22 +36,11 @@ import {
 } from "@/lib/types/workspace";
 import { Pagination } from "@/components/pagination";
 import { cn } from "@/lib/utils";
-import { Loader2, MoreHorizontal, Plus } from "lucide-react";
+import { Key, MoreHorizontal, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 const KEYS_PER_PAGE = 10;
-
-const MODE_STYLES: Record<ApiKeyApi["mode"], string> = {
-  test: "bg-muted text-muted-foreground",
-  live: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
-};
-
-const STATUS_STYLES: Record<ApiKeyApi["status"], string> = {
-  active:
-    "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
-  revoked: "bg-red-500/10 text-red-700 dark:bg-red-400/10 dark:text-red-300",
-};
 
 const formatDate = (value?: string | null) => {
   if (!value) return "Never";
@@ -117,251 +108,191 @@ const ApiKeysWorkspace = () => {
     }
   };
 
-  return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">
-            Keys for {workspace?.name ?? "your workspace"}.
-          </h1>
-          <p className="mt-2 max-w-lg text-sm text-muted-foreground">
-            Secret keys are shown once, at creation. Publishable keys are safe
-            to embed in client-side code and can only read events.
-          </p>
-        </div>
-        <Button
-          onClick={() => setCreateOpen(true)}
-          disabled={!workspaceId}
-          className="shrink-0 gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Create key
-        </Button>
-      </div>
+  const activeKeys = allKeys.filter((key) => key.status === "active");
 
-      <div className="mt-8 overflow-hidden">
-        {keysQuery.isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        ) : allKeys.length > 0 ? (
+  return (
+    <div className={DESK}>
+      <PageHeader
+        lead="your api"
+        accent="keys."
+        description={
           <>
+            For {workspace?.name ?? "your workspace"}. Secret keys are shown once, when you create them. Publishable keys are safe in client-side code
+            and can only read events.
+          </>
+        }
+        actions={
+          <Button variant="ink" onClick={() => setCreateOpen(true)} disabled={!workspaceId}>
+            <Plus className="h-4 w-4" />
+            Create key
+          </Button>
+        }
+      />
+
+      {keysQuery.isLoading ? (
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-[108px] rounded-[24px]" />
+            ))}
+          </div>
+          <Skeleton className="h-64 rounded-[28px]" />
+        </div>
+      ) : keysQuery.isError ? (
+        <Panel>
+          <ErrorState message="Couldn't load your keys." onRetry={() => keysQuery.refetch()} />
+        </Panel>
+      ) : allKeys.length > 0 ? (
+        <div className="flex flex-col gap-4">
+          <StatStrip
+            cells={[
+              { label: "Active", value: activeKeys.length.toLocaleString("en-NG"), note: "working right now" },
+              { label: "Live", value: activeKeys.filter((key) => key.mode === "live").length.toLocaleString("en-NG"), note: "move real money" },
+              { label: "Test", value: activeKeys.filter((key) => key.mode === "test").length.toLocaleString("en-NG"), note: "safe to play with" },
+            ]}
+          />
+
+          <Panel>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Label</TableHead>
-                  <TableHead>Publishable key</TableHead>
-                  <TableHead>Scopes</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last used</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead />
+                <TableRow className="border-b-[1.5px] border-border hover:bg-transparent">
+                  <TableHead className={cn(TABLE_HEAD, "pl-5 sm:pl-6")}>Label</TableHead>
+                  <TableHead className={TABLE_HEAD}>Publishable key</TableHead>
+                  <TableHead className={TABLE_HEAD}>Scopes</TableHead>
+                  <TableHead className={TABLE_HEAD}>Status</TableHead>
+                  <TableHead className={TABLE_HEAD}>Last used</TableHead>
+                  <TableHead className={TABLE_HEAD}>Created</TableHead>
+                  <TableHead className={cn(TABLE_HEAD, "pr-5 sm:pr-6")}>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {visibleKeys.map((key) => (
-                  <TableRow key={key._id}>
-                    <TableCell className="font-semibold text-foreground">
-                      <div className="flex items-center gap-2 text-sm">
-                        {key.label || "Untitled key"}
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-semibold capitalize",
-                            MODE_STYLES[key.mode],
-                          )}
-                        >
-                          {key.mode}
-                        </span>
-                      </div>
-                    </TableCell>
+                {visibleKeys.map((key) => {
+                  const mode = POSTER_TONES[key.mode === "live" ? "green" : "yellow"];
+                  const revoked = key.status === "revoked";
+                  return (
+                    <TableRow key={key._id} className={cn("border-b-[1.5px] border-border", revoked && "opacity-60")}>
+                      <TableCell className="py-4 pl-5 sm:pl-6">
+                        <div className="flex items-center gap-2 text-[15px] font-bold whitespace-nowrap">
+                          {key.label || "Untitled key"}
+                          <span className="rounded-full px-2 py-0.5 text-xs font-bold capitalize" style={{ backgroundColor: mode.bg, color: mode.fg }}>
+                            {key.mode}
+                          </span>
+                        </div>
+                      </TableCell>
 
-                    <TableCell>
-                      <div className="flex flex-col gap-1.5">
-                        <CopyField
-                          value={key.publishableKey}
-                          label="publishable key"
-                          className="max-w-xs bg-transparent border-0 p-0"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-nowrap items-center gap-1">
-                        {key.scopes.slice(0, 1).map((scope) => (
-                          <Badge
-                            key={scope}
-                            className="shrink-0 whitespace-nowrap text-xs"
-                          >
-                            {scope}
-                          </Badge>
-                        ))}
-                        {key.scopes.length > 2 ? (
-                          <Badge
-                            variant="outline"
-                            className="shrink-0 whitespace-nowrap text-xs"
-                            title={key.scopes.slice(1).join(", ")}
-                          >
-                            +{key.scopes.length - 1}
-                          </Badge>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-full px-2 py-0.5 text-sm font-semibold capitalize",
-                          STATUS_STYLES[key.status],
-                        )}
-                      >
-                        {key.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm font-medium text-muted-foreground">
-                      {formatDate(key.lastUsedAt)}
-                    </TableCell>
-                    <TableCell className="text-sm font-medium text-muted-foreground">
-                      {formatDate(key.createdAt)}
-                    </TableCell>
-                    <TableCell>
-                      {key.status === "active" ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
-                            aria-label="Key actions"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {key.mode === "test" ? (
-                              <DropdownMenuItem
-                                onClick={() => setUpgradeTarget(key)}
-                              >
-                                Switch to live
-                              </DropdownMenuItem>
-                            ) : null}
-                            <DropdownMenuItem
-                              onClick={() => setRevokeTarget(key)}
-                              className="text-destructive"
+                      <TableCell className="py-4">
+                        <CopyField value={key.publishableKey} label="publishable key" className="max-w-[300px] min-w-[220px]" />
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="flex flex-nowrap items-center gap-1">
+                          {key.scopes.slice(0, 1).map((scope) => (
+                            <span key={scope} className="rounded-full border-[1.5px] border-border px-2.5 py-0.5 font-mono text-xs font-semibold whitespace-nowrap">
+                              {scope}
+                            </span>
+                          ))}
+                          {key.scopes.length > 1 ? (
+                            <span
+                              className="rounded-full bg-secondary px-2 py-0.5 text-xs font-bold whitespace-nowrap"
+                              title={key.scopes.slice(1).join(", ")}
                             >
-                              Revoke
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                              +{key.scopes.length - 1}
+                            </span>
+                          ) : null}
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <span className="flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap">
+                          <span className={cn("h-2 w-2 rounded-full", revoked ? "bg-destructive" : "bg-primary")} />
+                          {revoked ? "Revoked" : "Active"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-4 text-sm whitespace-nowrap text-muted-foreground">{formatDate(key.lastUsedAt)}</TableCell>
+                      <TableCell className="py-4 text-sm whitespace-nowrap text-muted-foreground">{formatDate(key.createdAt)}</TableCell>
+                      <TableCell className="py-4 pr-5 sm:pr-6">
+                        {key.status === "active" ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                              aria-label={`Actions for ${key.label || "this key"}`}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {key.mode === "test" ? <DropdownMenuItem onClick={() => setUpgradeTarget(key)}>Switch to live</DropdownMenuItem> : null}
+                              <DropdownMenuItem onClick={() => setRevokeTarget(key)} className="text-destructive">
+                                Revoke
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : null}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
             <Pagination
               page={page}
-              totalPages={Math.max(
-                1,
-                Math.ceil(allKeys.length / KEYS_PER_PAGE),
-              )}
+              totalPages={Math.max(1, Math.ceil(allKeys.length / KEYS_PER_PAGE))}
               totalItems={allKeys.length}
               pageSize={KEYS_PER_PAGE}
               onPageChange={setPage}
               noun="key"
-              className="border-t border-border"
             />
-          </>
-        ) : (
-          <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-            <p className="text-sm font-semibold text-foreground">
-              No API keys yet
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Create one to start calling the Vera API.
-            </p>
-          </div>
-        )}
-      </div>
+          </Panel>
+        </div>
+      ) : (
+        <Panel>
+          <EmptyState
+            icon={<Key className="h-6 w-6" />}
+            title="no api keys yet"
+            description="Create a test key to start calling the Vera API. Switch it to live when you're ready."
+            action={
+              <Button variant="ink" size="sm" onClick={() => setCreateOpen(true)} disabled={!workspaceId}>
+                <Plus className="h-4 w-4" />
+                Create your first key
+              </Button>
+            }
+          />
+        </Panel>
+      )}
 
-      {workspaceId ? (
-        <CreateApiKeyDialog
-          open={createOpen}
-          workspaceId={workspaceId}
-          onOpenChange={setCreateOpen}
-          onCreated={setRevealedKey}
-        />
-      ) : null}
+      {workspaceId ? <CreateApiKeyDialog open={createOpen} workspaceId={workspaceId} onOpenChange={setCreateOpen} onCreated={setRevealedKey} /> : null}
 
-      <RevealSecretDialog
-        createdKey={revealedKey}
-        onClose={() => setRevealedKey(null)}
-      />
+      <RevealSecretDialog createdKey={revealedKey} onClose={() => setRevealedKey(null)} />
 
-      <Dialog
+      <ConfirmDialog
         open={Boolean(revokeTarget)}
         onOpenChange={(open) => {
           if (!open) setRevokeTarget(null);
         }}
-      >
-        <DialogContent aria-describedby={undefined} className="max-w-sm">
-          <div className="flex flex-col gap-4 p-6 pt-10 text-center">
-            <h2 className="text-lg font-bold text-foreground">
-              Revoke this key?
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              &quot;{revokeTarget?.label || "This API key"}&quot; will stop
-              working immediately. This can&apos;t be undone.
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setRevokeTarget(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex-1 bg-destructive text-destructive-foreground hover:opacity-90"
-                loading={revokeApiKey.isPending}
-                onClick={() => void handleRevoke()}
-              >
-                Revoke
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        title="Revoke this key?"
+        description={<>&quot;{revokeTarget?.label || "This API key"}&quot; will stop working immediately. This can&apos;t be undone.</>}
+        confirmLabel="Revoke key"
+        cancelLabel="Keep it"
+        loading={revokeApiKey.isPending}
+        onConfirm={() => void handleRevoke()}
+      />
 
-      <Dialog
+      <ConfirmDialog
         open={Boolean(upgradeTarget)}
         onOpenChange={(open) => {
           if (!open) setUpgradeTarget(null);
         }}
-      >
-        <DialogContent aria-describedby={undefined} className="max-w-sm">
-          <div className="flex flex-col gap-4 p-6 pt-10 text-center">
-            <h2 className="text-lg font-bold text-foreground">
-              Switch to live?
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              &quot;{upgradeTarget?.label || "This API key"}&quot; will get a
-              new live secret key, and its current test key will stop working
-              immediately. You&apos;ll need to update anywhere the old key is
-              used.
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setUpgradeTarget(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex-1"
-                loading={upgradeApiKeyToLive.isPending}
-                onClick={() => void handleUpgrade()}
-              >
-                Switch to live
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        title="Switch to live?"
+        description={
+          <>
+            &quot;{upgradeTarget?.label || "This API key"}&quot; will get a new live secret key, and its current test key will stop working immediately.
+            You&apos;ll need to update anywhere the old key is used.
+          </>
+        }
+        confirmLabel="Switch to live"
+        cancelLabel="Not yet"
+        loading={upgradeApiKeyToLive.isPending}
+        onConfirm={() => void handleUpgrade()}
+      />
     </div>
   );
 };

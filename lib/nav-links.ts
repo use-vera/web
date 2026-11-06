@@ -1,3 +1,6 @@
+import type { PosterTone } from "@/components/vera/event-poster";
+import { BookOpen, Braces, FlaskConical, KeyRound, Megaphone, Store, type LucideIcon } from "lucide-react";
+
 export interface NavLink {
   href: string;
   label: string;
@@ -5,6 +8,9 @@ export interface NavLink {
 
 export interface NavMenuItem extends NavLink {
   description: string;
+  /* The header menus show each item as a coloured tile, in the poster tones. */
+  icon: LucideIcon;
+  tone: PosterTone;
 }
 
 export interface NavMenu {
@@ -28,11 +34,15 @@ export const navMenus: NavMenu[] = [
     items: [
       {
         href: "/for-organizers",
+        icon: Megaphone,
+        tone: "green",
         label: "For Organizers",
         description: "List your event, sell tickets, run the door.",
       },
       {
         href: "/for-vendors",
+        icon: Store,
+        tone: "yellow",
         label: "For Vendors",
         description: "Sell food, drinks and merch at events.",
       },
@@ -46,21 +56,29 @@ export const navMenus: NavMenu[] = [
     items: [
       {
         href: "/developers/docs",
+        icon: BookOpen,
+        tone: "blue",
         label: "Documentation",
         description: "Guides that walk through each flow end to end.",
       },
       {
         href: "/developers/api",
+        icon: Braces,
+        tone: "pink",
         label: "API reference",
         description: "Every endpoint, parameter and response.",
       },
       {
         href: "/developers/sandbox",
+        icon: FlaskConical,
+        tone: "ink",
         label: "Sandbox",
         description: "Send real requests from the browser.",
       },
       {
         href: "/developers/keys",
+        icon: KeyRound,
+        tone: "cream",
         label: "API keys",
         description: "Create and roll your keys. Sign-in required.",
       },

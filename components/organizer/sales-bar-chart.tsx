@@ -30,7 +30,7 @@ export const SalesBarChart = ({
   if (total === 0) {
     return (
       <div
-        className="flex items-center justify-center text-sm text-muted-foreground"
+        className="flex items-center justify-center rounded-[20px] bg-secondary text-sm font-semibold text-muted-foreground"
         style={{ height }}
       >
         No sales in this window yet.
@@ -40,7 +40,7 @@ export const SalesBarChart = ({
 
   return (
     <div>
-      <div className="relative flex items-end gap-0.5" style={{ height }}>
+      <div className="relative flex items-end gap-1 sm:gap-1.5" style={{ height }}>
         {points.map((point) => {
           const isActive = activeKey === point.key;
           const isPeak = point.key === peakKey && point.value > 0;
@@ -55,7 +55,7 @@ export const SalesBarChart = ({
               {isActive ? (
                 <div
                   role="tooltip"
-                  className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-max -translate-x-1/2 rounded-md bg-foreground px-2.5 py-1.5 text-background shadow-lg"
+                  className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-max -translate-x-1/2 rounded-2xl bg-foreground px-3 py-2 text-background"
                 >
                   <div className="text-xs font-semibold tabular-nums">
                     {point.value} {point.value === 1 ? "ticket" : "tickets"}
@@ -76,8 +76,8 @@ export const SalesBarChart = ({
                 onFocus={() => setActiveKey(point.key)}
                 onBlur={() => setActiveKey(null)}
                 className={cn(
-                  "w-full cursor-default rounded-t-[4px] bg-primary transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                  isActive ? "opacity-100" : "opacity-85",
+                  "w-full cursor-default rounded-[6px] bg-primary transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  isActive ? "bg-foreground" : "",
                 )}
                 style={{
                   height: `${Math.max(2, (point.value / max) * 100)}%`,
@@ -88,7 +88,7 @@ export const SalesBarChart = ({
         })}
       </div>
 
-      <div className="mt-2.5 flex gap-0.5 border-t border-border pt-2">
+      <div className="mt-2.5 flex gap-1 pt-1 sm:gap-1.5">
         {points.map((point, index) => (
           <span
             key={point.key}

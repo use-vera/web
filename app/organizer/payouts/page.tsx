@@ -1,15 +1,8 @@
 "use client";
 
-import {
-  EmptyState,
-  ErrorState,
-  Eyebrow,
-  StatStrip,
-} from "@/components/organizer/organizer-primitives";
+import { DESK, EmptyState, ErrorState, FilterPills, PageHeader, Panel, PanelHeader } from "@/components/organizer/organizer-primitives";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import { Pagination } from "@/components/pagination";
-import Badge from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNairaAmount, formatNairaCompact } from "@/lib/format-currency";
 import { usePayoutAccount, useWallet, useWalletTransactions } from "@/lib/hooks/use-money";
@@ -19,7 +12,7 @@ import {
   type WalletTransactionType,
 } from "@/lib/types/money";
 import { cn } from "@/lib/utils";
-import { Check, Wallet } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Check, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -72,205 +65,153 @@ const PayoutsPage = () => {
   const transactions = transactionsQuery.data?.items ?? [];
 
   return (
-    <div className="pb-8">
-      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-          <div>
-            <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em]">
-              Payouts
-            </h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              What you have earned, what has cleared, and what is on its way to
-              your bank.
-            </p>
-          </div>
-          <Link
-            href="/organizer/payouts/withdraw"
-            className={cn(buttonVariants(), "shrink-0")}
-          >
-            <Wallet className="h-4 w-4" />
-            Withdraw
-          </Link>
-        </div>
-      </header>
+    <div className={DESK}>
+      <PageHeader lead="your" accent="payouts." description="What you have earned, what has cleared, and what is on its way to your bank." />
 
-      <div className="px-4 pt-5 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-4">
         {walletQuery.isLoading ? (
-          <Skeleton className="h-[104px] w-full rounded-sm" />
+          <Skeleton className="h-[260px] w-full rounded-[32px]" />
         ) : walletQuery.isError || !wallet ? (
-          <ErrorState
-            message="Couldn't load your wallet."
-            onRetry={() => walletQuery.refetch()}
-          />
+          <ErrorState message="Couldn't load your wallet." onRetry={() => walletQuery.refetch()} />
         ) : (
-          <StatStrip
-            cells={[
-              {
-                label: "Available",
-                value: formatNairaAmount(koboToNaira(wallet.availableBalanceKobo)),
-                note: "ready to withdraw now",
-              },
-              {
-                label: "Pending",
-                value: formatNairaAmount(koboToNaira(wallet.pendingBalanceKobo)),
-                note: "clears after each event",
-              },
-              {
-                label: "Reserved",
-                value: formatNairaAmount(koboToNaira(wallet.reservedBalanceKobo)),
-                note: "withdrawal in flight",
-              },
-              {
-                label: "Owing",
-                value: formatNairaAmount(koboToNaira(wallet.owingBalanceKobo)),
-                note: "refunds to recover",
-              },
-            ]}
-          />
-        )}
-      </div>
-
-      {account ? (
-        <div className="px-4 pt-3.5 sm:px-6 lg:px-8">
-          <Card className="flex-row items-center gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
-              <Check className="h-[17px] w-[17px]" strokeWidth={2.5} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-semibold">
-                {account.bankName} ••••{account.accountNumber.slice(-4)} ·{" "}
-                {account.accountName}
-              </div>
-              <div className="mt-0.5 text-xs text-muted-foreground">
-                Payouts land in 24–48 hours
-              </div>
-            </div>
-            <Badge variant={account.kycStatus === "verified" ? "default" : "outline"}>
-              {account.kycStatus === "verified" ? "Verified" : account.kycStatus}
-            </Badge>
-          </Card>
-        </div>
-      ) : accountQuery.isLoading ? null : (
-        <div className="px-4 pt-3.5 sm:px-6 lg:px-8">
-          <Card className="flex-row items-center gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
-            <div className="min-w-0 flex-1 text-[13px] text-muted-foreground">
-              No payout account yet. Add one before you can withdraw.
-            </div>
-            <Link
-              href="/organizer/payouts/withdraw"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+            {/* What they can take out right now, and where it goes. */}
+            <section
+              aria-label="Ready to withdraw"
+              className="flex flex-col gap-6 rounded-[32px] p-[clamp(20px,3vw,36px)]"
+              style={{ backgroundColor: POSTER_TONES.green.bg, color: POSTER_TONES.green.fg }}
             >
-              Add account
-            </Link>
-          </Card>
-        </div>
-      )}
-
-      {wallet ? (
-        <div className="flex gap-8 px-4 pt-5 sm:px-6 lg:px-8">
-          {[
-            ["Lifetime sales", wallet.lifetimeGrossSalesKobo, false],
-            ["Platform fees", wallet.lifetimePlatformFeesKobo, true],
-            ["Withdrawn", wallet.lifetimeWithdrawnKobo, false],
-            ["Refunded", wallet.lifetimeRefundedKobo, true],
-          ].map(([label, kobo, negative]) => (
-            <div key={String(label)}>
-              <Eyebrow>{label}</Eyebrow>
-              <div className="mt-1 text-lg font-bold tabular-nums">
-                {negative ? "−" : ""}
-                {formatNairaCompact(koboToNaira(Number(kobo)))}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-bold opacity-75">Ready to withdraw</span>
+                <span style={{ lineHeight: 0.9 }} className="text-[clamp(44px,6vw,80px)] font-extrabold tracking-[-0.05em] tabular-nums">
+                  {formatNairaAmount(koboToNaira(wallet.availableBalanceKobo))}
+                </span>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : null}
 
-      <div className="px-4 pt-5 sm:px-6 lg:px-8 lg:pt-6">
-        <Card className="gap-0 py-0">
-          <div className="flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4">
-            <div className="text-base leading-snug font-semibold">
-              Transactions
-            </div>
-            <div className="inline-flex gap-1 rounded-full bg-muted p-1">
-              {FILTERS.map((filter) => (
-                <button
-                  key={filter.value}
-                  type="button"
-                  onClick={() => {
-                    setType(filter.value);
-                    setPage(1);
-                  }}
-                  className={cn(
-                    "inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-semibold transition-colors",
-                    type === filter.value
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
+              <div className="mt-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {account ? (
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0B1D14] text-[#15C67C]">
+                      <Check className="h-4 w-4" strokeWidth={3} />
+                    </span>
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate text-[15px] font-bold">
+                        {account.bankName} ••••{account.accountNumber.slice(-4)}
+                      </span>
+                      <span className="truncate text-[13px] font-semibold opacity-75">
+                        {account.accountName} · {account.kycStatus === "verified" ? "verified" : account.kycStatus} · lands in 24–48 hours
+                      </span>
+                    </span>
+                  </span>
+                ) : accountQuery.isLoading ? (
+                  <span />
+                ) : (
+                  <span className="text-[15px] font-semibold opacity-80">No payout account yet. Add one before you can withdraw.</span>
+                )}
+                <Link
+                  href="/organizer/payouts/withdraw"
+                  className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-[#0B1D14] px-6 text-[15px] font-bold text-[#F5F3EF] transition-opacity hover:opacity-90"
                 >
-                  {filter.label}
-                </button>
+                  <Wallet className="h-4 w-4" />
+                  {account ? "Withdraw" : "Add account"}
+                </Link>
+              </div>
+            </section>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              {[
+                { label: "Pending", kobo: wallet.pendingBalanceKobo, note: "clears after each event", tone: "yellow" as const },
+                { label: "Reserved", kobo: wallet.reservedBalanceKobo, note: "withdrawal in flight", tone: "blue" as const },
+                { label: "Owing", kobo: wallet.owingBalanceKobo, note: "refunds to recover", tone: "pink" as const },
+              ].map((cell) => (
+                <div
+                  key={cell.label}
+                  className="flex items-center justify-between gap-3 rounded-[24px] px-5 py-4"
+                  style={{ backgroundColor: POSTER_TONES[cell.tone].bg, color: POSTER_TONES[cell.tone].fg }}
+                >
+                  <span className="flex flex-col">
+                    <span className="text-[15px] font-bold">{cell.label}</span>
+                    <span className="text-[13px] font-semibold opacity-70">{cell.note}</span>
+                  </span>
+                  <span className="text-[22px] font-extrabold tracking-[-0.03em] tabular-nums">{formatNairaAmount(koboToNaira(cell.kobo))}</span>
+                </div>
               ))}
             </div>
           </div>
-          <hr className="ticket-perforation" />
+        )}
+
+        {wallet ? (
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 rounded-[28px] border-[1.5px] border-border p-5 sm:p-6 lg:grid-cols-4">
+            {[
+              ["Lifetime sales", wallet.lifetimeGrossSalesKobo, false],
+              ["Platform fees", wallet.lifetimePlatformFeesKobo, true],
+              ["Withdrawn", wallet.lifetimeWithdrawnKobo, false],
+              ["Refunded", wallet.lifetimeRefundedKobo, true],
+            ].map(([label, kobo, negative]) => (
+              <div key={String(label)} className="flex flex-col gap-1">
+                <dt className="text-[13px] font-semibold text-muted-foreground">{label}</dt>
+                <dd className="text-[22px] font-extrabold tracking-[-0.03em] tabular-nums">
+                  {negative ? "−" : ""}
+                  {formatNairaCompact(koboToNaira(Number(kobo)))}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+
+        <Panel>
+          <PanelHeader
+            title="Transactions"
+            description="Sales, fees and withdrawals, newest first."
+            className="flex-col sm:flex-row sm:items-center"
+            action={
+              <FilterPills
+                label="Filter transactions"
+                options={FILTERS}
+                value={type}
+                onChange={(value) => {
+                  setType(value);
+                  setPage(1);
+                }}
+              />
+            }
+          />
 
           {transactionsQuery.isLoading ? (
-            <div className="p-4 sm:p-5">
+            <div className="flex flex-col gap-2 px-5 pb-5 sm:px-6">
               {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton key={index} className="my-2 h-11 w-full rounded-md" />
+                <Skeleton key={index} className="h-12 w-full rounded-2xl" />
               ))}
             </div>
           ) : transactions.length === 0 ? (
-            <EmptyState
-              icon={<Wallet className="h-6 w-6" />}
-              title="Nothing here yet"
-              description="Ticket sales, fees and withdrawals all show up on this ledger."
-            />
+            <EmptyState icon={<Wallet className="h-6 w-6" />} title="Nothing here yet" description="Ticket sales, fees and withdrawals all show up on this ledger." />
           ) : (
             <>
-              <div className="px-5 py-1">
+              <div className="flex flex-col px-2.5 pb-2">
                 {transactions.map((transaction) => {
                   const naira = koboToNaira(transaction.amountKobo);
                   const isCredit = naira > 0;
 
                   return (
-                    <div
-                      key={transaction._id}
-                      className="flex flex-wrap items-center gap-x-3.5 gap-y-2 py-3"
-                    >
-                      <div className="order-1 shrink-0 sm:w-[150px]">
-                        <Badge
-                          variant={
-                            transaction.type === "ticket_sale"
-                              ? "default"
-                              : "outline"
-                          }
-                        >
-                          {TYPE_LABELS[transaction.type]}
-                        </Badge>
-                      </div>
-                      <div className="order-3 min-w-0 basis-full sm:order-2 sm:basis-auto sm:flex-1">
-                        <div className="truncate text-[13px] font-semibold">
-                          {titleOf(transaction)}
-                        </div>
-                        <div className="text-xs text-muted-foreground tabular-nums">
-                          {new Intl.DateTimeFormat("en-NG", {
-                            day: "numeric",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }).format(new Date(transaction.createdAt))}
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="order-2 capitalize sm:order-3">
-                        {transaction.bucket}
-                      </Badge>
+                    <div key={transaction._id} className="flex items-center gap-3.5 rounded-[18px] px-2.5 py-3">
                       <span
+                        aria-hidden="true"
                         className={cn(
-                          "order-2 ml-auto shrink-0 text-right text-sm font-bold tabular-nums sm:order-4 sm:ml-0 sm:w-[120px]",
-                          isCredit && "text-accent-foreground",
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                          isCredit ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground",
                         )}
                       >
+                        {isCredit ? <ArrowDownLeft className="h-4 w-4" strokeWidth={2.6} /> : <ArrowUpRight className="h-4 w-4" strokeWidth={2.6} />}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[15px] font-bold">{titleOf(transaction)}</div>
+                        <div className="truncate text-[13px] text-muted-foreground tabular-nums">
+                          {new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(transaction.createdAt))}
+                          {" · "}
+                          <span className="capitalize">{transaction.bucket}</span>
+                        </div>
+                      </div>
+                      <span className={cn("shrink-0 text-right text-[15px] font-extrabold tabular-nums", isCredit && "text-accent-foreground")}>
                         {isCredit ? "+" : "−"}
                         {formatNairaAmount(Math.abs(naira))}
                       </span>
@@ -278,7 +219,7 @@ const PayoutsPage = () => {
                   );
                 })}
               </div>
-              <div className="border-t border-border bg-muted/60">
+              <div className="border-t-[1.5px] border-border px-5 sm:px-6">
                 <Pagination
                   page={transactionsQuery.data?.page ?? 1}
                   totalPages={transactionsQuery.data?.totalPages ?? 1}
@@ -290,7 +231,7 @@ const PayoutsPage = () => {
               </div>
             </>
           )}
-        </Card>
+        </Panel>
       </div>
     </div>
   );

@@ -1,9 +1,7 @@
 "use client";
 
-import { Eyebrow } from "@/components/organizer/organizer-primitives";
-import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getApiErrorMessage } from "@/lib/api/error-message";
 import { formatNairaAmount } from "@/lib/format-currency";
@@ -13,7 +11,7 @@ import {
   useSubscription,
   useVerifyPremium,
 } from "@/lib/hooks/use-money";
-import { Check, Sparkles, TriangleAlert } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -108,158 +106,104 @@ const PremiumPage = () => {
     }
   };
 
+  const expires =
+    isActive && subscription?.premiumExpiresAt
+      ? new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", year: "numeric" }).format(new Date(subscription.premiumExpiresAt))
+      : null;
+
   return (
-    <div className="pb-8">
-      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em]">
-            Vera Premium
-          </h1>
-          {isActive ? (
-            <Badge>
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Active
-            </Badge>
-          ) : null}
-        </div>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Grow smarter with deeper event intelligence.
-        </p>
-      </header>
+    <section aria-label="Vera Premium" className="flex flex-col gap-6">
+      <p className="text-[15px] text-muted-foreground">
+        {isActive ? `Premium is on${expires ? ` until ${expires}` : ""}.` : "Grow smarter with deeper event intelligence."}
+      </p>
 
       {subscriptionQuery.isLoading ? (
-        <div className="px-4 pt-5 sm:px-6 lg:px-8 lg:pt-6">
-          <Skeleton className="h-[420px] w-full rounded-sm" />
-        </div>
+        <Skeleton className="h-[420px] w-full rounded-[30px]" />
       ) : (
-        <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start pt-5 sm:px-6 lg:px-8 lg:pt-6">
-          <div className="flex min-w-0 flex-1 flex-col gap-3.5 sm:flex-row">
-            <Card className="flex-1 gap-0 py-0">
-              <div className="p-4 sm:p-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-base leading-snug font-semibold">
-                    Free
-                  </span>
-                  {!isActive ? <Badge variant="outline">Your plan</Badge> : null}
-                </div>
-                <div className="mt-3 text-3xl font-bold tracking-[-0.02em] tabular-nums">
-                  ₦0
-                </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">forever</div>
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.15fr_minmax(300px,0.9fr)]">
+          {/* Free */}
+          <div className="flex flex-col gap-5 rounded-[30px] p-[clamp(20px,2.4vw,28px)] ring-1 ring-border ring-inset" style={{ backgroundColor: POSTER_TONES.cream.bg, color: POSTER_TONES.cream.fg }}>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-lg font-extrabold">free.</span>
+              {!isActive ? <span className="rounded-full border-[1.5px] border-current px-3 py-1 text-xs font-bold">Your plan</span> : null}
+            </div>
+            <div>
+              <div className="text-[44px] font-extrabold tracking-[-0.04em] tabular-nums" style={{ lineHeight: 1 }}>
+                ₦0
               </div>
-              <hr className="ticket-perforation" />
-              <div className="flex flex-col gap-2.5 px-4 py-3.5 sm:px-5 sm:py-4">
-                {FREE_INCLUDES.map((item) => (
-                  <div key={item} className="flex items-start gap-2.5 text-[13px]">
-                    <Check className="mt-px h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="text-muted-foreground">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="flex-1 gap-0 py-0 shadow-[inset_0_0_0_2px_var(--primary),0_4px_12px_rgba(22,21,15,0.06)]">
-              <div className="bg-accent p-4 sm:p-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-base leading-snug font-semibold text-accent-foreground">
-                    Premium
-                  </span>
-                  <Badge variant="solid">
-                    <Sparkles className="h-3 w-3" />
-                    {isActive ? "Your plan" : "Recommended"}
-                  </Badge>
-                </div>
-                <div className="mt-3 text-3xl font-bold tracking-[-0.02em] text-accent-foreground tabular-nums">
-                  {formatNairaAmount(price)}
-                </div>
-                <div className="mt-0.5 text-xs text-accent-foreground/85">
-                  per month · cancel any time
-                </div>
-              </div>
-              <hr className="ticket-perforation" />
-              <div className="flex flex-col gap-3 px-4 py-3.5 sm:px-5 sm:py-4">
-                {PREMIUM_PERKS.map(([title, body]) => (
-                  <div key={title} className="flex items-start gap-2.5">
-                    <Check
-                      className="mt-px h-3.5 w-3.5 shrink-0 text-primary"
-                      strokeWidth={3}
-                    />
-                    <div>
-                      <div className="text-[13px] font-semibold">{title}</div>
-                      <div className="mt-0.5 text-xs leading-relaxed text-pretty text-muted-foreground">
-                        {body}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
+              <div className="mt-1 text-sm font-semibold opacity-70">forever</div>
+            </div>
+            <ul className="flex flex-col gap-2.5">
+              {FREE_INCLUDES.map((item) => (
+                <li key={item} className="flex items-start gap-2.5 text-[15px] font-semibold opacity-80">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.6} />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <div className="w-full lg:w-[340px] lg:shrink-0">
-            <Card className="gap-0 py-0">
-              <div className="p-4 sm:p-5">
-                <Eyebrow>{isActive ? "Your subscription" : "Upgrade"}</Eyebrow>
-                <div className="mt-1.5 text-3xl font-bold tracking-[-0.02em] tabular-nums">
-                  {formatNairaAmount(price)}
-                </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">
-                  billed monthly, not automatic
-                </div>
+          {/* Premium */}
+          <div className="flex flex-col gap-5 rounded-[30px] p-[clamp(20px,2.4vw,28px)]" style={{ backgroundColor: POSTER_TONES.green.bg, color: POSTER_TONES.green.fg }}>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-lg font-extrabold">premium.</span>
+              <span className="flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-xs font-bold text-foreground">
+                <Sparkles className="h-3 w-3" />
+                {isActive ? "Your plan" : "Recommended"}
+              </span>
+            </div>
+            <div>
+              <div className="text-[44px] font-extrabold tracking-[-0.04em] tabular-nums" style={{ lineHeight: 1 }}>
+                {formatNairaAmount(price)}
               </div>
-              <hr className="ticket-perforation" />
-              <div className="flex flex-col gap-2.5 px-4 py-3.5 sm:px-5 sm:py-4">
-                {[
-                  ["Renews", "Manually, you decide"],
-                  [
-                    isActive ? "Active until" : "Next charge",
-                    isActive && subscription?.premiumExpiresAt
-                      ? new Intl.DateTimeFormat("en-NG", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        }).format(new Date(subscription.premiumExpiresAt))
-                      : "None scheduled",
-                  ],
-                  ["Fee on tickets", "Still 5%"],
-                ].map(([key, value]) => (
-                  <div key={key} className="flex justify-between text-[13px]">
-                    <span className="text-muted-foreground">{key}</span>
-                    <span className="font-semibold">{value}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-muted/60 px-4 py-3.5 sm:px-5 sm:py-4">
-                <Button
-                  className="w-full"
-                  loading={initialize.isPending || checkingOut || verify.isPending}
-                  onClick={upgrade}
-                >
-                  {isActive ? "Renew with Paystack" : "Upgrade with Paystack"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2 w-full"
-                  loading={restore.isPending}
-                  onClick={restoreSubscription}
-                >
-                  Restore a purchase
-                </Button>
-              </div>
-            </Card>
+              <div className="mt-1 text-sm font-semibold opacity-70">per month · cancel any time</div>
+            </div>
+            <ul className="flex flex-col gap-3.5">
+              {PREMIUM_PERKS.map(([title, body]) => (
+                <li key={title} className="flex items-start gap-2.5">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={3} />
+                  <span>
+                    <span className="block text-[15px] font-bold">{title}</span>
+                    <span className="block text-sm font-medium text-pretty opacity-75">{body}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-            <Card className="mt-3 flex-row items-start gap-3 p-4">
-              <TriangleAlert className="mt-px h-4 w-4 shrink-0 text-muted-foreground" />
-              <p className="text-xs leading-relaxed text-pretty text-muted-foreground">
-                Premium never renews on its own. When the month is up it simply
-                stops, and your events keep running.
-              </p>
-            </Card>
+          {/* Checkout */}
+          <div className="flex flex-col gap-5 rounded-[30px] p-[clamp(20px,2.4vw,28px)]" style={{ backgroundColor: POSTER_TONES.ink.bg, color: POSTER_TONES.ink.fg }}>
+            <span className="text-lg font-extrabold">{isActive ? "your subscription." : "upgrade."}</span>
+            <dl className="flex flex-col gap-3">
+              {[
+                ["Renews", "Manually, you decide"],
+                [isActive ? "Active until" : "Next charge", expires ?? "None scheduled"],
+                ["Fee on tickets", "Still 5%"],
+              ].map(([key, value]) => (
+                <div key={key} className="flex justify-between gap-3 text-[15px]">
+                  <dt className="opacity-65">{key}</dt>
+                  <dd className="font-bold">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="text-sm text-pretty opacity-65">Premium never renews on its own. When the month is up it simply stops, and your events keep running.</p>
+            <div className="mt-auto flex flex-col gap-2">
+              <Button
+                size="lg"
+                className="w-full bg-[#F5F3EF] text-[#16150F] hover:opacity-90"
+                loading={initialize.isPending || checkingOut || verify.isPending}
+                onClick={upgrade}
+              >
+                {isActive ? "Renew with Paystack" : "Upgrade with Paystack"}
+              </Button>
+              <Button variant="ghost" size="sm" className="w-full text-inherit hover:bg-white/10" loading={restore.isPending} onClick={restoreSubscription}>
+                Restore a purchase
+              </Button>
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

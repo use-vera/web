@@ -72,7 +72,7 @@ const CodeEditor = ({
   return (
     <div
       className={cn(
-        "relative max-w-full min-w-0 overflow-hidden rounded-sm border border-border bg-[#0d1117]",
+        "relative max-w-full min-w-0 overflow-hidden rounded-[20px] bg-[#16150F]",
         className,
       )}
     >

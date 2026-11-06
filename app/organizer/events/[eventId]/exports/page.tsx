@@ -1,6 +1,6 @@
 "use client";
 
-import { Eyebrow } from "@/components/organizer/organizer-primitives";
+import { Eyebrow, PANEL, SELECT_FIELD } from "@/components/organizer/organizer-primitives";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -95,11 +95,11 @@ const ExportsPage = () => {
   const preview = previewQuery.data;
 
   return (
-    <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start py-5 pb-8 sm:px-6 lg:px-8">
-      <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-        <Card className="gap-0 py-0">
-          <div className="px-4 py-3.5 sm:px-5 sm:py-4">
-            <div className="text-base leading-snug font-semibold">
+    <div className="flex flex-col items-stretch gap-4 lg:flex-row lg:items-start">
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <Card className={cn(PANEL, "gap-0 py-0")}>
+          <div className="px-5 py-4 sm:px-6 sm:py-5">
+            <div className="text-[17px] leading-snug font-bold">
               Build an export
             </div>
             <div className="mt-0.5 text-xs text-muted-foreground">
@@ -118,7 +118,7 @@ const ExportsPage = () => {
                   <select
                     value={kind}
                     onChange={(input) => setKind(input.target.value as ExportKind)}
-                    className="h-12 w-full cursor-pointer appearance-none rounded-md border border-border bg-background px-4 pr-10 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
+                    className={SELECT_FIELD}
                   >
                     {KINDS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -140,7 +140,7 @@ const ExportsPage = () => {
                     onChange={(input) =>
                       setFormat(input.target.value as ExportFormat)
                     }
-                    className="h-12 w-full cursor-pointer appearance-none rounded-md border border-border bg-background px-4 pr-10 text-sm text-foreground uppercase transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
+                    className={cn(SELECT_FIELD, "uppercase")}
                   >
                     {FORMATS.map((option) => (
                       <option key={option} value={option}>
@@ -179,13 +179,13 @@ const ExportsPage = () => {
             </p>
           </div>
 
-          <div className="flex items-center justify-between bg-muted/60 px-4 py-3 sm:px-5 sm:py-3.5">
+          <div className="flex items-center justify-between border-t-[1.5px] border-border px-4 py-3 sm:px-5 sm:py-3.5">
             <span className="text-xs text-muted-foreground tabular-nums">
               {preview
                 ? `${preview.rowCount.toLocaleString("en-NG")} rows · ${preview.columns.length} columns`
                 : "Built fresh each time you ask."}
             </span>
-            <Button size="sm" onClick={build} loading={createExport.isPending}>
+            <Button variant="ink" size="sm" onClick={build} loading={createExport.isPending}>
               <FileText className="h-4 w-4" />
               Build export
             </Button>
@@ -193,9 +193,9 @@ const ExportsPage = () => {
         </Card>
 
         {previewId ? (
-          <Card className="gap-0 py-0">
-            <div className="flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4">
-              <div className="text-base leading-snug font-semibold">Preview</div>
+          <Card className={cn(PANEL, "gap-0 py-0")}>
+            <div className="flex items-center justify-between px-5 py-4 sm:px-6 sm:py-5">
+              <div className="text-[17px] leading-snug font-bold">Preview</div>
               {preview ? (
                 <span className="text-xs font-medium text-muted-foreground tabular-nums">
                   First {preview.previewRows.length} of{" "}
@@ -206,7 +206,7 @@ const ExportsPage = () => {
             <hr className="ticket-perforation" />
             <div className="overflow-x-auto px-4 py-3 sm:px-5 sm:py-3.5 pb-4.5">
               {previewQuery.isLoading ? (
-                <Skeleton className="h-24 w-full rounded-md" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
               ) : !preview || preview.previewRows.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
                   This export came back empty.
@@ -218,7 +218,7 @@ const ExportsPage = () => {
                       {preview.columns.map((column) => (
                         <th
                           key={column}
-                          className="px-2 py-2.5 text-left text-[11px] font-semibold tracking-[0.06em] whitespace-nowrap uppercase text-muted-foreground"
+                          className="px-2 py-2.5 text-left text-[13px] font-semibold whitespace-nowrap text-muted-foreground"
                         >
                           {column}
                         </th>
@@ -246,9 +246,9 @@ const ExportsPage = () => {
         ) : null}
       </div>
 
-      <Card className="w-full lg:w-[392px] lg:shrink-0 gap-0 py-0">
-        <div className="px-4 py-3.5 sm:px-5 sm:py-4">
-          <div className="text-base leading-snug font-semibold">
+      <Card className={cn(PANEL, "w-full lg:w-[392px] lg:shrink-0 gap-0 py-0")}>
+        <div className="px-5 py-4 sm:px-6 sm:py-5">
+          <div className="text-[17px] leading-snug font-bold">
             Recent exports
           </div>
         </div>
@@ -256,7 +256,7 @@ const ExportsPage = () => {
         <div className="px-3 py-1.5 pb-2.5">
           {exportsQuery.isLoading ? (
             Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="my-2 h-12 w-full rounded-md" />
+              <Skeleton key={index} className="my-2 h-12 w-full rounded-2xl" />
             ))
           ) : exports.length === 0 ? (
             <p className="px-2 py-8 text-center text-[13px] text-muted-foreground">
@@ -292,8 +292,8 @@ const ExportsPage = () => {
                 {item.status === "ready" ? (
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="h-8 shrink-0 text-xs"
+                    variant="line"
+                    className="h-9 shrink-0 text-xs"
                     onClick={() => download(item)}
                     disabled={downloadingId === item._id}
                   >
@@ -318,7 +318,7 @@ const ExportsPage = () => {
           noun="export"
           className="border-t border-border"
         />
-        <div className="bg-muted/60 px-4 py-3 sm:px-5 sm:py-3.5">
+        <div className="border-t-[1.5px] border-border px-4 py-3 sm:px-5 sm:py-3.5">
           <Eyebrow>Heads up</Eyebrow>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             An export is a snapshot. Build a new one for the latest numbers.

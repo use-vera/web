@@ -48,7 +48,7 @@ export const AddOnRedemptionPanel = ({
   );
 
   return (
-    <div className="rounded-sm bg-card p-4 outline outline-foreground/10 -outline-offset-1 sm:p-5">
+    <div className="rounded-[28px] border-[1.5px] border-border p-5 sm:p-6">
       <div className="flex items-baseline justify-between gap-3">
         <Eyebrow>Also on this ticket</Eyebrow>
         <span className="text-xs text-muted-foreground">
@@ -72,16 +72,14 @@ export const AddOnRedemptionPanel = ({
             <li
               key={item._id}
               className={cn(
-                "flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md p-3",
-                done
-                  ? "bg-accent shadow-[inset_0_0_0_1px_var(--primary)]"
-                  : "shadow-[inset_0_0_0_1px_var(--border)]",
+                "flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[18px] p-3",
+                done ? "bg-accent" : "border-[1.5px] border-border",
               )}
             >
               <span
                 className={cn(
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
-                  done ? "bg-card" : "bg-muted",
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px]",
+                  done ? "bg-background" : "bg-secondary",
                 )}
               >
                 {done ? (
@@ -124,6 +122,7 @@ export const AddOnRedemptionPanel = ({
               {collectible && !done && mine ? (
                 <Button
                   size="sm"
+                  variant="ink"
                   disabled={offline || Boolean(busyPurchaseId)}
                   loading={busy}
                   onClick={() => onRedeem(item)}

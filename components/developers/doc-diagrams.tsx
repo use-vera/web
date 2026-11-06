@@ -50,7 +50,7 @@ const Figure = ({
   children: React.ReactNode;
 }) => (
   <figure className="flex flex-col gap-2">
-    <div className="overflow-hidden rounded-xl border border-border bg-card p-4 text-muted-foreground">
+    <div className="overflow-hidden rounded-[22px] border-[1.5px] border-border p-5 text-muted-foreground">
       <svg
         role="img"
         aria-label={label}
@@ -73,7 +73,7 @@ const Figure = ({
         {children}
       </svg>
     </div>
-    <figcaption className="text-xs text-muted-foreground">{caption}</figcaption>
+    <figcaption className="text-[13px] text-muted-foreground">{caption}</figcaption>
   </figure>
 );
 

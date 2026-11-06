@@ -5,8 +5,9 @@ import MethodBadge from "@/components/developers/method-badge";
 import ResponseViewer, {
   type SandboxResponse,
 } from "@/components/developers/response-viewer";
-import Badge from "@/components/ui/badge";
-import Button from "@/components/ui/button";
+import { DESK, PageHeader } from "@/components/organizer/organizer-primitives";
+import Button, { buttonVariants } from "@/components/ui/button";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import CodeEditor from "@/components/ui/code-editor";
 import {
   ENDPOINTS,
@@ -14,9 +15,12 @@ import {
   type EndpointDoc,
 } from "@/lib/developer-docs/endpoints";
 import { cn, ROUTES } from "@/lib/utils";
+import { PlayCircle } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+
+const INLINE_LINK = "font-semibold text-foreground underline underline-offset-2";
 
 const SANDBOX_KEY_STORAGE = "vera_sandbox_api_key";
 
@@ -136,29 +140,30 @@ const SandboxRequestPanel = ({
   };
 
   return (
-    <>
-      <div className="min-w-0 flex flex-col gap-5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <MethodBadge method={endpoint.method} />
-          <code className="text-sm font-semibold text-foreground">
-            {endpoint.path}
-          </code>
-          <Badge variant="outline">{endpoint.scope}</Badge>
+    <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="flex min-w-0 flex-col gap-5 rounded-[28px] border-[1.5px] border-border p-5 sm:p-6">
+        <div className="flex flex-col gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <MethodBadge method={endpoint.method} />
+            <span className="rounded-full border-[1.5px] border-border px-2.5 py-0.5 font-mono text-xs font-semibold text-muted-foreground">{endpoint.scope}</span>
+          </div>
+          <h2 className="text-[22px] leading-tight font-extrabold tracking-[-0.03em]">{endpoint.summary}</h2>
+          <code className="font-mono text-[13px] font-semibold break-all text-muted-foreground">{endpoint.path}</code>
         </div>
 
         {endpoint.pathParams?.length ? (
           <div className="flex flex-col gap-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-[13px] font-bold">
               Path parameters
             </p>
             {endpoint.pathParams.map((param) => (
               <div key={param.name} className="flex flex-col gap-1.5">
                 <label
                   htmlFor={`path-${param.name}`}
-                  className="flex items-baseline gap-1.5 font-mono text-xs font-semibold text-foreground"
+                  className="flex items-baseline gap-1.5 font-mono text-[13px] font-bold text-foreground"
                 >
                   {param.name}
-                  <span className="font-sans text-[11px] font-normal text-muted-foreground">
+                  <span className="font-sans text-xs font-medium text-muted-foreground">
                     {param.type}
                     {param.required ? "" : " · optional"}
                   </span>
@@ -181,17 +186,17 @@ const SandboxRequestPanel = ({
 
         {endpoint.queryParams?.length ? (
           <div className="flex flex-col gap-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-[13px] font-bold">
               Query parameters
             </p>
             {endpoint.queryParams.map((param) => (
               <div key={param.name} className="flex flex-col gap-1.5">
                 <label
                   htmlFor={`query-${param.name}`}
-                  className="flex items-baseline gap-1.5 font-mono text-xs font-semibold text-foreground"
+                  className="flex items-baseline gap-1.5 font-mono text-[13px] font-bold text-foreground"
                 >
                   {param.name}
-                  <span className="font-sans text-[11px] font-normal text-muted-foreground">
+                  <span className="font-sans text-xs font-medium text-muted-foreground">
                     {param.type}
                     {param.required ? "" : " · optional"}
                   </span>
@@ -214,8 +219,8 @@ const SandboxRequestPanel = ({
 
         {endpoint.bodyParams?.length ? (
           <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="flex flex-col gap-2">
+              <p className="text-[13px] font-bold">
                 Body (JSON)
               </p>
               {endpoint.bodyExamples?.length ? (
@@ -228,7 +233,7 @@ const SandboxRequestPanel = ({
                         setBodyText(JSON.stringify(example.body, null, 2));
                         setActiveExampleNote(example.note ?? null);
                       }}
-                      className="rounded-full border border-border px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground flex items-center justify-center"
+                      className="flex h-8 cursor-pointer items-center justify-center rounded-full border-[1.5px] border-border px-3 text-xs font-semibold transition-colors hover:border-foreground"
                     >
                       {example.label}
                     </button>
@@ -237,7 +242,7 @@ const SandboxRequestPanel = ({
               ) : null}
             </div>
             {activeExampleNote ? (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[13px] text-muted-foreground">
                 {activeExampleNote}
               </p>
             ) : null}
@@ -246,10 +251,16 @@ const SandboxRequestPanel = ({
         ) : null}
 
         {sendError ? (
-          <p className="text-sm text-destructive">{sendError}</p>
+          <p
+            className="rounded-[18px] p-3.5 text-[13px] font-semibold"
+            style={{ backgroundColor: POSTER_TONES.pink.bg, color: POSTER_TONES.pink.fg }}
+          >
+            {sendError}
+          </p>
         ) : null}
 
         <Button
+          variant="ink"
           onClick={() => void handleSend()}
           loading={sending}
           className="w-fit"
@@ -259,12 +270,10 @@ const SandboxRequestPanel = ({
       </div>
 
       <div className="min-w-0">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Response
-        </p>
+        <p className="mb-2 text-[13px] font-bold">Response</p>
         <ResponseViewer response={response} />
       </div>
-    </>
+    </div>
   );
 };
 
@@ -289,96 +298,78 @@ const SandboxWorkbench = () => {
   }, [apiKey]);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
-        Test the API live.
-      </h1>
-      <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-        Requests go straight from your browser to the real Vera API using the
-        key you paste in. The key stays in this tab&apos;s session storage and
-        is never sent to Vera&apos;s web servers.
-      </p>
+    <div className={DESK}>
+      <PageHeader
+        lead="try the"
+        accent="api."
+        description={
+          <>
+            Requests go straight from your browser to the real Vera API with the key you paste in. No key yet? Create a test one on the{" "}
+            <Link href={ROUTES.DEVELOPERS_KEYS} className={INLINE_LINK}>
+              API keys
+            </Link>{" "}
+            page, or read the{" "}
+            <Link href={`${ROUTES.DEVELOPERS_DOCS}/quickstart`} className={INLINE_LINK}>
+              quickstart
+            </Link>{" "}
+            first.
+          </>
+        }
+        actions={
+          <a href={ROUTES.DEVELOPERS_DEMO} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "line", size: "sm" })}>
+            <PlayCircle className="h-4 w-4" />
+            Demo app
+          </a>
+        }
+      />
 
-      <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-        No key yet? Create a test one on the{" "}
-        <Link
-          href={ROUTES.DEVELOPERS_KEYS}
-          className="font-semibold text-foreground underline underline-offset-2"
-        >
-          API keys
-        </Link>{" "}
-        page, or read the{" "}
-        <Link
-          href={`${ROUTES.DEVELOPERS_DOCS}/quickstart`}
-          className="font-semibold text-foreground underline underline-offset-2"
-        >
-          quickstart
-        </Link>{" "}
-        first.
-      </p>
-
-      <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-        Want the flows rather than single calls? The{" "}
-        <a
-          href={ROUTES.DEVELOPERS_DEMO}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-foreground underline underline-offset-2"
-        >
-          demo app
-        </a>{" "}
-        strings them together into a working ticket shop, and is one HTML file
-        you can save and build from.
-      </p>
-
-      <div className="mt-6 flex flex-col gap-2">
-        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          API key
+      <div
+        className="flex flex-col gap-3 rounded-[28px] p-5 sm:flex-row sm:items-center sm:gap-5 sm:p-6"
+        style={{ backgroundColor: POSTER_TONES.yellow.bg, color: POSTER_TONES.yellow.fg }}
+      >
+        <label htmlFor="sandbox-key" className="flex shrink-0 flex-col gap-0.5 sm:w-56">
+          <span className="text-[15px] font-bold">Your API key</span>
+          <span className="text-[13px] font-medium opacity-75">Kept in this tab only, never sent to Vera&apos;s web servers.</span>
         </label>
-        <DevInput
+        <input
+          id="sandbox-key"
           value={apiKey}
           onChange={(event) => setApiKey(event.target.value)}
-          placeholder="pk_live_... or sk_live_..."
-          className="max-w-md font-mono text-xs"
+          placeholder="pk_test_... or sk_test_..."
+          autoComplete="off"
+          spellCheck={false}
+          className="h-12 w-full min-w-0 rounded-2xl border-[1.5px] border-current/30 bg-transparent px-4 font-mono text-[13px] outline-none placeholder:text-current placeholder:opacity-50 focus-visible:border-current"
         />
       </div>
 
-      <div className="mt-15 grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr_1fr]">
-        <div className="flex flex-col gap-8">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+        <nav aria-label="Endpoints" className="flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
           {ENDPOINT_GROUPS.map((group) => (
-            <div key={group}>
-              <p className="mb-5 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {group}
-              </p>
-              <div className="flex flex-col gap-2">
-                {ENDPOINTS.filter((item) => item.group === group).map(
-                  (item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedId(item.id)}
-                      className={cn(
-                        "flex items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm font-medium font-sans",
-                        item.id === selectedId
-                          ? "bg-secondary text-foreground"
-                          : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
-                      )}
-                    >
-                      <MethodBadge method={item.method} />
-                      <span className="truncate">{item.summary}</span>
-                    </button>
-                  ),
-                )}
-              </div>
+            <div key={group} className="flex flex-col gap-1">
+              <p className="mb-1 px-3 text-[13px] font-bold">{group}</p>
+              {ENDPOINTS.filter((item) => item.group === group).map((item) => {
+                const active = item.id === selectedId;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setSelectedId(item.id)}
+                    className={cn(
+                      "flex min-h-10 cursor-pointer items-center gap-2.5 rounded-full px-2 py-1.5 text-left text-[13px] font-semibold transition-colors",
+                      active ? "bg-foreground text-background" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    )}
+                  >
+                    <MethodBadge method={item.method} size="sm" />
+                    <span className="min-w-0 truncate">{item.summary}</span>
+                  </button>
+                );
+              })}
             </div>
           ))}
-        </div>
+        </nav>
 
-        <SandboxRequestPanel
-          key={endpoint.id}
-          endpoint={endpoint}
-          apiKey={apiKey}
-        />
+        <SandboxRequestPanel key={endpoint.id} endpoint={endpoint} apiKey={apiKey} />
       </div>
     </div>
   );

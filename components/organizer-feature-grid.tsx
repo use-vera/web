@@ -1,60 +1,24 @@
-import {
-  ORGANIZER_FEATURES,
-  type OrganizerFeature,
-} from "@/lib/organizer-content";
-import {
-  MessageCircle,
-  QrCode,
-  ShieldCheck,
-  Sparkles,
-  Ticket,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import DisplayHeading, { Eyebrow } from "@/components/vera/display-heading";
+import { ORGANIZER_FEATURES } from "@/lib/organizer-content";
 
-const iconMap: Record<OrganizerFeature["icon"], LucideIcon> = {
-  ticket: Ticket,
-  wallet: Wallet,
-  qrcode: QrCode,
-  shield: ShieldCheck,
-  sparkles: Sparkles,
-  message: MessageCircle,
-};
-
+/** What the dashboard does, numbered on hairlines: no icon cards. */
 const OrganizerFeatureGrid = () => {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-      <div className="mx-auto max-w-2xl text-center">
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-          Everything you need
-        </span>
-        <h2 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">
-          One dashboard, from listing to payout.
-        </h2>
+    <section className="mx-auto flex max-w-[1240px] flex-col gap-12 px-[clamp(16px,4vw,40px)] py-[clamp(64px,8vw,120px)]">
+      <div className="flex flex-col gap-5">
+        <Eyebrow>Everything you need</Eyebrow>
+        <DisplayHeading lead="one dashboard, from listing" accent="to payout." breakBeforeAccent />
       </div>
 
-      <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {ORGANIZER_FEATURES.map((feature) => {
-          const Icon = iconMap[feature.icon];
-
-          return (
-            <div
-              key={feature.title}
-              className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-6"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
-                <Icon className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-lg font-bold text-card-foreground">
-                {feature.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {feature.description}
-              </p>
-            </div>
-          );
-        })}
-      </div>
+      <ol className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] border-t border-border">
+        {ORGANIZER_FEATURES.map((feature, index) => (
+          <li key={feature.title} className="flex flex-col gap-2 border-b border-border py-7 pr-8">
+            <span className="text-[13px] font-bold text-primary">{String(index + 1).padStart(2, "0")}</span>
+            <h3 className="text-xl font-bold tracking-[-0.01em]">{feature.title}</h3>
+            <p className="text-[15px] leading-relaxed text-muted-foreground">{feature.description}</p>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 };

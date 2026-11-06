@@ -2,6 +2,9 @@
 
 import Button from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { MenuTile } from "@/components/header-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import { useLogout, useSession } from "@/lib/hooks/use-auth";
 import { navLinks, navMenus } from "@/lib/nav-links";
 import { useActiveNavHref } from "@/lib/use-active-nav-href";
@@ -50,7 +53,7 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
   };
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <ConfirmDialog
         open={confirmLogout}
         onOpenChange={setConfirmLogout}
@@ -65,7 +68,7 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
         type="button"
         aria-label={open ? "Close menu" : "Open menu"}
         onClick={() => setOpen((value) => !value)}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground"
+        className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-foreground text-background"
       >
         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
@@ -83,15 +86,15 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
                     close();
                   }
                 }}
-                className="fixed top-20 right-0 bottom-0 left-0 z-40 bg-black/40"
+                className="fixed top-20 right-0 bottom-0 left-0 z-40 bg-black/30"
               />
               <div
                 className={cn(
-                  "fixed inset-x-0 top-20 z-50 rounded-b-2xl border-b border-x border-border bg-background px-6 pb-6 pt-2 shadow-xl",
+                  "fixed inset-x-0 top-20 z-50 rounded-b-[28px] bg-background px-[clamp(16px,4vw,40px)] pt-2 pb-6",
                   inverted && "dark",
                 )}
               >
-                <nav className="flex flex-col gap-1">
+                <nav aria-label="Main" className="flex flex-col">
                   {navLinks.map((link) => {
                     const active = isActive(link.href);
 
@@ -100,11 +103,10 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
                         key={link.href}
                         href={link.href}
                         onClick={close}
+                        aria-current={active ? "page" : undefined}
                         className={cn(
-                          "rounded-lg px-3 py-3 text-sm font-semibold transition-colors",
-                          active
-                            ? "bg-accent text-accent-foreground"
-                            : "text-foreground hover:bg-secondary",
+                          "border-b border-border py-3.5 text-xl font-bold tracking-[-0.02em] transition-colors",
+                          active ? "text-primary" : "text-foreground",
                         )}
                       >
                         {link.label}
@@ -115,61 +117,71 @@ const MobileNav = ({ inverted = false }: MobileNavProps) => {
                   {/* No room for a dropdown on a phone, so the group opens
                       flat under its own label. */}
                   {navMenus.map((menu) => (
-                    <div key={menu.label} className="mt-2 flex flex-col gap-1">
-                      <span className="px-3 pt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                    <div key={menu.label} className="mt-4 flex flex-col">
+                      <span className="pb-1 text-sm font-semibold text-muted-foreground">
                         {menu.label}
                       </span>
-                      {menu.items.map((item) => {
-                        const active = isActive(item.href);
+                      <div className="grid grid-cols-2 gap-1">
+                        {menu.items.map((item) => {
+                          const active = isActive(item.href);
 
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={close}
-                            className={cn(
-                              "rounded-lg px-3 py-3 text-sm font-semibold transition-colors",
-                              active
-                                ? "bg-accent text-accent-foreground"
-                                : "text-foreground hover:bg-secondary",
-                            )}
-                          >
-                            {item.label}
-                          </Link>
-                        );
-                      })}
+                          return (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              onClick={close}
+                              aria-current={active ? "page" : undefined}
+                              className={cn(
+                                "flex items-center gap-2.5 rounded-[18px] py-2 pr-2 text-[15px] font-bold transition-colors",
+                                active ? "text-primary" : "text-foreground",
+                              )}
+                            >
+                              <MenuTile icon={item.icon} tone={item.tone} className="h-9 w-9 rounded-[12px]" />
+                              <span className="min-w-0">{item.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
 
                   {user ? (
                     <Link
-                      href={ROUTES.TICKETS}
+                      href={ROUTES.ACCOUNT}
                       onClick={close}
-                      className="mt-2 flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-foreground hover:bg-secondary"
+                      className="mt-4 flex items-center gap-3 rounded-[22px] p-2 pr-4 text-foreground"
+                      style={{ backgroundColor: POSTER_TONES.green.bg, color: POSTER_TONES.green.fg }}
                     >
-                      <Ticket className="h-4 w-4" />
-                      My tickets
+                      <Avatar size="lg">
+                        <AvatarImage src={user.avatarUrl} />
+                        <AvatarFallback>{user.fullName.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate text-[15px] font-bold">{user.fullName}</span>
+                        <span className="text-[13px] font-semibold opacity-75">Tickets, payments and premium</span>
+                      </span>
+                      <Ticket className="h-5 w-5 shrink-0" />
                     </Link>
                   ) : null}
                 </nav>
 
-                <div className="mt-3 flex flex-col gap-2">
+                <div className="mt-5 flex flex-col gap-2">
                   {user ? (
                     <button
                       type="button"
                       onClick={() => setConfirmLogout(true)}
-                      className="flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-destructive hover:bg-secondary"
+                      className="flex cursor-pointer items-center justify-center gap-2 py-3 text-base font-semibold text-destructive"
                     >
                       <LogOut className="h-4 w-4" />
                       Sign out
                     </button>
                   ) : (
-                    <Button variant="outline" className="w-full" onClick={handleSignIn}>
+                    <Button variant="line" size="lg" className="w-full" onClick={handleSignIn}>
                       Sign in
                     </Button>
                   )}
-                  <Button className="w-full" onClick={handleDownloadClick}>
-                    Download the app
+                  <Button variant="ink" size="lg" className="w-full" onClick={handleDownloadClick}>
+                    Get the app
                   </Button>
                 </div>
               </div>

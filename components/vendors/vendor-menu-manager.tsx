@@ -1,7 +1,10 @@
 "use client";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import Button from "@/components/ui/button";
+import { EmptyState, ErrorState, PageHeader, Panel, PanelHeader, StatStrip } from "@/components/organizer/organizer-primitives";
+import Button, { buttonVariants } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { POSTER_TONES, toneFor } from "@/components/vera/event-poster";
 import Switch from "@/components/ui/switch";
 import VendorItemForm from "@/components/vendors/vendor-item-form";
 import { formatNairaAmount } from "@/lib/format-currency";
@@ -14,7 +17,7 @@ import {
 } from "@/lib/hooks/use-vendor";
 import { type VendorItem } from "@/lib/types/vendor";
 import { cn } from "@/lib/utils";
-import { ImageOff, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -29,8 +32,27 @@ const AvailabilitySwitch = ({ item }: { item: VendorItem }) => {
       onCheckedChange={(checked) =>
         updateItem.mutate({ itemId: item._id, payload: { available: checked } })
       }
-      
     />
+  );
+};
+
+/** The item's photo, or its first letter on a poster colour. */
+const ItemThumb = ({ item }: { item: VendorItem }) => {
+  const colours = POSTER_TONES[toneFor(item._id)];
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn("flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[16px] text-xl font-extrabold", !item.available && "opacity-55 grayscale")}
+      style={{ backgroundColor: colours.bg, color: colours.fg }}
+    >
+      {item.imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        item.name.charAt(0).toUpperCase()
+      )}
+    </span>
   );
 };
 
@@ -57,19 +79,16 @@ const VendorMenuManager = () => {
   const menu = menuQuery.data;
   const sections = menu?.vendor.sections ?? [];
 
-  if (menuQuery.isPending) {
-    return (
-      // <p className="p-6 text-sm text-muted-foreground">Loading your menu…</p>
+  const allItems = (menu?.sections ?? []).flatMap((section) => section.items);
+  const onSale = allItems.filter((item) => item.available).length;
 
-      <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin text-primary" />
-        Loading your menu...
-      </p>
-    );
-  }
+  const openAdd = () => {
+    setEditing(null);
+    setAdding(true);
+  };
 
   return (
-    <div className="flex flex-col gap-6 ">
+    <div className="flex flex-col pb-10">
       <ConfirmDialog
         open={Boolean(confirmDelete)}
         onOpenChange={(open) => !open && setConfirmDelete(null)}
@@ -108,174 +127,186 @@ const VendorMenuManager = () => {
         }}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Menu</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Switch an item off the moment it runs out. Buyers stop seeing it
-            straight away.
-          </p>
+      <PageHeader
+        lead="your"
+        accent="menu."
+        description="Switch an item off the moment it runs out. Buyers stop seeing it straight away."
+        actions={
+          <>
+            {menu?.vendor.slug ? (
+              <a href={`/vendors/${menu.vendor.slug}`} target="_blank" rel="noreferrer" className={buttonVariants({ variant: "line", size: "sm" })}>
+                <ExternalLink className="h-4 w-4" />
+                Your page
+              </a>
+            ) : null}
+            <Button variant="ink" size="sm" onClick={openAdd}>
+              <Plus className="h-4 w-4" />
+              Add item
+            </Button>
+          </>
+        }
+      />
+
+      {menuQuery.isPending ? (
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-[108px] rounded-[24px]" />
+            ))}
+          </div>
+          <Skeleton className="h-64 rounded-[28px]" />
         </div>
-        <div className="flex items-center gap-2">
-          {menu?.vendor.slug ? (
-            <a
-              href={`/vendors/${menu.vendor.slug}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-            >
-              View your page
-            </a>
-          ) : null}
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setAdding(true);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Add item
-          </Button>
-        </div>
-      </div>
+      ) : null}
+
+      {menuQuery.isError ? (
+        <Panel>
+          <ErrorState message="Couldn't load your menu." onRetry={() => menuQuery.refetch()} />
+        </Panel>
+      ) : null}
+
+      {menu && menu.itemCount > 0 ? (
+        <StatStrip
+          cells={[
+            { label: "On sale", value: onSale.toLocaleString("en-NG"), note: "buyers can order these" },
+            { label: "Switched off", value: (allItems.length - onSale).toLocaleString("en-NG"), note: "hidden from buyers" },
+            { label: "Sections", value: sections.length.toLocaleString("en-NG"), note: "headings on your menu" },
+          ]}
+        />
+      ) : null}
 
       {adding || editing ? (
-        <div className="rounded-2xl border border-border bg-card p-6 max-w-3xl">
-          <h2 className="mb-5 text-lg font-bold text-card-foreground">
-            {editing ? `Edit ${editing.name}` : "Add an item"}
-          </h2>
-          <VendorItemForm
-            key={editing?._id ?? "new"}
-            sections={sections}
-            item={editing ?? undefined}
-            pending={updateItem.isPending || createItem.isPending}
-            submitLabel={editing ? "Save changes" : "Add item"}
-            onCancel={() => {
-              setAdding(false);
-              setEditing(null);
-            }}
-            onSubmit={async (payload) => {
-              try {
-                if (editing) {
-                  await updateItem.mutateAsync({
-                    itemId: editing._id,
-                    payload,
-                  });
-                  toast.success("Item updated");
-                } else {
-                  await createItem.mutateAsync(payload);
-                  toast.success("Item added");
-                }
-
-                setEditing(null);
-                setAdding(false);
-              } catch {
-                toast.error("Couldn't save that item.");
-              }
-            }}
+        <Panel className="mt-6 max-w-3xl">
+          <PanelHeader
+            title={editing ? `Edit ${editing.name}` : "Add an item"}
+            description={editing ? "Changes show on your menu as soon as you save." : "It goes on sale as soon as you add it."}
           />
-        </div>
-      ) : null}
+          <div className="px-5 pb-6 sm:px-6">
+            <VendorItemForm
+              key={editing?._id ?? "new"}
+              sections={sections}
+              item={editing ?? undefined}
+              pending={updateItem.isPending || createItem.isPending}
+              submitLabel={editing ? "Save changes" : "Add item"}
+              onCancel={() => {
+                setAdding(false);
+                setEditing(null);
+              }}
+              onSubmit={async (payload) => {
+                try {
+                  if (editing) {
+                    await updateItem.mutateAsync({ itemId: editing._id, payload });
+                    toast.success("Item updated");
+                  } else {
+                    await createItem.mutateAsync(payload);
+                    toast.success("Item added");
+                  }
 
-      
+                  setEditing(null);
+                  setAdding(false);
+                } catch {
+                  toast.error("Couldn't save that item.");
+                }
+              }}
+            />
+          </div>
+        </Panel>
+      ) : null}
 
       {menu && menu.itemCount === 0 && !adding ? (
-        <div className="rounded-2xl border border-dashed border-border p-10 text-center">
-          <p className="text-sm font-semibold text-foreground">
-            Your menu is empty
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Add what you sell and it shows up for attendees at your next event.
-          </p>
-        </div>
+        <Panel className="mt-2">
+          <EmptyState
+            icon={<UtensilsCrossed className="h-6 w-6" />}
+            title="your menu is empty"
+            description="Add what you sell and it shows up for attendees at your next event."
+            action={
+              <Button variant="ink" size="sm" onClick={openAdd}>
+                <Plus className="h-4 w-4" />
+                Add your first item
+              </Button>
+            }
+          />
+        </Panel>
       ) : null}
 
-      {(menu?.sections ?? []).map((section) => (
-        <section key={section._id ?? "default"} className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xs font-bold uppercase text-muted-foreground">
-              {section.name}
-            </h2>
-            <span className="text-xs  text-muted-foreground">
-              {section.items.length}{" "}
-              {section.items.length === 1 ? "item" : "items"}
-            </span>
-            {section._id ? (
-              <button
-                type="button"
-                onClick={() =>
-                  setConfirmSection({ id: section._id!, name: section.name })
-                }
-                className="ml-auto text-xs font-semibold text-muted-foreground hover:text-destructive"
-              >
-                Remove section
-              </button>
-            ) : null}
-          </div>
-
-          <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-            {section.items.map((item) => (
-              <li key={item._id} className="flex items-center gap-4 p-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary">
-                  {item.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.imageUrl}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <ImageOff className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </span>
-
-                <span className="min-w-0 flex-1">
-                  <span
-                    className={cn(
-                      "block truncate text-base font-semibold",
-                      item.available
-                        ? "text-card-foreground"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {item.name}
-                  </span>
-                  <span className="block truncate text-sm text-muted-foreground">
-                    {item.categoryLabel}
-                    {item.stock === null ? "" : ` · ${item.stock} left`}
-                  </span>
-                </span>
-
-                <span className="text-base font-bold tabular-nums text-card-foreground">
-                  {formatNairaAmount(item.priceNaira)}
-                </span>
-
-                <AvailabilitySwitch item={item} />
-
+      {(menu?.sections ?? [])
+        .filter((section) => section.items.length > 0 || section._id)
+        .map((section) => (
+          <section key={section._id ?? "default"} className="mt-8 flex flex-col gap-3">
+            <div className="flex items-end gap-3 px-1">
+              <h2 className="text-[22px] leading-tight font-extrabold tracking-[-0.03em]">{section.name}</h2>
+              <span className="pb-0.5 text-[13px] font-semibold text-muted-foreground tabular-nums">
+                {section.items.length} {section.items.length === 1 ? "item" : "items"}
+              </span>
+              {section._id ? (
                 <button
                   type="button"
-                  aria-label={`Edit ${item.name}`}
-                  onClick={() => {
-                    setAdding(false);
-                    setEditing(item);
-                  }}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  onClick={() => setConfirmSection({ id: section._id!, name: section.name })}
+                  className="ml-auto cursor-pointer pb-0.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-destructive"
                 >
-                  <Pencil className="h-4 w-4" />
+                  Remove section
                 </button>
-                <button
-                  type="button"
-                  aria-label={`Remove ${item.name}`}
-                  onClick={() => setConfirmDelete(item)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+              ) : null}
+            </div>
+
+            {section.items.length === 0 ? (
+              <p className="rounded-[22px] border-[1.5px] border-dashed border-border px-5 py-6 text-center text-[13px] font-semibold text-muted-foreground">
+                Nothing in this section yet. Pick it when you add or edit an item.
+              </p>
+            ) : (
+              <Panel>
+                <ul className="divide-y-[1.5px] divide-border">
+                  {section.items.map((item) => (
+                    <li key={item._id} className="flex items-center gap-3 p-3 sm:gap-4 sm:pr-4">
+                      <ItemThumb item={item} />
+
+                      <span className={cn("flex min-w-0 flex-1 flex-col gap-0.5", !item.available && "opacity-55")}>
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="truncate text-base font-bold">{item.name}</span>
+                          {item.ageRestricted ? (
+                            <span className="shrink-0 rounded-full border-[1.5px] border-current px-1.5 text-[11px] font-bold">18+</span>
+                          ) : null}
+                        </span>
+                        <span className="truncate text-[13px] text-muted-foreground">
+                          {item.categoryLabel}
+                          {item.stock === null ? "" : ` · ${item.stock} left`}
+                          {item.available ? "" : " · switched off"}
+                        </span>
+                      </span>
+
+                      <span className={cn("text-base font-extrabold tracking-[-0.02em] tabular-nums", !item.available && "opacity-55")}>
+                        {formatNairaAmount(item.priceNaira)}
+                      </span>
+
+                      <AvailabilitySwitch item={item} />
+
+                      <span className="flex shrink-0 items-center">
+                        <button
+                          type="button"
+                          aria-label={`Edit ${item.name}`}
+                          onClick={() => {
+                            setAdding(false);
+                            setEditing(item);
+                          }}
+                          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`Remove ${item.name}`}
+                          onClick={() => setConfirmDelete(item)}
+                          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+            )}
+          </section>
+        ))}
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { twMerge } from "tailwind-merge";
 export const ROUTES = Object.freeze({
   DOWNLOAD: "/download",
   TICKETS: "/tickets",
+  ACCOUNT: "/account/tickets",
   DEVELOPERS: "/developers",
   DEVELOPERS_DOCS: "/developers/docs",
   DEVELOPERS_API: "/developers/api",

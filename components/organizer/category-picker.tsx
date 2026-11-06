@@ -1,6 +1,5 @@
 "use client";
 
-import Badge from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { cn } from "@/lib/utils";
@@ -23,7 +22,7 @@ export const CategoryPicker = ({
     return (
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: 6 }).map((_, index) => (
-          <Skeleton key={index} className="h-8 w-24 rounded-full" />
+          <Skeleton key={index} className="h-10 w-24 rounded-full" />
         ))}
       </div>
     );
@@ -60,14 +59,15 @@ export const CategoryPicker = ({
               "cursor-pointer rounded-full transition-opacity disabled:cursor-not-allowed disabled:opacity-40",
             )}
           >
-            <Badge variant={selected ? "default" : "outline"}>
-              {selected ? (
-                <Check className="h-3 w-3" strokeWidth={3} />
-              ) : (
-                <Plus className="h-3 w-3" />
+            <span
+              className={cn(
+                "flex h-10 items-center gap-1.5 rounded-full border-[1.5px] px-4 text-sm font-semibold transition-colors",
+                selected ? "border-foreground bg-foreground text-background" : "border-border text-foreground hover:border-foreground",
               )}
+            >
+              {selected ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Plus className="h-3.5 w-3.5" />}
               {category.name}
-            </Badge>
+            </span>
           </button>
         );
       })}

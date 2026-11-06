@@ -1,11 +1,14 @@
 "use client";
 
 import { OrganizerField } from "@/components/organizer/organizer-field";
-import { Eyebrow, Meter } from "@/components/organizer/organizer-primitives";
+import {
+  Panel,
+  PanelHeader,
+} from "@/components/organizer/organizer-primitives";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import { QrScanner } from "@/components/organizer/qr-scanner";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { getApiErrorMessage } from "@/lib/api/error-message";
 import { clockLabel } from "@/lib/event-status";
 import { ScanResultPanel } from "@/components/organizer/scan-result-panel";
@@ -207,7 +210,9 @@ const CheckInPage = () => {
     setError(null);
 
     try {
-      const updated = await redeemAddOn.mutateAsync({ purchaseId: purchase._id });
+      const updated = await redeemAddOn.mutateAsync({
+        purchaseId: purchase._id,
+      });
 
       /* Replaced in place rather than refetched: a door usually has two or
          three things to hand the same person, and the list should not jump
@@ -216,7 +221,9 @@ const CheckInPage = () => {
         current.map((item) => (item._id === updated._id ? updated : item)),
       );
     } catch (caught) {
-      setError(getApiErrorMessage(caught, `Could not hand over ${purchase.name}`));
+      setError(
+        getApiErrorMessage(caught, `Could not hand over ${purchase.name}`),
+      );
     } finally {
       setRedeemingId(null);
     }
@@ -230,108 +237,159 @@ const CheckInPage = () => {
   const admittedNow = result && !result.alreadyUsed;
 
   return (
-    <div className="px-4 pt-5 pb-8 sm:px-6 lg:px-8">
-      {/* Door mode: prepare while there is signal, then scan with none. */}
-      <Card className="mb-3.5 flex-col items-start gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
-        <span
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        {/* The number the door cares about, as big as the page allows. */}
+        <section
+          aria-label="Admitted"
+          className="flex flex-col justify-between gap-5 rounded-[28px] p-[clamp(20px,2.4vw,28px)]"
+          style={{
+            backgroundColor: POSTER_TONES.green.bg,
+            color: POSTER_TONES.green.fg,
+          }}
+        >
+          <div className="flex items-end justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-bold opacity-75">Admitted</span>
+              <span
+                style={{ lineHeight: 0.9 }}
+                className="text-[clamp(56px,6vw,88px)] font-extrabold tracking-[-0.05em] tabular-nums"
+              >
+                {admitted.toLocaleString("en-NG")}
+              </span>
+            </div>
+            <span className="pb-2 text-right text-sm font-bold tabular-nums opacity-75">
+              {outside.toLocaleString("en-NG")} still outside
+              <br />
+              {issued.toLocaleString("en-NG")} issued
+            </span>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-[#0B1D14]/15">
+            <div
+              className="h-full rounded-full bg-[#0B1D14] transition-[width] duration-500"
+              style={{ width: `${Math.min(100, percent)}%` }}
+            />
+          </div>
+        </section>
+
+        {/* Door mode: prepare while there is signal, then scan with none. */}
+        <section
+          aria-label="Door mode"
           className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+            "flex flex-col gap-4 rounded-[28px] p-[clamp(20px,2.4vw,28px)]",
             door.status === "ready"
-              ? "bg-accent text-accent-foreground"
-              : "bg-muted text-muted-foreground",
+              ? "dark bg-background text-foreground"
+              : "border-[1.5px] border-border",
           )}
         >
-          {door.status === "ready" ? (
-            <WifiOff className="h-[17px] w-[17px]" />
-          ) : (
-            <Download className="h-[17px] w-[17px]" />
-          )}
-        </span>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[13px] font-semibold">
-              {door.status === "ready"
-                ? "Door mode is on. Scans work with no signal"
-                : "Door mode is off"}
+          <div className="flex items-start gap-3.5">
+            <span
+              className={cn(
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px]",
+                door.status === "ready"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-foreground",
+              )}
+            >
+              {door.status === "ready" ? (
+                <WifiOff className="h-[17px] w-[17px]" />
+              ) : (
+                <Download className="h-[17px] w-[17px]" />
+              )}
             </span>
-            {door.status === "ready" ? (
-              <>
-                <Badge variant={door.online ? "default" : "outline"}>
-                  {door.online ? "Online" : "Offline"}
-                </Badge>
-                {door.meta?.laneLabel ? (
-                  <Badge variant="outline">{door.meta.laneLabel}</Badge>
-                ) : null}
-              </>
-            ) : null}
-          </div>
-          <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-            {door.status === "ready"
-              ? `${door.rosterCount.toLocaleString("en-NG")} tickets held · ${door.pendingCount} waiting to sync${
-                  door.syncing ? " · syncing" : ""
-                }`
-              : "Download the guest list once, then the door keeps working if the network drops."}
-          </div>
-          {door.error ? (
-            <p className="mt-1.5 text-xs font-semibold text-destructive">
-              {door.error}
-            </p>
-          ) : null}
-        </div>
 
-        <div className="flex shrink-0 gap-2">
-          {door.status === "ready" ? (
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[17px] font-bold">
+                  {door.status === "ready"
+                    ? "Door mode is on. Scans work with no signal"
+                    : "Door mode is off"}
+                </span>
+                {door.status === "ready" ? (
+                  <>
+                    <Badge variant={door.online ? "default" : "outline"}>
+                      {door.online ? "Online" : "Offline"}
+                    </Badge>
+                    {door.meta?.laneLabel ? (
+                      <Badge variant="outline">{door.meta.laneLabel}</Badge>
+                    ) : null}
+                  </>
+                ) : null}
+              </div>
+              <div className="mt-1 text-sm text-muted-foreground tabular-nums">
+                {door.status === "ready"
+                  ? `${door.rosterCount.toLocaleString("en-NG")} tickets held · ${door.pendingCount} waiting to sync${
+                      door.syncing ? " · syncing" : ""
+                    }`
+                  : "Download the guest list once, then the door keeps working if the network drops."}
+              </div>
+              {door.error ? (
+                <p className="mt-1.5 text-[13px] font-semibold text-destructive">
+                  {door.error}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mt-auto flex flex-wrap gap-2">
+            {door.status === "ready" ? (
+              <Button
+                size="sm"
+                variant="line"
+                className="h-11"
+                disabled={!door.online || door.syncing}
+                onClick={() => void door.sync()}
+              >
+                Sync now
+              </Button>
+            ) : null}
+            {door.status !== "ready" ? (
+              <OrganizerField
+                value={lane}
+                onChange={(input) => setLane(input.target.value)}
+                placeholder="Door 1"
+                aria-label="Name this door"
+                className="h-11 w-[130px] rounded-full text-sm"
+                maxLength={60}
+              />
+            ) : null}
             <Button
               size="sm"
-              variant="outline"
-              className="h-9 text-xs"
-              disabled={!door.online || door.syncing}
-              onClick={() => void door.sync()}
+              variant={door.status === "ready" ? "line" : "ink"}
+              className="h-11"
+              loading={door.status === "preparing"}
+              disabled={!door.online}
+              onClick={() => void door.prepare(lane)}
             >
-              Sync now
+              {door.status === "ready" ? "Refresh list" : "Turn on door mode"}
             </Button>
-          ) : null}
-          {door.status !== "ready" ? (
-            <OrganizerField
-              value={lane}
-              onChange={(input) => setLane(input.target.value)}
-              placeholder="Door 1"
-              aria-label="Name this door"
-              className="h-9 w-[110px] text-xs"
-              maxLength={60}
-            />
-          ) : null}
-          <Button
-            size="sm"
-            variant={door.status === "ready" ? "outline" : "default"}
-            className="h-9 text-xs"
-            loading={door.status === "preparing"}
-            disabled={!door.online}
-            onClick={() => void door.prepare(lane)}
-          >
-            {door.status === "ready" ? "Refresh list" : "Turn on door mode"}
-          </Button>
-        </div>
-      </Card>
+          </div>
+        </section>
+      </div>
 
       {conflicts.length > 0 ? (
-        <Card className="mb-3.5 gap-0 py-0">
-          <div className="flex items-center justify-between px-4 py-3.5 sm:px-5">
+        <section
+          aria-label="Scanned at two doors"
+          className="rounded-[28px]"
+          style={{
+            backgroundColor: POSTER_TONES.pink.bg,
+            color: POSTER_TONES.pink.fg,
+          }}
+        >
+          <div className="flex items-center justify-between px-5 pt-5 pb-3 sm:px-6">
             <div className="flex items-center gap-2.5">
-              <TriangleAlert className="h-4 w-4 shrink-0 text-destructive" />
-              <span className="text-[13px] font-semibold">
+              <TriangleAlert className="h-4 w-4 shrink-0" />
+              <span className="text-[15px] font-bold">
                 {conflicts.length === 1
                   ? "1 ticket was scanned at two doors"
                   : `${conflicts.length} tickets were scanned at two doors`}
               </span>
             </div>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[13px] font-semibold opacity-75">
               Found on sync
             </span>
           </div>
-          <hr className="ticket-perforation" />
-          <div className="px-4 py-1 pb-2.5 sm:px-5">
+          <div className="px-5 pb-4 sm:px-6">
             {conflicts.slice(0, 5).map((conflict) => (
               <div
                 key={`${conflict.ticketCode}-${conflict.rescannedAt}`}
@@ -340,12 +398,14 @@ const CheckInPage = () => {
                 <span className="text-[13px] font-semibold">
                   {conflict.attendeeName || conflict.ticketCode}
                 </span>
-                <span className="font-mono text-[11px] text-muted-foreground">
+                <span className="font-mono text-[11px] opacity-70">
                   {conflict.ticketCode}
                 </span>
-                <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                <span className="ml-auto text-xs font-medium opacity-75 tabular-nums">
                   admitted {conflict.admittedLane ?? "unknown door"}
-                  {conflict.admittedAt ? ` ${clockLabel(conflict.admittedAt)}` : ""}
+                  {conflict.admittedAt
+                    ? ` ${clockLabel(conflict.admittedAt)}`
+                    : ""}
                   {" · "}
                   rescanned {conflict.rescannedLane ?? "unknown door"}{" "}
                   {clockLabel(conflict.rescannedAt)}
@@ -353,32 +413,16 @@ const CheckInPage = () => {
               </div>
             ))}
             {conflicts.length > 5 ? (
-              <p className="py-2 text-xs text-muted-foreground tabular-nums">
+              <p className="py-2 text-xs opacity-75 tabular-nums">
                 and {conflicts.length - 5} more
               </p>
             ) : null}
           </div>
-        </Card>
+        </section>
       ) : null}
 
-      <Card className="mb-3.5 flex-col items-stretch gap-4 px-4 py-4 sm:flex-row sm:items-center sm:gap-7 sm:px-5">
-        <div>
-          <Eyebrow>Admitted</Eyebrow>
-          <div className="mt-0.5 text-[26px] leading-tight font-bold tracking-[-0.02em] tabular-nums">
-            {admitted.toLocaleString("en-NG")}
-          </div>
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="mb-1.5 flex justify-between text-xs text-muted-foreground tabular-nums">
-            <span>{outside.toLocaleString("en-NG")} still outside</span>
-            <span>{issued.toLocaleString("en-NG")} issued</span>
-          </div>
-          <Meter percent={percent} className="h-2" />
-        </div>
-      </Card>
-
-      <div className="flex flex-col gap-3.5 lg:flex-row lg:items-stretch">
-        <div className="flex w-full lg:w-[452px] lg:shrink-0 flex-col gap-3">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="flex w-full flex-col gap-3 lg:sticky lg:top-20 lg:w-[452px] lg:shrink-0">
           <QrScanner
             onDetect={(code) => void admit(code)}
             disabled={checkIn.isPending}
@@ -393,11 +437,11 @@ const CheckInPage = () => {
               aria-label="Ticket reference"
               autoComplete="off"
               spellCheck={false}
-              className="flex-1 font-sans"
+              className="flex-1 rounded-full font-sans"
             />
             <Button
               type="submit"
-              size="sm"
+              variant="ink"
               className="h-12 shrink-0"
               loading={checkIn.isPending}
               disabled={!code.trim()}
@@ -407,11 +451,11 @@ const CheckInPage = () => {
           </form>
 
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1.5 text-[11px] font-semibold text-muted-foreground">
+            <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-md border-[1.5px] border-border px-1.5 text-[11px] font-bold text-foreground">
               Enter
             </kbd>
             admit
-            <kbd className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1.5 text-[11px] font-semibold text-muted-foreground">
+            <kbd className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-md border-[1.5px] border-border px-1.5 text-[11px] font-bold text-foreground">
               Esc
             </kbd>
             leave door mode
@@ -425,7 +469,7 @@ const CheckInPage = () => {
           ) : null}
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-3.5">
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
           {localResult ? (
             <ScanResultPanel
               ok={localResult.outcome === "admitted"}
@@ -485,15 +529,19 @@ const CheckInPage = () => {
               stubTime={clockLabel(result.checkedInAt ?? result.ticket.usedAt)}
             />
           ) : (
-            <Card className="flex flex-1 items-center justify-center py-14">
+            <div className="flex min-h-[240px] flex-1 items-center justify-center rounded-[28px] border-[1.5px] border-dashed border-border py-14">
               <div className="max-w-xs text-center">
-                <ScanLine className="mx-auto h-6 w-6 text-muted-foreground" />
-                <p className="mt-3 text-sm font-semibold">Nobody scanned yet</p>
-                <p className="mt-1 text-[13px] text-muted-foreground">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-[16px] bg-foreground text-background">
+                  <ScanLine className="h-5 w-5" />
+                </span>
+                <p className="mt-4 text-xl font-extrabold tracking-[-0.02em]">
+                  nobody scanned yet.
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
                   The ticket you scan shows up here, torn.
                 </p>
               </div>
-            </Card>
+            </div>
           )}
 
           {heldAddOns.length ? (
@@ -507,19 +555,18 @@ const CheckInPage = () => {
             />
           ) : null}
 
-          <Card className="gap-0 py-0">
-            <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-3.5">
-              <span className="text-base leading-snug font-semibold">
-                Last through the door
-              </span>
-              <span className="text-xs font-medium text-muted-foreground tabular-nums">
-                {history.length} this session
-              </span>
-            </div>
-            <hr className="ticket-perforation" />
-            <div className="px-5 py-1 pb-2">
+          <Panel>
+            <PanelHeader
+              title="Last through the door"
+              action={
+                <span className="text-[13px] font-semibold text-muted-foreground tabular-nums">
+                  {history.length} this session
+                </span>
+              }
+            />
+            <div className="px-5 pb-3 sm:px-6">
               {history.length === 0 ? (
-                <p className="py-5 text-center text-[13px] text-muted-foreground">
+                <p className="pb-3 text-sm text-muted-foreground">
                   Scans from this session appear here.
                 </p>
               ) : (
@@ -530,9 +577,9 @@ const CheckInPage = () => {
                   >
                     <span
                       className={cn(
-                        "flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full",
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
                         entry.ok
-                          ? "bg-accent text-accent-foreground"
+                          ? "bg-primary text-primary-foreground"
                           : "bg-destructive text-destructive-foreground",
                       )}
                     >
@@ -543,7 +590,7 @@ const CheckInPage = () => {
                       )}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[13px] font-semibold">
+                      <div className="truncate text-[15px] font-bold">
                         {entry.name}
                       </div>
                       <div className="truncate text-xs text-muted-foreground">
@@ -566,7 +613,7 @@ const CheckInPage = () => {
                 ))
               )}
             </div>
-          </Card>
+          </Panel>
         </div>
       </div>
     </div>

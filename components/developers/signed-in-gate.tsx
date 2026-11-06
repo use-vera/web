@@ -24,7 +24,7 @@ const WorkspaceGate = ({ children }: { children: React.ReactNode }) => {
   if (isLoading) {
     return (
       <Centered>
-        <Loader2 className="h-7 w-7 animate-spin text-primary" />
+        <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
       </Centered>
     );
   }
@@ -32,7 +32,7 @@ const WorkspaceGate = ({ children }: { children: React.ReactNode }) => {
   if (isError || !workspace) {
     return (
       <Centered>
-        <p className="max-w-sm text-center text-sm leading-relaxed text-muted-foreground">
+        <p className="max-w-sm text-center text-[15px] leading-relaxed text-muted-foreground">
           We couldn&apos;t set up your developer workspace. Refresh the page, or
           try again shortly.
         </p>
@@ -57,7 +57,7 @@ const SignedInGate = ({ children }: { children: React.ReactNode }) => {
   if (sessionQuery.isLoading) {
     return (
       <Centered>
-        <Loader2 className="h-7 w-7 animate-spin text-primary" />
+        <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
       </Centered>
     );
   }
@@ -65,21 +65,21 @@ const SignedInGate = ({ children }: { children: React.ReactNode }) => {
   if (!sessionQuery.data?.user) {
     return (
       <Centered>
-        <div className="flex max-w-sm flex-col items-center gap-4 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent">
-            <KeyRound className="h-6 w-6 text-primary" />
+        <div className="flex max-w-md flex-col items-center gap-4 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-foreground text-background">
+            <KeyRound className="h-6 w-6" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">
-            Sign in to see your keys
+          <h1 style={{ lineHeight: 0.95 }} className="text-[clamp(32px,4vw,48px)] font-extrabold tracking-[-0.045em]">
+            sign in to see your <span className="text-primary">keys.</span>
           </h1>
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p className="text-[15px] leading-relaxed text-muted-foreground">
             Keys belong to an account, so this is the one part of the portal
             that needs one. The docs, the API reference and the sandbox stay
             open either way.
           </p>
           <Link
             href={`${ROUTES.SIGN_IN}?redirectTo=${ROUTES.DEVELOPERS_KEYS}`}
-            className={buttonVariants()}
+            className={buttonVariants({ variant: "ink" })}
           >
             Sign in
           </Link>

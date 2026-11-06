@@ -1,3 +1,4 @@
+import { DESK } from "@/components/organizer/desk";
 import VendorMenuManager from "@/components/vendors/vendor-menu-manager";
 import type { Metadata } from "next";
 
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function VendorMenuPage() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-10">
+    <div className={DESK}>
       <VendorMenuManager />
     </div>
   );

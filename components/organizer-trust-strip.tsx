@@ -1,28 +1,20 @@
-import PerforatedDivider from "@/components/perforated-divider";
-import { Clock, ShieldCheck, Wallet } from "lucide-react";
+const items = ["No setup fee", "Payouts in 24–48h", "Verified check-in"];
 
-const items = [
-  { icon: Wallet, label: "No setup fee" },
-  { icon: Clock, label: "Payouts in 24–48h" },
-  { icon: ShieldCheck, label: "Verified check-in" },
-];
-
+/** Three plain promises, set large between hairlines. */
 const OrganizerTrustStrip = () => {
   return (
-    <section className="mx-auto max-w-6xl px-6">
-      <PerforatedDivider />
-      <div className="grid grid-cols-1 gap-6 py-8 sm:grid-cols-3">
-        {items.map((item) => (
-          <div
-            key={item.label}
-            className="flex items-center justify-center gap-2.5 text-foreground"
+    <section className="mx-auto max-w-[1240px] px-[clamp(16px,4vw,40px)]">
+      <ul className="grid grid-cols-1 border-y border-border sm:grid-cols-3">
+        {items.map((item, index) => (
+          <li
+            key={item}
+            className="flex items-center gap-3 border-border py-7 text-[clamp(22px,2.4vw,30px)] font-extrabold tracking-[-0.03em] sm:border-l sm:pl-6 sm:first:border-l-0 sm:first:pl-0 [&:not(:first-child)]:border-t sm:[&:not(:first-child)]:border-t-0"
           >
-            <item.icon className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold">{item.label}</span>
-          </div>
+            <span className="text-sm font-bold text-primary">{String(index + 1).padStart(2, "0")}</span>
+            {item}
+          </li>
         ))}
-      </div>
-      <PerforatedDivider />
+      </ul>
     </section>
   );
 };

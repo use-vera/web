@@ -2,7 +2,7 @@
 
 import DevInput from "@/components/developers/dev-input";
 import Button from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { getApiErrorMessage } from "@/lib/api/error-message";
 import { useCreateApiKey } from "@/lib/hooks/use-api-keys";
 import {
@@ -11,6 +11,8 @@ import {
   type ApiKeyScope,
   type CreateApiKeyResponse,
 } from "@/lib/types/workspace";
+import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -72,64 +74,54 @@ const CreateApiKeyDialog = ({
         onOpenChange(next);
       }}
     >
-      <DialogContent aria-describedby={undefined} className="max-w-lg">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-6 pt-10">
-          <div>
-            <h2 className="text-lg font-bold text-foreground">
-              Create API key
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Scope it to only what your integration needs.
-            </p>
+      <DialogContent aria-describedby={undefined} className="max-w-lg rounded-[28px] border-[1.5px] border-border bg-background">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 sm:p-7">
+          <div className="pr-10">
+            <DialogTitle style={{ lineHeight: 0.95 }} className="text-[32px] font-extrabold tracking-[-0.045em]">
+              new <span className="text-primary">key.</span>
+            </DialogTitle>
+            <p className="mt-2 text-[15px] text-muted-foreground">Scope it to only what your integration needs. Every key starts in test mode.</p>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Label
-            </label>
-            <DevInput
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-              placeholder="e.g. Production website"
-              maxLength={80}
-            />
-          </div>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-bold">Label</span>
+            <DevInput value={label} onChange={(event) => setLabel(event.target.value)} placeholder="e.g. Production website" maxLength={80} />
+          </label>
 
-          <p className="-mt-2 text-xs text-muted-foreground">
-            Every key starts in test mode. Switch it to live from the API
-            keys page once you&apos;re ready.
-          </p>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Scopes
-            </label>
-            <div className="flex flex-col gap-2 rounded-sm border border-border p-3">
-              {ALL_API_KEY_SCOPES.map((scope) => (
-                <label
-                  key={scope}
-                  className="flex cursor-pointer items-center gap-2.5 rounded-sm py-1.5 px-3 hover:bg-secondary"
-                >
-                  <input
-                    type="checkbox"
-                    checked={scopes.includes(scope)}
-                    onChange={() => toggleScope(scope)}
-                    className="mt-0.5 h-4 w-4 accent-primary"
-                  />
-                  <span className="flex flex-col">
-                    <span className="text-sm font-semibold text-foreground">
-                      {scope}
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-sm font-bold">Scopes</legend>
+            <div className="flex flex-col gap-2">
+              {ALL_API_KEY_SCOPES.map((scope) => {
+                const checked = scopes.includes(scope);
+                return (
+                  <label
+                    key={scope}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-3 rounded-[18px] border-[1.5px] px-4 py-3 transition-colors",
+                      checked ? "border-foreground" : "border-border hover:border-foreground/40",
+                    )}
+                  >
+                    <input type="checkbox" checked={checked} onChange={() => toggleScope(scope)} className="sr-only" />
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-[1.5px]",
+                        checked ? "border-foreground bg-foreground text-background" : "border-border",
+                      )}
+                    >
+                      {checked ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : null}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {API_KEY_SCOPE_DESCRIPTIONS[scope]}
+                    <span className="flex min-w-0 flex-col">
+                      <span className="font-mono text-[13px] font-bold">{scope}</span>
+                      <span className="text-[13px] text-muted-foreground">{API_KEY_SCOPE_DESCRIPTIONS[scope]}</span>
                     </span>
-                  </span>
-                </label>
-              ))}
+                  </label>
+                );
+              })}
             </div>
-          </div>
+          </fieldset>
 
-          <Button type="submit" loading={createApiKey.isPending}>
+          <Button type="submit" variant="ink" loading={createApiKey.isPending}>
             Create key
           </Button>
         </form>

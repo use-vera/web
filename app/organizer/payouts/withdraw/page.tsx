@@ -1,7 +1,14 @@
 "use client";
 
 import { OrganizerField } from "@/components/organizer/organizer-field";
-import { Eyebrow, SectionLabel } from "@/components/organizer/organizer-primitives";
+import {
+  DESK,
+  Eyebrow,
+  PageHeader,
+  PANEL,
+  SectionLabel,
+  SELECT_FIELD,
+} from "@/components/organizer/organizer-primitives";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,11 +26,14 @@ import {
 } from "@/lib/hooks/use-money";
 import { koboToNaira, nairaToKobo } from "@/lib/types/money";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Check, ChevronDown, Wallet } from "lucide-react";
-import Link from "next/link";
+import { Check, ChevronDown, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+
+const CHIP =
+  "flex h-10 items-center rounded-full border-[1.5px] border-border px-4 text-sm font-semibold transition-colors hover:border-foreground";
+const CHIP_ON = "border-foreground bg-foreground text-background";
 
 const WithdrawPage = () => {
   const router = useRouter();
@@ -59,7 +69,10 @@ const WithdrawPage = () => {
       await preview.mutateAsync({ bankCode, accountNumber });
     } catch (error) {
       toast.error(
-        getApiErrorMessage(error, "Couldn't find that account. Check the number."),
+        getApiErrorMessage(
+          error,
+          "Couldn't find that account. Check the number.",
+        ),
       );
     }
   };
@@ -86,43 +99,38 @@ const WithdrawPage = () => {
   };
 
   return (
-    <div className="pb-8">
-      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
-        <Link
-          href="/organizer/payouts"
-          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Payouts
-        </Link>
-        <h1 className="mt-3.5 text-[26px] leading-tight font-bold tracking-[-0.02em]">
-          Withdraw
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Move cleared earnings to your bank.
-        </p>
-      </header>
+    <div className={DESK}>
+      <PageHeader
+        back={{ href: "/organizer/payouts", label: "Payouts" }}
+        lead="send it to your"
+        accent="bank."
+        description="Move cleared earnings to your account."
+      />
 
-      <div className="flex flex-col items-stretch gap-3.5 px-4 lg:flex-row lg:items-start pt-5 sm:px-6 lg:px-8 lg:pt-6">
+      <div className="flex flex-col items-stretch gap-4 lg:flex-row lg:items-start">
         <div className="min-w-0 w-full lg:max-w-[640px] lg:flex-1">
-          <Card className="gap-0 py-0">
+          <Card className={cn(PANEL, "gap-0 py-0")}>
             <div className="p-4 sm:p-5">
               <SectionLabel>How much</SectionLabel>
               {walletQuery.isLoading ? (
                 <Skeleton className="h-16 w-full rounded-md" />
               ) : (
                 <>
-                  <div className="flex h-16 items-center gap-2 rounded-md border border-border bg-background px-4 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30">
-                    <span className="text-xl text-muted-foreground">₦</span>
+                  <div className="flex h-20 items-center gap-2 rounded-[22px] border-[1.5px] border-border px-5 transition-colors focus-within:border-foreground">
+                    <span className="text-3xl font-extrabold text-muted-foreground">
+                      ₦
+                    </span>
                     <input
-                      value={amount ? Number(amount).toLocaleString("en-NG") : ""}
+                      value={
+                        amount ? Number(amount).toLocaleString("en-NG") : ""
+                      }
                       onChange={(input) =>
                         setAmount(input.target.value.replace(/[^0-9]/g, ""))
                       }
                       inputMode="numeric"
                       placeholder="0"
                       aria-label="Amount to withdraw in naira"
-                      className="w-full bg-transparent text-2xl font-bold tracking-[-0.01em] tabular-nums outline-none placeholder:text-muted-foreground/50"
+                      className="w-full bg-transparent text-[40px] font-extrabold tracking-[-0.04em] tabular-nums outline-none placeholder:text-muted-foreground/50"
                     />
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -133,14 +141,14 @@ const WithdrawPage = () => {
                         onClick={() => setAmount(String(value))}
                         className="cursor-pointer"
                       >
-                        <Badge
-                          variant={
-                            Number(amount) === value ? "default" : "outline"
-                          }
-                          className="px-3 py-1.5"
+                        <span
+                          className={cn(
+                            CHIP,
+                            Number(amount) === value && CHIP_ON,
+                          )}
                         >
                           {formatNairaAmount(value)}
-                        </Badge>
+                        </span>
                       </button>
                     ))}
                     <button
@@ -148,16 +156,16 @@ const WithdrawPage = () => {
                       onClick={() => setAmount(String(availableNaira))}
                       className="cursor-pointer"
                     >
-                      <Badge
-                        variant={
-                          Number(amount) === availableNaira && availableNaira > 0
-                            ? "default"
-                            : "outline"
-                        }
-                        className="px-3 py-1.5"
+                      <span
+                        className={cn(
+                          CHIP,
+                          Number(amount) === availableNaira &&
+                            availableNaira > 0 &&
+                            CHIP_ON,
+                        )}
                       >
                         All {formatNairaAmount(availableNaira)}
-                      </Badge>
+                      </span>
                     </button>
                   </div>
                   <p className="mt-3 text-xs text-muted-foreground">
@@ -176,7 +184,7 @@ const WithdrawPage = () => {
             <hr className="ticket-perforation" />
 
             <div className="flex items-center gap-3.5 p-4 sm:p-5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground">
                 <Wallet className="h-[17px] w-[17px]" />
               </span>
               <div className="min-w-0 flex-1">
@@ -199,8 +207,8 @@ const WithdrawPage = () => {
               </div>
               <Button
                 size="sm"
-                variant="outline"
-                className="h-9 shrink-0 text-xs"
+                variant="line"
+                className="h-10 shrink-0"
                 onClick={() => setShowAccountForm((current) => !current)}
               >
                 {account ? "Change" : "Add account"}
@@ -209,9 +217,9 @@ const WithdrawPage = () => {
           </Card>
 
           {showAccountForm ? (
-            <Card className="mt-3.5 gap-0 py-0">
-              <div className="px-4 py-3.5 sm:px-5 sm:py-4">
-                <div className="text-base leading-snug font-semibold">
+            <Card className={cn(PANEL, "mt-3.5 gap-0 py-0")}>
+              <div className="px-5 py-4 sm:px-6 sm:py-5">
+                <div className="text-[17px] leading-snug font-bold">
                   {account ? "Change payout account" : "Add a payout account"}
                 </div>
                 <p className="mt-1 text-[13px] text-muted-foreground">
@@ -231,7 +239,7 @@ const WithdrawPage = () => {
                           setBankCode(input.target.value);
                           preview.reset();
                         }}
-                        className="h-12 w-full cursor-pointer appearance-none rounded-md border border-border bg-background px-4 pr-10 text-sm transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
+                        className={SELECT_FIELD}
                       >
                         <option value="">Select a bank…</option>
                         {(banksQuery.data ?? []).map((bank) => (
@@ -262,7 +270,7 @@ const WithdrawPage = () => {
                 </div>
 
                 {preview.data ? (
-                  <div className="mt-3.5 flex items-center gap-3 rounded-sm bg-accent p-3.5">
+                  <div className="mt-3.5 flex items-center gap-3 rounded-[20px] bg-accent p-3.5">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
                       <Check className="h-3 w-3" strokeWidth={3} />
                     </span>
@@ -275,6 +283,7 @@ const WithdrawPage = () => {
                       </div>
                     </div>
                     <Button
+                      variant="ink"
                       size="sm"
                       className="h-9 shrink-0 text-xs"
                       loading={saveAccount.isPending}
@@ -286,8 +295,8 @@ const WithdrawPage = () => {
                 ) : (
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="mt-3.5"
+                    variant="line"
+                    className="mt-3.5 h-11"
                     loading={preview.isPending}
                     disabled={!bankCode || accountNumber.length < 10}
                     onClick={checkAccount}
@@ -301,7 +310,7 @@ const WithdrawPage = () => {
         </div>
 
         <div className="w-full lg:w-[360px] lg:shrink-0">
-          <Card className="gap-0 py-0">
+          <Card className={cn(PANEL, "gap-0 py-0")}>
             <div className="p-4 sm:p-5">
               <Eyebrow>Withdrawing</Eyebrow>
               <div className="mt-1.5 text-3xl font-bold tracking-[-0.02em] tabular-nums">
@@ -309,7 +318,7 @@ const WithdrawPage = () => {
               </div>
             </div>
             <hr className="ticket-perforation" />
-            <div className="flex flex-col gap-2.5 px-4 py-3.5 sm:px-5 sm:py-4">
+            <div className="flex flex-col gap-2.5 px-5 py-4 sm:px-6 sm:py-5">
               {[
                 [
                   "To",
@@ -329,8 +338,10 @@ const WithdrawPage = () => {
                 </div>
               ))}
             </div>
-            <div className="bg-muted/60 px-4 py-3.5 sm:px-5 sm:py-4">
+            <div className="border-t-[1.5px] border-border px-5 py-4 sm:px-6 sm:py-5">
               <Button
+                variant="ink"
+                size="lg"
                 className="w-full"
                 disabled={!canWithdraw}
                 loading={withdraw.isPending}
@@ -347,9 +358,9 @@ const WithdrawPage = () => {
             </div>
           </Card>
 
-          <Card className="mt-3 gap-0 py-0">
-            <div className="px-4 py-3.5 sm:px-5 sm:py-4">
-              <div className="text-base leading-snug font-semibold">
+          <Card className={cn(PANEL, "mt-3 gap-0 py-0")}>
+            <div className="px-5 py-4 sm:px-6 sm:py-5">
+              <div className="text-[17px] leading-snug font-bold">
                 Recent withdrawals
               </div>
             </div>
@@ -357,7 +368,10 @@ const WithdrawPage = () => {
             <div className="px-5 py-1 pb-2.5">
               {withdrawalsQuery.isLoading ? (
                 Array.from({ length: 3 }).map((_, index) => (
-                  <Skeleton key={index} className="my-2.5 h-10 w-full rounded-md" />
+                  <Skeleton
+                    key={index}
+                    className="my-2.5 h-10 w-full rounded-md"
+                  />
                 ))
               ) : (withdrawalsQuery.data?.items ?? []).length === 0 ? (
                 <p className="py-6 text-center text-[13px] text-muted-foreground">
@@ -365,7 +379,10 @@ const WithdrawPage = () => {
                 </p>
               ) : (
                 (withdrawalsQuery.data?.items ?? []).map((item) => (
-                  <div key={item._id} className="flex items-center gap-3 py-2.5">
+                  <div
+                    key={item._id}
+                    className="flex items-center gap-3 py-2.5"
+                  >
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-semibold tabular-nums">
                         {formatNairaAmount(koboToNaira(item.amountKobo))}
@@ -378,7 +395,9 @@ const WithdrawPage = () => {
                       </div>
                     </div>
                     <Badge
-                      variant={item.status === "completed" ? "default" : "outline"}
+                      variant={
+                        item.status === "completed" ? "default" : "outline"
+                      }
                       className={cn(
                         "capitalize",
                         item.status === "failed" &&

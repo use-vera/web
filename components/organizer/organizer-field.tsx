@@ -2,10 +2,8 @@ import { cn } from "@/lib/utils";
 import * as React from "react";
 
 /**
- * The organizer dashboard's form field. rounded-md, matching AuthField and
- * DevInput. The app's real convention for form fields. The shared Input
- * component's rounded-full is a deliberate one-off for the events search bar
- * and does not belong on dashboard surfaces.
+ * The organizer dashboard's form field, drawn like AuthField: an outline on
+ * the page colour that turns ink when focused, no fill.
  */
 export const OrganizerField = ({
   className,
@@ -15,8 +13,8 @@ export const OrganizerField = ({
   <input
     type={type}
     className={cn(
-      "h-12 w-full rounded-md border border-border bg-background px-4 text-sm text-foreground transition-colors placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
-      "aria-invalid:border-destructive aria-invalid:focus-visible:border-destructive aria-invalid:focus-visible:ring-destructive/30",
+      "h-12 w-full rounded-2xl border-[1.5px] border-border bg-transparent px-4 text-[15px] text-foreground transition-colors placeholder:text-muted-foreground/70 focus-visible:border-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+      "aria-invalid:border-destructive aria-invalid:focus-visible:border-destructive",
       className,
     )}
     {...props}
@@ -29,7 +27,7 @@ export const OrganizerTextarea = ({
 }: React.ComponentProps<"textarea">) => (
   <textarea
     className={cn(
-      "w-full rounded-md border border-border bg-background px-4 py-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none",
+      "w-full rounded-2xl border-[1.5px] border-border bg-transparent px-4 py-3 text-[15px] text-foreground transition-colors placeholder:text-muted-foreground/70 focus-visible:border-foreground focus-visible:outline-none",
       className,
     )}
     {...props}

@@ -1,3 +1,4 @@
+import { DESK } from "@/components/organizer/desk";
 import VendorMoney from "@/components/vendors/vendor-money";
 import type { Metadata } from "next";
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function VendorMoneyPage() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-10">
+    <div className={DESK}>
       <VendorMoney />
     </div>
   );

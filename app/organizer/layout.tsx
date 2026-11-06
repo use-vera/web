@@ -13,10 +13,11 @@ const OrganizerLayout = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell
     nav={NAV}
     role="Organizer"
+    primaryAction={{ href: "/organizer/events/new", label: "Create event" }}
     redirectTo="/organizer/events"
-    signedOutIcon={<CalendarDays className="h-6 w-6" />}
-    signedOutTitle="Sign in to manage your events"
-    signedOutDescription="Create events, sell tickets, scan people in at the door, and see how the night went."
+    signedOutLead="sign in to run your"
+    signedOutAccent="events."
+    signedOutDescription="Create events, sell tickets, scan people in at the door, and see how it went."
   >
     {children}
   </DashboardShell>

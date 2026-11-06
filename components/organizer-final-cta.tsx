@@ -1,21 +1,19 @@
 import { buttonVariants } from "@/components/ui/button";
+import DisplayHeading from "@/components/vera/display-heading";
 import Link from "next/link";
 
+/** The last nudge before the download band: a heading and one button, on a hairline. */
 const OrganizerFinalCta = () => {
   return (
-    <section className="mx-auto max-w-4xl px-6 pb-4 text-center">
-      <div className="flex flex-col items-center gap-5 rounded-3xl border border-border bg-card px-8 py-14">
-        <h2 className="text-3xl font-bold text-card-foreground sm:text-4xl">
-          Ready to host your first event?
-        </h2>
-        <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-          It takes about five minutes to list your first event and start
-          selling tickets.
-        </p>
-        <Link
-          href="/organizer/events"
-          className={buttonVariants({ size: "lg" })}
-        >
+    <section className="mx-auto max-w-[1240px] px-[clamp(16px,4vw,40px)] py-[clamp(48px,7vw,96px)]">
+      <div className="flex flex-wrap items-end justify-between gap-8 border-t border-border pt-10">
+        <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-4">
+          <DisplayHeading lead="ready to host your" accent="first event?" breakBeforeAccent />
+          <p className="max-w-md text-lg leading-relaxed text-muted-foreground">
+            It takes about five minutes to list your first event and start selling tickets.
+          </p>
+        </div>
+        <Link href="/organizer/events" className={buttonVariants({ variant: "ink", size: "lg" })}>
           Start hosting free
         </Link>
       </div>

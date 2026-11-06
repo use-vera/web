@@ -3,7 +3,6 @@
 import { EmptyState, ErrorState } from "@/components/organizer/organizer-primitives";
 import { Pagination } from "@/components/pagination";
 import Badge from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNairaAmount } from "@/lib/format-currency";
 import { usePaymentAttempts } from "@/lib/hooks/use-money";
@@ -72,41 +71,31 @@ const PaymentsPage = () => {
   const attempts = attemptsQuery.data?.items ?? [];
 
   return (
-    <div className="pb-8">
-      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
-        <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em]">
-          Payments
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Every payment you have started on Vera, whether or not it went through.
-        </p>
-      </header>
+    <section aria-label="Your payments" className="flex flex-col gap-6">
+      <p className="text-[15px] text-muted-foreground">Every payment you have started on Vera, whether or not it went through.</p>
 
-      <div className="px-4 pt-5 sm:px-6 lg:px-8">
-        <div className="inline-flex gap-1 rounded-full bg-muted p-1">
-          {FILTERS.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              onClick={() => {
-                setKind(filter.value);
-                setPage(1);
-              }}
-              className={cn(
-                "inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-semibold transition-colors",
-                kind === filter.value
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
+      <div className="-mx-[clamp(16px,4vw,40px)] flex gap-2 overflow-x-auto px-[clamp(16px,4vw,40px)] pb-1">
+        {FILTERS.map((filter) => (
+          <button
+            key={filter.value}
+            type="button"
+            aria-pressed={kind === filter.value}
+            onClick={() => {
+              setKind(filter.value);
+              setPage(1);
+            }}
+            className={cn(
+              "flex h-10 shrink-0 cursor-pointer items-center rounded-full border-[1.5px] px-4 text-sm font-semibold transition-colors",
+              kind === filter.value ? "border-foreground bg-foreground text-background" : "border-border text-foreground hover:border-foreground",
+            )}
+          >
+            {filter.label}
+          </button>
+        ))}
       </div>
 
-      <div className="px-4 pt-4 sm:px-6 lg:px-8">
-        <Card className="gap-0 py-0">
+      <div>
+        <div className="overflow-hidden rounded-[28px] border-[1.5px] border-border">
           {attemptsQuery.isLoading ? (
             <div className="p-4 sm:p-5">
               {Array.from({ length: 6 }).map((_, index) => (
@@ -121,7 +110,7 @@ const PaymentsPage = () => {
           ) : attempts.length === 0 ? (
             <EmptyState
               icon={<CreditCard className="h-6 w-6" />}
-              title="No payments yet"
+              title="No payments yet."
               description="Tickets you buy and subscriptions you start will show up here."
             />
           ) : (
@@ -141,7 +130,7 @@ const PaymentsPage = () => {
                         <th
                           key={label}
                           className={cn(
-                            "py-3 text-[11px] font-semibold tracking-[0.06em] uppercase text-muted-foreground",
+                            "py-3.5 text-[13px] font-semibold text-muted-foreground",
                             className,
                           )}
                         >
@@ -221,7 +210,7 @@ const PaymentsPage = () => {
                   </div>
                 ))}
               </div>
-              <div className="border-t border-border bg-muted/60">
+              <div className="border-t border-border px-4 sm:px-5">
                 <Pagination
                   page={attemptsQuery.data?.page ?? 1}
                   totalPages={attemptsQuery.data?.totalPages ?? 1}
@@ -233,9 +222,9 @@ const PaymentsPage = () => {
               </div>
             </>
           )}
-        </Card>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

@@ -1,34 +1,22 @@
+import DisplayHeading, { Eyebrow } from "@/components/vera/display-heading";
 import { IMAGES } from "@/lib/images";
 import Image from "next/image";
 
 const AboutHero = () => {
   return (
-    <section className="mx-auto max-w-4xl px-6 pt-20 pb-6 text-center">
-      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-        About Vera
-      </span>
+    <section className="mx-auto flex max-w-[1240px] flex-wrap items-end gap-[clamp(32px,5vw,64px)] px-[clamp(16px,4vw,40px)] pt-[clamp(24px,5vw,64px)] pb-[clamp(40px,6vw,80px)]">
+      <div className="flex min-w-0 flex-[1_1_480px] flex-col gap-6">
+        <Eyebrow>About Vera</Eyebrow>
+        <DisplayHeading as="h1" lead="the app we wished existed" accent="every weekend." className="text-[clamp(48px,7vw,104px)]" />
+        <p className="max-w-[520px] text-lg leading-relaxed text-muted-foreground">
+          Vera started with a simple frustration: buying a ticket shouldn&apos;t feel riskier than the event itself. So we
+          built a place to find events, buy tickets without getting scammed, and actually remember it after, through
+          the moments the people you follow share.
+        </p>
+      </div>
 
-      <h1 className="mt-3 text-3xl font-bold leading-tight text-foreground sm:text-4xl">
-        We&apos;re building the app we wished existed on a Friday night.
-      </h1>
-
-      <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-base">
-        Vera started with a simple frustration: buying a ticket shouldn&apos;t
-        feel riskier than the event itself. So we built a place to find events,
-        buy tickets without getting scammed, and actually remember the night
-        after,through the moments the people you follow share.
-      </p>
-
-      <div className="mt-10 flex justify-center">
-        <Image
-          src={IMAGES.aboutUs}
-          alt="About Us"
-          unoptimized
-          priority
-          width={520}
-          height={320}
-          className="w-full max-w-sm rounded-2xl object-cover h-95"
-        />
+      <div className="flex min-w-0 flex-[1_1_380px] items-end justify-center overflow-hidden rounded-[32px] bg-[#15C67C] px-6 pt-8">
+        <Image src={IMAGES.aboutUs} alt="" unoptimized priority width={520} height={320} className="h-auto w-full max-w-md" />
       </div>
     </section>
   );

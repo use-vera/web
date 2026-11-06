@@ -14,10 +14,15 @@ import {
   OrganizerField,
   OrganizerTextarea,
 } from "@/components/organizer/organizer-field";
-import { SectionLabel } from "@/components/organizer/organizer-primitives";
+import {
+  DESK,
+  PageHeader,
+  SELECT_FIELD,
+  SectionLabel,
+} from "@/components/organizer/organizer-primitives";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getApiErrorMessage } from "@/lib/api/error-message";
 import { COUNTRIES, subdivisionLabel, subdivisionsFor } from "@/lib/countries";
@@ -36,8 +41,7 @@ import {
   summariseChanges,
 } from "@/lib/organizer-edit-rules";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ChevronDown, Lock, TriangleAlert } from "lucide-react";
-import Link from "next/link";
+import { ChevronDown, Lock, TriangleAlert } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -73,7 +77,7 @@ const Select = ({
       value={value}
       aria-label={label}
       onChange={(input) => onChange(input.target.value)}
-      className="h-12 w-full cursor-pointer appearance-none rounded-md border border-border bg-background px-4 pr-10 text-sm transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
+      className={SELECT_FIELD}
     >
       <option value="">Select…</option>
       {options.map((option) => (
@@ -97,10 +101,12 @@ const Section = ({
   locked?: string;
   children: React.ReactNode;
 }) => (
-  <section className="border-t border-border pt-7 first:border-t-0 first:pt-0">
-    <div className="mb-3.5">
+  <section className="rounded-[28px] border-[1.5px] border-border p-5 sm:p-7">
+    <div className="mb-5">
       <div className="flex flex-wrap items-center gap-2.5">
-        <h2 className="text-base font-semibold">{title}</h2>
+        <h2 className="text-[22px] font-extrabold tracking-[-0.025em]">
+          {title}
+        </h2>
         {locked ? (
           <Badge variant="outline">
             <Lock className="h-3 w-3" />
@@ -252,8 +258,8 @@ const EditEventPage = () => {
 
   if (eventQuery.isLoading || !event) {
     return (
-      <div className="px-4 py-6 sm:px-6 lg:px-8">
-        <Skeleton className="h-[500px] w-full rounded-sm" />
+      <div className={cn(DESK, "pt-10")}>
+        <Skeleton className="h-[500px] w-full max-w-3xl rounded-[28px]" />
       </div>
     );
   }
@@ -269,7 +275,7 @@ const EditEventPage = () => {
   };
 
   return (
-    <div className="pb-8">
+    <div className={DESK}>
       <ConfirmDialog
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
@@ -314,32 +320,31 @@ const EditEventPage = () => {
         }}
       />
 
-      <header className="px-4 pt-6 sm:px-6 lg:px-8 lg:pt-7">
-        <Link
-          href={`/organizer/events/${eventId}`}
-          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {event.name}
-        </Link>
-        <h1 className="mt-3.5 text-[26px] leading-tight font-bold tracking-[-0.02em]">
-          Edit event
-        </h1>
-      </header>
+      <PageHeader
+        back={{ href: `/organizer/events/${eventId}`, label: event.name }}
+        lead="edit the"
+        accent="details."
+      />
 
-      <div className="max-w-3xl px-4 pt-6 sm:px-6 lg:px-8">
+      <div className="max-w-3xl">
         {rules.hasIssuedTickets ? (
-          <Card className="mb-7 flex-row items-start gap-3 p-4">
-            <TriangleAlert className="mt-px h-4 w-4 shrink-0 text-muted-foreground" />
-            <p className="text-[13px] leading-relaxed text-pretty text-muted-foreground">
+          <div
+            className="mb-5 flex items-start gap-3 rounded-[24px] p-5"
+            style={{
+              backgroundColor: POSTER_TONES.yellow.bg,
+              color: POSTER_TONES.yellow.fg,
+            }}
+          >
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <p className="text-sm leading-relaxed font-semibold text-pretty">
               People already hold tickets. Changing the date or the venue posts
               an update to the event chat automatically so nobody turns up to
               the wrong place.
             </p>
-          </Card>
+          </div>
         ) : null}
 
-        <div className="flex flex-col gap-5 sm:gap-7">
+        <div className="flex flex-col gap-4">
           <Section title="Basics">
             <div className="flex flex-col gap-5">
               <label className="block">
@@ -482,9 +487,9 @@ const EditEventPage = () => {
             {tiers.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {tiers.map((tier) => (
-                  <Card
+                  <div
                     key={tier._id}
-                    className="flex-row items-center gap-3 px-4 py-3.5"
+                    className="flex flex-row items-center gap-3 rounded-[20px] border-[1.5px] border-border px-4 py-3"
                   >
                     <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                       {tier.name}
@@ -503,7 +508,7 @@ const EditEventPage = () => {
                       aria-label={`${tier.name} price`}
                       className="h-10 w-[120px] shrink-0 text-right"
                     />
-                  </Card>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -523,10 +528,10 @@ const EditEventPage = () => {
                   : "Live on Vera and open for ticket sales."
             }
           >
-            <Card className="flex-col items-start gap-4 p-4 sm:flex-row sm:items-center">
+            <div className="flex flex-col items-start gap-4 rounded-[20px] bg-secondary p-4 sm:flex-row sm:items-center sm:p-5">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-sm font-semibold">
+                  <span className="text-[15px] font-bold">
                     {event.status === "draft" ? "Draft" : "Published"}
                   </span>
                   <EventStatusBadge event={event} />
@@ -541,7 +546,7 @@ const EditEventPage = () => {
               </div>
               <Button
                 size="sm"
-                variant={event.status === "draft" ? "default" : "outline"}
+                variant={event.status === "draft" ? "ink" : "line"}
                 className="shrink-0"
                 disabled={
                   event.status === "published" && rules.hasIssuedTickets
@@ -566,7 +571,7 @@ const EditEventPage = () => {
               >
                 {event.status === "draft" ? "Publish event" : "Revert to draft"}
               </Button>
-            </Card>
+            </div>
           </Section>
 
           <Section
@@ -577,9 +582,9 @@ const EditEventPage = () => {
                 : undefined
             }
           >
-            <Card className="flex-col items-start gap-4 p-4 sm:flex-row sm:items-center">
+            <div className="flex flex-col items-start gap-4 rounded-[20px] bg-secondary p-4 sm:flex-row sm:items-center sm:p-5">
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold">
+                <div className="text-[15px] font-bold">
                   {rules.canDelete ? "Delete this event" : "Cancel this event"}
                 </div>
                 <p className="mt-1 text-[13px] leading-relaxed text-pretty text-muted-foreground">
@@ -591,7 +596,7 @@ const EditEventPage = () => {
               <Button
                 size="sm"
                 variant="outline"
-                className="shrink-0 border-destructive/60 text-destructive hover:bg-destructive/10"
+                className="shrink-0 border-[1.5px] border-destructive text-destructive hover:bg-destructive/10"
                 onClick={() =>
                   rules.canDelete
                     ? setConfirmDelete(true)
@@ -600,27 +605,30 @@ const EditEventPage = () => {
               >
                 {rules.canDelete ? "Delete event" : "Cancel and refund"}
               </Button>
-            </Card>
+            </div>
           </Section>
         </div>
       </div>
 
-      <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] mt-8 border-t border-border bg-background/95 px-4 py-3.5 backdrop-blur-sm sm:px-6 lg:bottom-0 lg:px-8">
-        <div className="flex items-end justify-end gap-2.5 ">
-          <Button
-            variant="link"
-            onClick={handleDiscard}
-            className="text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Discard
-          </Button>
-          <Button
-            loading={updateEvent.isPending || notify.isPending}
-            disabled={value.name.trim().length < 2}
-            onClick={save}
-          >
-            Save changes
-          </Button>
+      {/* Floats over the form so saving never needs a scroll back up. */}
+      <div className="sticky bottom-[max(16px,env(safe-area-inset-bottom))] z-20 mt-6 max-w-3xl">
+        <div className="flex items-center justify-between gap-2.5 rounded-full border-[1.5px] border-border bg-background py-2 pr-2 pl-5">
+          <span className="hidden text-sm text-muted-foreground sm:block">
+            Nothing changes until you save.
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Button variant="ghost" onClick={handleDiscard}>
+              Discard
+            </Button>
+            <Button
+              variant="ink"
+              loading={updateEvent.isPending || notify.isPending}
+              disabled={value.name.trim().length < 2}
+              onClick={save}
+            >
+              Save changes
+            </Button>
+          </span>
         </div>
       </div>
     </div>

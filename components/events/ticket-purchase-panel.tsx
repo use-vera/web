@@ -278,8 +278,8 @@ export const TicketPurchasePanel = ({
 
   if (step !== "picking") {
     return (
-      <Card className="gap-0 py-0">
-        <div className="flex flex-col items-center gap-3 px-[18px] py-10 text-center">
+      <Card className="dark gap-0 rounded-[32px] border-0 bg-background py-0 text-foreground ring-0">
+        <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <div className="text-sm font-semibold">
             {step === "awaiting-payment"
@@ -297,12 +297,14 @@ export const TicketPurchasePanel = ({
   }
 
   return (
-    <Card ref={rootRef} id="buy" className="gap-0 py-0">
-      <div className="p-[18px]">
-        <span className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground/70">
-          Straight from the organizer
+    /* The one dark thing on the page, so the eye ends here: the same ink panel as the app's ticket. */
+    <Card ref={rootRef} id="buy" className="dark gap-0 overflow-hidden rounded-[32px] border-0 bg-background py-0 text-foreground ring-0">
+      <div className="px-6 pt-6 pb-5">
+        <span style={{ lineHeight: 1 }} className="block text-[30px] font-extrabold tracking-[-0.035em]">
+          get your <span className="text-primary">ticket.</span>
         </span>
-        <div className="mt-1.5 text-[28px] font-bold tracking-[-0.02em] tabular-nums">
+        <div className="mt-3 text-sm text-muted-foreground">Straight from the organizer</div>
+        <div className="mt-0.5 text-[28px] font-bold tracking-[-0.02em] tabular-nums">
           {isFree ? "Free" : formatNairaAmount(unitPrice)}
         </div>
         <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
@@ -314,8 +316,8 @@ export const TicketPurchasePanel = ({
 
       {tiers.length > 0 ? (
         <>
-          <hr className="ticket-perforation" />
-          <div className="p-[18px]">
+          <hr className="border-border" />
+          <div className="px-6 py-5">
             <span className="mb-2.5 block text-[13px] font-semibold">
               Choose a ticket
             </span>
@@ -399,9 +401,9 @@ export const TicketPurchasePanel = ({
         </>
       ) : null}
 
-      <hr className="ticket-perforation" />
+      <hr className="border-border" />
 
-      <div className="p-[18px]">
+      <div className="px-6 py-5">
         <div className="flex items-center justify-between">
           <span className="text-[13px] font-semibold">How many</span>
           <div className="flex items-center gap-1">
@@ -494,7 +496,7 @@ export const TicketPurchasePanel = ({
         ) : null}
       </div>
 
-      <div className="bg-muted/60 px-[18px] py-4">
+      <div className="border-t border-border px-6 py-5">
         {!purchasable && reason ? (
           <p className="mb-2.5 text-center text-xs text-muted-foreground">
             {reason}
@@ -502,6 +504,8 @@ export const TicketPurchasePanel = ({
         ) : null}
 
         <Button
+          variant="ink"
+          size="lg"
           className="w-full"
           disabled={
             !purchasable ||

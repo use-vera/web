@@ -83,7 +83,7 @@ export const BlockInspector = ({
 
   if (!block) {
     return (
-      <aside className="hidden w-[300px] shrink-0 border-l border-border bg-card lg:block">
+      <aside className="hidden w-[300px] shrink-0 border-l border-border bg-background lg:block">
         <div className=" h-full items-center justify-center px-8 text-center flex flex-col gap-3">
           <Palette className="text-muted-foreground" />
           <p className="text-[13px] leading-relaxed text-muted-foreground">
@@ -104,7 +104,7 @@ export const BlockInspector = ({
     onChange(block.id, { [key]: value });
 
   return (
-    <aside className="w-full shrink-0 border-t border-border bg-card lg:min-h-0 lg:w-[300px] lg:overflow-y-auto lg:border-t-0 lg:border-l">
+    <aside className="w-full shrink-0 border-t border-border bg-background lg:min-h-0 lg:w-[300px] lg:overflow-y-auto lg:border-t-0 lg:border-l">
       <div className="border-b border-border px-4 py-3.5">
         <div className="flex items-center gap-2">
           <span className="text-[14px] font-bold">
@@ -422,7 +422,7 @@ const RepeatableItems = ({
         {items.map((item, index) => (
           <div
             key={index}
-            className="flex flex-col gap-2 rounded-sm p-2.5 ring-1 ring-border ring-inset"
+            className="flex flex-col gap-2 rounded-2xl border-[1.5px] border-border p-2.5"
           >
             {fields.map(([key, label]) =>
               key === "answer" ? (

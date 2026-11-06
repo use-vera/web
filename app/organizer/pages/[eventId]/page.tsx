@@ -141,8 +141,8 @@ const PageBuilder = () => {
 
   if (!event || pageQuery.isLoading) {
     return (
-      <div className="p-6">
-        <Skeleton className="h-[600px] w-full rounded-sm" />
+      <div className="p-[clamp(16px,3vw,40px)]">
+        <Skeleton className="h-[600px] w-full rounded-[28px]" />
       </div>
     );
   }
@@ -152,19 +152,21 @@ const PageBuilder = () => {
   const dirty = draftBlocks !== null || draftTheme !== null;
 
   return (
-    <div className="flex min-h-screen flex-col lg:h-full lg:min-h-0">
-      <header className="flex h-14 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4">
+    /* A fixed-height workspace on a desk: the outline, preview and inspector
+       scroll on their own, so Lenis is kept out of them. */
+    <div data-lenis-prevent className="flex min-h-screen flex-col lg:h-screen lg:min-h-0">
+      <header className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b-[1.5px] border-border bg-background px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href={`/organizer/events/${eventId}`}
             aria-label="Back to event"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1.5px] border-border text-foreground transition-colors hover:border-foreground"
           >
             <ArrowLeft className="h-[15px] w-[15px]" />
           </Link>
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold">{event.name}</div>
-            <div className="text-[11px] text-muted-foreground">
+            <div className="truncate text-[15px] font-bold">{event.name}</div>
+            <div className="text-xs text-muted-foreground">
               Event page · {isPublished ? "published" : "draft"}
               {dirty ? " · unsaved" : ""}
             </div>
@@ -172,7 +174,7 @@ const PageBuilder = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex gap-1 rounded-full bg-muted p-0.5">
+          <div className="inline-flex gap-1 rounded-full border-[1.5px] border-border p-0.5">
             {([["desktop", Monitor], ["mobile", Smartphone]] as const).map(
               ([value, Icon]) => (
                 <button
@@ -182,10 +184,10 @@ const PageBuilder = () => {
                   aria-pressed={device === value}
                   onClick={() => setDevice(value)}
                   className={cn(
-                    "flex h-7 w-9 cursor-pointer items-center justify-center rounded-full transition-colors",
+                    "flex h-8 w-10 cursor-pointer items-center justify-center rounded-full transition-colors",
                     device === value
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground",
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -199,10 +201,10 @@ const PageBuilder = () => {
             aria-label="Theme"
             onClick={() => setPanel(panel === "theme" ? "block" : "theme")}
             className={cn(
-              "flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border transition-colors",
+              "flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-[1.5px] transition-colors",
               panel === "theme"
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-muted",
+                ? "border-foreground bg-foreground text-background"
+                : "border-border text-foreground hover:border-foreground",
             )}
           >
             <Palette className="h-[15px] w-[15px]" />
@@ -212,7 +214,7 @@ const PageBuilder = () => {
             <Link
               href={`/${slug}`}
               target="_blank"
-              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-semibold transition-colors hover:bg-secondary"
+              className="inline-flex h-10 items-center gap-1.5 rounded-full border-[1.5px] border-border px-4 text-sm font-semibold transition-colors hover:border-foreground"
             >
               <Eye className="h-3.5 w-3.5" />
               View
@@ -221,8 +223,7 @@ const PageBuilder = () => {
 
           <Button
             size="sm"
-            variant="outline"
-            className="h-8 text-xs"
+            variant="line"
             disabled={!dirty}
             loading={savePage.isPending && !setStatus.isPending}
             onClick={save}
@@ -231,7 +232,7 @@ const PageBuilder = () => {
           </Button>
           <Button
             size="sm"
-            className="h-8 text-xs"
+            variant="ink"
             loading={setStatus.isPending}
             onClick={publish}
           >
@@ -257,7 +258,7 @@ const PageBuilder = () => {
 
         {/* The preview renders through the same components the published page
             uses, so what an organizer arranges is what ships. */}
-        <div className="flex min-h-0 flex-1 items-start justify-center bg-muted p-4 sm:p-5 lg:overflow-y-auto lg:p-7">
+        <div className="flex min-h-0 flex-1 items-start justify-center bg-secondary p-4 sm:p-5 lg:overflow-y-auto lg:p-7">
           <div
             className={cn(
               "w-full overflow-hidden rounded-t-lg shadow-[0_-1px_0_var(--color-border),0_12px_32px_rgba(22,21,15,0.10)] transition-[max-width] duration-300",
@@ -279,7 +280,7 @@ const PageBuilder = () => {
                 )}
               >
                 {selectedId === block.id ? (
-                  <span className="absolute top-0 left-3 z-10 rounded-b-md bg-primary px-2 py-0.5 text-[10px] font-bold tracking-[0.04em] text-primary-foreground uppercase">
+                  <span className="absolute top-0 left-3 z-10 rounded-b-lg bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground">
                     {blockDefinition(block.type)?.label ?? block.type}
                   </span>
                 ) : null}

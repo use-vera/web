@@ -1,3 +1,4 @@
+import { DESK } from "@/components/organizer/desk";
 import VendorOrderQueueBoard from "@/components/vendors/vendor-order-queue-board";
 import type { Metadata } from "next";
 
@@ -13,7 +14,7 @@ export default async function VendorEventOrdersPage({ params }: Props) {
   const { eventId } = await params;
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-10">
+    <div className={DESK}>
       <VendorOrderQueueBoard eventId={eventId} />
     </div>
   );

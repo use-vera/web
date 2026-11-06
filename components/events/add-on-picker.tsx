@@ -57,7 +57,7 @@ export const AddOnPicker = ({
   };
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col border-t border-border">
       {sellable.map((addOn) => {
         const picked = Boolean(selection[addOn._id]);
         const scarce =
@@ -67,18 +67,13 @@ export const AddOnPicker = ({
         return (
           <div
             key={addOn._id}
-            className={cn(
-              "rounded-sm bg-card transition-shadow",
-              picked
-                ? "ring-2 ring-primary ring-inset"
-                : "ring-1 ring-foreground/10 ring-inset",
-            )}
+            className="border-b border-border"
           >
             <button
               type="button"
               aria-pressed={picked}
               onClick={() => toggle(addOn)}
-              className="flex w-full cursor-pointer items-center gap-3.5 p-4 text-left active:scale-[0.995] transition-transform"
+              className="flex w-full cursor-pointer items-center gap-3.5 py-4 text-left"
             >
               <span
                 className={cn(
@@ -98,7 +93,7 @@ export const AddOnPicker = ({
               </span>
 
               <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-semibold">
+                <span className="block text-base font-bold">
                   {addOn.name}
                 </span>
                 <span className="mt-1 flex flex-wrap items-center gap-2">
@@ -120,14 +115,14 @@ export const AddOnPicker = ({
                 </span>
               </span>
 
-              <span className="text-[15px] font-bold tabular-nums">
+              <span className="text-base font-bold tabular-nums">
                 {formatNairaAmount(addOn.priceNaira)}
               </span>
             </button>
 
             {picked && addOn.variants?.length ? (
-              <div className="flex flex-wrap items-center gap-1.5 border-t border-border px-4 py-3">
-                <span className="mr-1 text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+              <div className="flex flex-wrap items-center gap-1.5 pb-4 pl-[36px]">
+                <span className="mr-1 text-[13px] font-semibold text-muted-foreground">
                   Option
                 </span>
                 {addOn.variants.map((variant) => {

@@ -1,10 +1,9 @@
 "use client";
 
-import EventThumbnail from "@/components/event-thumbnail";
-import { formatEventDate } from "@/lib/format-date";
+import EventPoster, { POSTER_TONES, toneFor } from "@/components/vera/event-poster";
+import { dayLabel, placeOf, priceTag, shortWhen } from "@/components/vera/event-format";
 import { type PublicEventApi } from "@/lib/types/event";
 import { cn } from "@/lib/utils";
-import { Calendar, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface AuthEventsCarouselProps {
@@ -15,9 +14,9 @@ interface AuthEventsCarouselProps {
 const ROTATE_MS = 4500;
 
 /**
- * Desktop-only side panel for the auth modal: a slow auto-rotating preview of
- * real upcoming events, so signing up reads as "here's what you're signing up
- * for" rather than a decorative sidebar.
+ * Beside the auth forms: real upcoming events, one at a time. The whole panel
+ * takes the event's poster colour, the artwork sits inset at the top, and the
+ * name is set big on the colour underneath: no caption card over the photo.
  */
 const AuthEventsCarousel = ({ events, className }: AuthEventsCarouselProps) => {
   const [index, setIndex] = useState(0);
@@ -41,59 +40,57 @@ const AuthEventsCarousel = ({ events, className }: AuthEventsCarouselProps) => {
 
   const safeIndex = index % events.length;
   const event = events[safeIndex];
+  const tone = toneFor(event._id);
+  const colours = POSTER_TONES[tone];
+  const when = event.nextOccurrenceAt || event.startsAt;
 
   return (
     <div
       className={cn(
-        "dark relative w-full shrink-0 overflow-hidden bg-background text-foreground sm:h-full sm:w-56",
+        "relative flex w-full shrink-0 flex-col gap-3 overflow-hidden p-3 transition-colors duration-500 sm:h-full sm:w-56",
+        tone === "cream" && "ring-1 ring-border ring-inset",
         className,
       )}
+      style={{ backgroundColor: colours.bg, color: colours.fg }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="relative h-full min-h-52">
-        <EventThumbnail
-          imageUrl={event.imageUrl}
-          alt={event.name}
-          className="absolute inset-0"
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/55 to-black/15" />
+      {/* With no artwork, the inset shows the date in ink rather than repeating the name. */}
+      <EventPoster
+        key={event._id}
+        seed={event._id}
+        tone={event.imageUrl ? tone : "ink"}
+        title={dayLabel(when)}
+        imageUrl={event.imageUrl}
+        imageVariant="hero"
+        className="min-h-40 flex-1 rounded-[24px] animate-in fade-in duration-500"
+        titleClassName="text-[clamp(28px,4vw,72px)]"
+      />
 
-        <span className="absolute top-4 left-4 text-[10px] font-bold text-white/70 uppercase">
-          Events we have for you
+      <div key={`${event._id}-info`} className="flex flex-col gap-3 px-[clamp(8px,1.6vw,20px)] pt-2 pb-[clamp(8px,1.6vw,20px)] animate-in fade-in slide-in-from-bottom-2 duration-500">
+        {events.length > 1 ? (
+          <div className="flex gap-1.5">
+            {events.map((item, i) => (
+              <button
+                key={item._id}
+                type="button"
+                onClick={() => setIndex(i)}
+                aria-label={`Show event ${i + 1}`}
+                aria-current={i === safeIndex}
+                className={cn("h-1 flex-1 rounded-full transition-opacity", i === safeIndex ? "bg-current" : "bg-current opacity-25")}
+              />
+            ))}
+          </div>
+        ) : null}
+
+        <span className="text-sm font-bold opacity-75">Coming up on Vera</span>
+        <h3 style={{ lineHeight: 0.95 }} className="line-clamp-2 text-[clamp(24px,3.4vw,56px)] font-extrabold tracking-[-0.04em]">
+          {event.name}
+        </h3>
+        <span className="text-[15px] font-semibold opacity-80">
+          {[shortWhen(when), placeOf(event), priceTag(event)].filter(Boolean).join(" · ")}
         </span>
-
-        <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-4">
-          <h3 className="line-clamp-2 text-base leading-snug font-bold text-white">
-            {event.name}
-          </h3>
-          <div className="flex items-center gap-1.5 text-xs text-white/80">
-            <Calendar className="h-3 w-3 shrink-0" />
-            {formatEventDate(event.nextOccurrenceAt)}
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-white/80">
-            <Users className="h-3 w-3 shrink-0" />
-            {event.soldTickets} going
-          </div>
-        </div>
       </div>
-
-      {events.length > 1 ? (
-        <div className="absolute top-16 right-4 flex flex-col gap-1.5">
-          {events.map((item, i) => (
-            <button
-              key={item._id}
-              type="button"
-              onClick={() => setIndex(i)}
-              aria-label={`Show event ${i + 1}`}
-              className={cn(
-                "h-1.5 rounded-full transition-all",
-                i === safeIndex ? "h-4 w-1.5 bg-primary" : "w-1.5 bg-white/40",
-              )}
-            />
-          ))}
-        </div>
-      ) : null}
     </div>
   );
 };

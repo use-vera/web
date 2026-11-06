@@ -1,7 +1,9 @@
 import DocsRail from "@/components/developers/docs-rail";
-import Badge from "@/components/ui/badge";
+import { DESK } from "@/components/organizer/desk";
+import { PageHeader } from "@/components/organizer/organizer-primitives";
+import { POSTER_TONES, type PosterTone } from "@/components/vera/event-poster";
 import { GUIDES, GUIDE_SECTIONS } from "@/lib/developer-docs/content";
-import { ROUTES } from "@/lib/utils";
+import { cn, ROUTES } from "@/lib/utils";
 import { ArrowRight, Clock } from "lucide-react";
 import Link from "next/link";
 
@@ -18,74 +20,80 @@ const SECTION_BLURBS: Record<string, string> = {
   "Going live": "What to check before real money moves.",
 };
 
+/* Each section keeps one colour, so its guides read as a set. */
+const SECTION_TONES: Record<string, PosterTone> = {
+  "Getting started": "green",
+  "Core concepts": "yellow",
+  "Build a flow": "blue",
+  "Going live": "pink",
+};
+
+const sectionId = (section: string) => section.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
 const DevelopersDocsIndexPage = () => (
-  <div className="mx-auto flex max-w-6xl gap-12 px-6 py-14 sm:px-10">
+  <div className={cn(DESK, "flex gap-12")}>
     <div className="min-w-0 flex-1">
-    <header className="flex flex-col gap-3">
-      <Badge variant="outline" className="w-fit">
-        Documentation
-      </Badge>
-      <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-        Build on Vera.
-      </h1>
-      <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-        Sell tickets from your own site, admit people at the door, and handle
-        refunds, all over one REST API. Start with the quickstart, then follow
-        the flow you are building.
-      </p>
-    </header>
+      <PageHeader
+        lead="the"
+        accent="docs."
+        description="Sell tickets from your own site, admit people at the door, and handle refunds, all over one REST API. Start with the quickstart, then follow the flow you are building."
+      />
 
-    <div className="mt-10 flex flex-col gap-10">
-      {GUIDE_SECTIONS.map((section) => {
-        const guides = GUIDES.filter((guide) => guide.section === section);
+      <div className="flex flex-col gap-12">
+        {GUIDE_SECTIONS.map((section) => {
+          const guides = GUIDES.filter((guide) => guide.section === section);
 
-        if (!guides.length) {
-          return null;
-        }
+          if (!guides.length) {
+            return null;
+          }
 
-        return (
-          <section key={section} className="flex flex-col gap-4">
-            <div>
-              <h2 className="text-lg font-bold text-foreground">{section}</h2>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {SECTION_BLURBS[section]}
-              </p>
-            </div>
+          const colours = POSTER_TONES[SECTION_TONES[section] ?? "cream"];
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              {guides.map((guide) => (
-                <Link
-                  key={guide.slug}
-                  href={`${ROUTES.DEVELOPERS_DOCS}/${guide.slug}`}
-                  className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-5 transition-colors hover:border-foreground/20 hover:bg-muted/40"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-[15px] font-bold text-card-foreground">
-                      {guide.title}
-                    </h3>
-                    <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                  </div>
+          return (
+            <section key={section} id={sectionId(section)} className="flex scroll-mt-24 flex-col gap-4">
+              <div>
+                <h2 style={{ lineHeight: 1 }} className="text-[clamp(24px,2.4vw,32px)] font-extrabold tracking-[-0.035em]">
+                  {section.toLowerCase()}.
+                </h2>
+                <p className="mt-2 text-[15px] text-muted-foreground">{SECTION_BLURBS[section]}</p>
+              </div>
 
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {guide.summary}
-                  </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {guides.map((guide, index) => (
+                  <Link
+                    key={guide.slug}
+                    href={`${ROUTES.DEVELOPERS_DOCS}/${guide.slug}`}
+                    className="group flex flex-col gap-3 rounded-[26px] border-[1.5px] border-border p-5 transition-colors hover:border-foreground"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span
+                        className="flex h-9 w-9 items-center justify-center rounded-[12px] text-sm font-extrabold tabular-nums"
+                        style={{ backgroundColor: colours.bg, color: colours.fg }}
+                      >
+                        {index + 1}
+                      </span>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                    </div>
 
-                  {guide.readingMinutes ? (
-                    <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" aria-hidden />
-                      {guide.readingMinutes} min read
-                    </p>
-                  ) : null}
-                </Link>
-              ))}
-            </div>
-          </section>
-        );
-      })}
+                    <h3 className="text-[17px] leading-snug font-bold tracking-[-0.01em] transition-colors group-hover:text-primary">{guide.title}</h3>
+                    <p className="text-sm leading-relaxed text-muted-foreground">{guide.summary}</p>
+
+                    {guide.readingMinutes ? (
+                      <p className="mt-auto flex items-center gap-1.5 pt-1 text-[13px] font-semibold text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5" aria-hidden />
+                        {guide.readingMinutes} min read
+                      </p>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </div>
 
-    <DocsRail />
+    <DocsRail headings={GUIDE_SECTIONS.filter((section) => GUIDES.some((guide) => guide.section === section)).map((section) => ({ id: sectionId(section), label: section }))} />
   </div>
 );
 

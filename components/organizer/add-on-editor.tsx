@@ -144,10 +144,10 @@ export const AddOnEditor = ({
         return (
           <div
             key={index}
-            className="rounded-sm bg-card p-4 ring-1 ring-foreground/10 ring-inset"
+            className="rounded-[24px] border-[1.5px] border-border p-4 sm:p-5"
           >
             <div className="flex items-center justify-between gap-3">
-              <span className="text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+              <span className="text-sm font-bold text-foreground">
                 Add-on {index + 1}
               </span>
               <button
@@ -162,7 +162,7 @@ export const AddOnEditor = ({
 
             <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_140px_140px]">
               <label className="block">
-                <span className="mb-1.5 block text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+                <span className="mb-1.5 block text-sm font-bold text-foreground">
                   Name
                 </span>
                 <OrganizerField
@@ -173,7 +173,7 @@ export const AddOnEditor = ({
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+                <span className="mb-1.5 block text-sm font-bold text-foreground">
                   Price
                 </span>
                 <AmountField
@@ -185,7 +185,7 @@ export const AddOnEditor = ({
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+                <span className="mb-1.5 block text-sm font-bold text-foreground">
                   {options.length ? "Per option" : "Stock"}
                 </span>
                 <AmountField
@@ -220,7 +220,7 @@ export const AddOnEditor = ({
             </div>
 
             <label className="mt-3 block">
-              <span className="mb-1.5 block text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+              <span className="mb-1.5 block text-sm font-bold text-foreground">
                 Options
               </span>
               <OrganizerField
@@ -240,7 +240,7 @@ export const AddOnEditor = ({
             </label>
 
             <div className="mt-4">
-              <span className="mb-2 block text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+              <span className="mb-2 block text-sm font-bold text-foreground">
                 How is it collected?
               </span>
               <div className="grid gap-2 sm:grid-cols-3">
@@ -286,7 +286,7 @@ export const AddOnEditor = ({
 
             {draft.redemption !== "none" ? (
               <label className="mt-3 block">
-                <span className="mb-1.5 block text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+                <span className="mb-1.5 block text-sm font-bold text-foreground">
                   Where
                 </span>
                 <OrganizerField
@@ -323,7 +323,7 @@ export const AddOnEditor = ({
       <button
         type="button"
         onClick={() => onChange([...drafts, emptyAddOn()])}
-        className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-sm border border-dashed border-border text-[13px] font-semibold text-primary transition-colors hover:border-primary hover:bg-accent/40"
+        className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-full border-[1.5px] border-dashed border-border text-sm font-bold text-foreground transition-colors hover:border-foreground"
       >
         <Plus className="h-4 w-4" />
         {drafts.length ? "Add another" : "Add an add-on"}

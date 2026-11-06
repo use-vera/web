@@ -69,10 +69,10 @@ const VendorImageInput = ({
       <label
         htmlFor={inputId}
         className={cn(
-          "relative flex cursor-pointer items-center justify-center overflow-hidden border border-dashed border-border bg-background transition-colors hover:border-primary",
+          "relative flex shrink-0 cursor-pointer items-center justify-center overflow-hidden border-[1.5px] border-dashed border-border transition-colors hover:border-foreground",
           shape === "circle"
             ? "h-20 w-20 rounded-full"
-            : "h-20 w-20 rounded-2xl",
+            : "h-20 w-20 rounded-[22px]",
         )}
       >
         {shown ? (
@@ -112,8 +112,8 @@ const VendorImageInput = ({
       </label>
 
       <div className="flex flex-col gap-1">
-        <span className="text-sm font-semibold text-foreground">{label}</span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-sm font-bold text-foreground">{label}</span>
+        <span className="text-[13px] text-muted-foreground">
           {shown ? "Tap the image to replace it" : "JPG or PNG, up to 5MB"}
         </span>
         {shown ? (
@@ -127,7 +127,7 @@ const VendorImageInput = ({
                 inputRef.current.value = "";
               }
             }}
-            className="mt-1 inline-flex w-fit items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-destructive"
+            className="mt-1 inline-flex w-fit cursor-pointer items-center gap-1 text-[13px] font-semibold text-muted-foreground hover:text-destructive"
           >
             <X className="h-3 w-3" />
             Remove

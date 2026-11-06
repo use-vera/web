@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 
 const title = "About Vera: real events, real moments.";
 const description =
-  "Vera is the all-in-one events app for finding events, buying tickets safely, and keeping the moments that make a night worth remembering.";
+  "Vera is the all-in-one events app for finding events, buying tickets safely, and keeping the moments that make an event worth remembering.";
 
 export const metadata: Metadata = {
   title,

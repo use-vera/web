@@ -3,7 +3,7 @@
 import AuthEventsCarousel from "@/components/auth/auth-events-carousel";
 import SignInView from "@/components/auth/sign-in-view";
 import SignUpView from "@/components/auth/sign-up-view";
-import LogoMark from "@/components/logo-mark";
+import Wordmark from "@/components/vera/wordmark";
 import {
   AUTH_COPY,
   AUTH_ROUTES,
@@ -55,7 +55,7 @@ const AuthPage = ({ role, view }: AuthPageProps) => {
     <div className="mt-2 border-t border-border pt-5">
       <Link
         href={copy.crossHref}
-        className="flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        className="flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
       >
         <Store className="h-4 w-4" />
         {copy.crossLabel}
@@ -64,44 +64,43 @@ const AuthPage = ({ role, view }: AuthPageProps) => {
   );
 
   return (
-    <div className="grid min-h-dvh grid-cols-1 lg:grid-cols-[1fr_minmax(30rem,38%)]">
-      <aside className="relative hidden lg:block">
+    <div className="grid min-h-dvh grid-cols-1 bg-background lg:grid-cols-[1fr_minmax(30rem,40%)]">
+      <aside className="relative hidden p-4 lg:block">
         {events.length > 0 ? (
           <AuthEventsCarousel
             events={events}
-            className="absolute inset-0 h-full w-full sm:h-full sm:w-full"
+            className="absolute inset-4 h-auto w-auto rounded-[36px] sm:h-auto sm:w-auto"
           />
         ) : (
           /* No events to show yet, so the panel holds the brand rather than
              collapsing the layout to one lonely column. */
-          <div className="dark absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background text-foreground">
-            <LogoMark className="h-12 w-12" />
-            <p className="max-w-xs text-center text-sm text-muted-foreground">
+          <div className="dark absolute inset-4 flex flex-col justify-end gap-4 rounded-[36px] bg-background p-10 text-foreground">
+            <span style={{ lineHeight: 0.85 }} className="text-[clamp(96px,12vw,180px)] font-extrabold tracking-[-0.06em]">
+              vera<span className="text-primary">.</span>
+            </span>
+            <p className="max-w-xs text-base text-muted-foreground">
               Tickets, events and the people selling at them, in one place.
             </p>
           </div>
         )}
       </aside>
 
-      <main className="flex flex-col bg-background">
-        <div className="flex items-center justify-between px-6 pt-6">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Vera
+      <main className="flex flex-col">
+        <div className="flex items-center justify-between px-[clamp(16px,4vw,40px)] pt-6">
+          <Link href="/" aria-label="Back to Vera" className="flex items-center gap-3">
+            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
+            <Wordmark />
           </Link>
 
           <Link
             href={AUTH_ROUTES[role][view === "sign-in" ? "sign-up" : "sign-in"]}
-            className="text-sm font-semibold text-foreground underline underline-offset-4"
+            className="rounded-full border-[1.5px] border-foreground px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-foreground/5"
           >
             {view === "sign-in" ? "Create an account" : "Sign in"}
           </Link>
         </div>
 
-        <div className="flex flex-1 items-center justify-center px-6 py-10">
+        <div className="flex flex-1 items-center justify-center px-[clamp(16px,4vw,40px)] py-10">
           <div className="w-full max-w-sm">
             {view === "sign-in" ? (
               <SignInView

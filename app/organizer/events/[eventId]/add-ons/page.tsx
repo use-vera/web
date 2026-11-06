@@ -1,11 +1,10 @@
 "use client";
 
-import { Eyebrow, Meter } from "@/components/organizer/organizer-primitives";
+import { Meter, Panel, PanelHeader, SearchField } from "@/components/organizer/organizer-primitives";
+import { POSTER_TONES } from "@/components/vera/event-poster";
 import { AddOnRedemptionPanel } from "@/components/organizer/add-on-redemption-panel";
-import { OrganizerField } from "@/components/organizer/organizer-field";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getApiErrorMessage } from "@/lib/api/error-message";
 import {
@@ -16,7 +15,7 @@ import {
 import { organizerService } from "@/lib/services/organizer.service";
 import { type TicketAddOnApi } from "@/lib/types/organizer";
 import { cn } from "@/lib/utils";
-import { PackageCheck, Search, TriangleAlert } from "lucide-react";
+import { PackageCheck, TriangleAlert } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 
@@ -97,47 +96,29 @@ const AddOnsPage = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Add-ons</h1>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          {namePrefix(eventQuery.data?.event?.name)} What has been collected, and
-          what is still owed.
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <Card className="gap-0 p-5">
-            <Eyebrow>Hand something over</Eyebrow>
-            <p className="mt-1 text-[13px] text-muted-foreground">
-              Scan or type the ticket code to hand over anything on it. This
-              only reads the ticket — it never admits anyone.
-            </p>
-
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <Panel>
+          <PanelHeader
+            title="Hand something over"
+            description={`${namePrefix(eventQuery.data?.event?.name)} Scan or type a ticket code. This only reads the ticket, it never admits anyone.`}
+          />
+          <div className="px-5 pb-5 sm:px-6">
             <form
-              className="mt-3.5 flex gap-2"
+              className="flex gap-2"
               onSubmit={(formEvent) => {
                 formEvent.preventDefault();
                 void lookUp(code);
               }}
             >
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <OrganizerField
-                  value={code}
-                  onChange={(input) => setCode(input.target.value)}
-                  placeholder="VRA-XXXXXXXX-XXXXX"
-                  aria-label="Ticket code"
-                  className="pl-10 font-semibold tracking-[0.04em]"
-                />
-              </div>
-              <Button
-                type="submit"
-                className="h-12 shrink-0"
-                disabled={!code.trim()}
-                loading={looking}
-              >
+              <SearchField
+                value={code}
+                onChange={(input) => setCode(input.target.value)}
+                placeholder="VRA-XXXXXXXX-XXXXX"
+                aria-label="Ticket code"
+                className="flex-1 font-semibold"
+              />
+              <Button type="submit" variant="ink" className="h-12 shrink-0" disabled={!code.trim()} loading={looking}>
                 Look up
               </Button>
             </form>
@@ -148,111 +129,89 @@ const AddOnsPage = () => {
                 {error}
               </p>
             ) : null}
-          </Card>
+          </div>
+        </Panel>
 
-          {heldAddOns.length ? (
-            <AddOnRedemptionPanel
-              addOns={heldAddOns}
-              attendeeName={holder}
-              surface="all"
-              busyPurchaseId={redeemingId}
-              onRedeem={(purchase) => void handOver(purchase)}
-            />
-          ) : null}
+        {heldAddOns.length ? (
+          <AddOnRedemptionPanel
+            addOns={heldAddOns}
+            attendeeName={holder}
+            surface="all"
+            busyPurchaseId={redeemingId}
+            onRedeem={(purchase) => void handOver(purchase)}
+          />
+        ) : null}
 
-          <Card className="gap-0 py-0">
-            <div className="flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4">
-              <span className="text-base leading-snug font-semibold">
-                Still to hand over
-              </span>
-              <span className="text-xs font-medium text-muted-foreground tabular-nums">
+        <Panel>
+          <PanelHeader
+            title="Still to hand over"
+            action={
+              <span className="text-[13px] font-semibold text-muted-foreground tabular-nums">
                 {outstanding} of {sold}
               </span>
+            }
+          />
+
+          {fulfilmentQuery.isLoading ? (
+            <div className="flex flex-col gap-3 px-5 pb-5 sm:px-6">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton key={index} className="h-12 w-full rounded-2xl" />
+              ))}
             </div>
-            <hr className="ticket-perforation" />
-
-            {fulfilmentQuery.isLoading ? (
-              <div className="flex flex-col gap-3 p-5">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <Skeleton key={index} className="h-12 w-full rounded-md" />
-                ))}
-              </div>
-            ) : rows.length === 0 ? (
-              <p className="px-5 py-12 text-center text-sm text-muted-foreground">
-                Nothing sold yet. Add-ons show up here as people buy them.
-              </p>
-            ) : (
-              <div className="divide-y divide-border/40">
-                {rows.map((row) => (
-                  <div
-                    key={`${row.addOnId}-${row.variantName}`}
-                    className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3.5 sm:px-5"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold">
-                          {row.name}
-                          {row.variantName ? ` · ${row.variantName}` : ""}
-                        </span>
-                        {row.outstanding === 0 ? (
-                          <Badge variant="outline">All collected</Badge>
-                        ) : null}
-                      </div>
-                      <div className="mt-1.5 max-w-[260px]">
-                        <Meter
-                          percent={row.sold ? (row.collected / row.sold) * 100 : 0}
-                        />
-                      </div>
+          ) : rows.length === 0 ? (
+            <p className="px-5 pb-6 text-[15px] text-muted-foreground sm:px-6">Nothing sold yet. Add-ons show up here as people buy them.</p>
+          ) : (
+            <div className="flex flex-col px-2.5 pb-2.5">
+              {rows.map((row) => (
+                <div key={`${row.addOnId}-${row.variantName}`} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[18px] px-2.5 py-3.5">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[15px] font-bold">
+                        {row.name}
+                        {row.variantName ? ` · ${row.variantName}` : ""}
+                      </span>
+                      {row.outstanding === 0 ? <Badge variant="outline">All collected</Badge> : null}
                     </div>
-
-                    <div className="text-right">
-                      <div
-                        className={cn(
-                          "text-sm font-semibold tabular-nums",
-                          row.outstanding === 0 && "text-muted-foreground",
-                        )}
-                      >
-                        {row.collected} / {row.sold}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {row.outstanding === 0
-                          ? "done"
-                          : `${row.outstanding} outstanding`}
-                      </div>
+                    <div className="mt-2 max-w-[320px]">
+                      <Meter percent={row.sold ? (row.collected / row.sold) * 100 : 0} />
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
 
-        <Card className="w-full gap-0 p-5 lg:w-[300px] lg:shrink-0">
-          <Eyebrow>Collected so far</Eyebrow>
-          <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-[-0.02em] tabular-nums">
+                  <div className="text-right">
+                    <div className={cn("text-[15px] font-bold tabular-nums", row.outstanding === 0 && "text-muted-foreground")}>
+                      {row.collected} / {row.sold}
+                    </div>
+                    <div className="text-[13px] text-muted-foreground">{row.outstanding === 0 ? "done" : `${row.outstanding} outstanding`}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+      </div>
+
+      <aside className="flex w-full flex-col gap-4 lg:sticky lg:top-20 lg:w-[320px] lg:shrink-0">
+        <section
+          aria-label="Collected so far"
+          className="flex flex-col gap-4 rounded-[28px] p-6"
+          style={{ backgroundColor: POSTER_TONES.yellow.bg, color: POSTER_TONES.yellow.fg }}
+        >
+          <span className="text-sm font-bold opacity-75">Collected so far</span>
+          <div className="flex items-baseline gap-2">
+            <span style={{ lineHeight: 0.9 }} className="text-[64px] font-extrabold tracking-[-0.05em] tabular-nums">
               {collected}
             </span>
-            <span className="text-sm text-muted-foreground tabular-nums">
-              of {sold}
-            </span>
+            <span className="text-base font-bold tabular-nums opacity-75">of {sold}</span>
           </div>
-          <div className="mt-3">
-            <Meter percent={sold ? (collected / sold) * 100 : 0} />
+          <div className="h-3 overflow-hidden rounded-full bg-[#2A220C]/15">
+            <div className="h-full rounded-full bg-[#2A220C]" style={{ width: `${sold ? Math.min(100, (collected / sold) * 100) : 0}%` }} />
           </div>
-
-          <hr className="ticket-perforation my-4" />
-
-          <div className="flex items-start gap-2.5">
-            <PackageCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Anything on a ticket can be handed over here, whenever they come
-              for it — including something the gate did not get to. The door
-              hands over its own items as people are scanned in.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </section>
+        <p className="flex items-start gap-2.5 px-2 text-[13px] leading-relaxed text-muted-foreground">
+          <PackageCheck className="mt-0.5 h-4 w-4 shrink-0" />
+          Anything on a ticket can be handed over here, whenever they come for it, including something the gate did not get to. The door hands over its own items as people are scanned in.
+        </p>
+      </aside>
     </div>
   );
 };

@@ -39,9 +39,9 @@ export const BlockOutline = ({
   const [adding, setAdding] = useState(false);
 
   return (
-    <aside className="flex w-full shrink-0 flex-col border-b border-border bg-card lg:w-[280px] lg:border-r lg:border-b-0">
+    <aside className="flex w-full shrink-0 flex-col border-b border-border bg-background lg:w-[280px] lg:border-r lg:border-b-0">
       <div className="flex items-center justify-between px-3.5 pt-4 pb-2.5">
-        <span className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground/70">
+        <span className="text-[13px] font-semibold text-muted-foreground">
           Sections
         </span>
         <span className="text-[11px] text-muted-foreground tabular-nums">
@@ -59,7 +59,7 @@ export const BlockOutline = ({
             <div
               key={block.id}
               className={cn(
-                "group flex items-center gap-1.5 rounded-sm px-2",
+                "group flex items-center gap-1.5 rounded-xl px-2",
                 isSelected && "bg-accent ring-1 ring-primary ring-inset",
               )}
             >
@@ -85,7 +85,7 @@ export const BlockOutline = ({
                   {definition?.label ?? block.type}
                 </span>
                 {isBoundBlock(block.type) ? (
-                  <span className="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.04em] text-accent-foreground uppercase">
+                  <span className="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 text-[11px] font-bold text-accent-foreground">
                     Live
                   </span>
                 ) : null}
@@ -122,9 +122,9 @@ export const BlockOutline = ({
 
       <div className="p-3">
         {adding ? (
-          <div className="rounded-sm ring-1 ring-border ring-inset">
+          <div className="rounded-2xl border-[1.5px] border-border">
             <div className="flex items-center justify-between px-3 py-2">
-              <span className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground/70">
+              <span className="text-[13px] font-semibold text-muted-foreground">
                 Add a section
               </span>
               <button
@@ -144,12 +144,12 @@ export const BlockOutline = ({
                     onAdd(definition.type);
                     setAdding(false);
                   }}
-                  className="flex w-full cursor-pointer flex-col gap-0.5 rounded-sm px-2 py-2 text-left transition-colors hover:bg-muted"
+                  className="flex w-full cursor-pointer flex-col gap-0.5 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary"
                 >
                   <span className="flex items-center gap-2 text-[13px] font-semibold">
                     {definition.label}
                     {definition.bound ? (
-                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.04em] text-accent-foreground uppercase">
+                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[11px] font-bold text-accent-foreground">
                         Live
                       </span>
                     ) : null}

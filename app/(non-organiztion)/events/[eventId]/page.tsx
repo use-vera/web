@@ -6,16 +6,17 @@ import {
   type AddOnSelection,
 } from "@/components/events/add-on-picker";
 import { TicketPurchasePanel } from "@/components/events/ticket-purchase-panel";
+import { useAuthModal } from "@/components/auth/auth-modal-provider";
 import { ResaleMarketplace } from "@/components/resale/resale-marketplace";
-import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { hostOf, placeOf } from "@/components/vera/event-format";
+import EventPoster from "@/components/vera/event-poster";
+import { useSession } from "@/lib/hooks/use-auth";
 import { useEvent } from "@/lib/hooks/use-events";
 import { useResaleMarketplace } from "@/lib/hooks/use-resale";
-import { cloudinaryVariant } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
-import { Clock, MapPin, Ticket, TriangleAlert, Users } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -29,7 +30,10 @@ const EventPage = () => {
   const [addOnSelection, setAddOnSelection] = useState<AddOnSelection>({});
 
   const eventQuery = useEvent(eventId);
-  const marketplaceQuery = useResaleMarketplace(eventId);
+  const session = useSession();
+  const signedIn = Boolean(session.data?.user);
+  const { openAuthModal } = useAuthModal();
+  const marketplaceQuery = useResaleMarketplace(eventId, 1, signedIn);
 
   const event = eventQuery.data?.event;
   const listings = marketplaceQuery.data?.items ?? [];
@@ -37,9 +41,9 @@ const EventPage = () => {
 
   if (eventQuery.isLoading) {
     return (
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-        <Skeleton className="h-[280px] w-full rounded-sm" />
-        <Skeleton className="mt-6 h-10 w-96" />
+      <main className="mx-auto w-full max-w-[1240px] px-[clamp(16px,4vw,40px)] pt-[clamp(16px,3vw,40px)] pb-24">
+        <Skeleton className="h-[clamp(240px,32vw,420px)] w-full rounded-[36px]" />
+        <Skeleton className="mt-8 h-14 w-2/3 max-w-xl" />
       </main>
     );
   }
@@ -61,101 +65,78 @@ const EventPage = () => {
   const ceiling = Math.round(faceValue * (1 + markupPercent / 100));
   const soldOut = (event.remainingTickets ?? 0) <= 0;
 
+  const host = hostOf(event);
+  const when = event.nextOccurrenceAt || event.startsAt;
+
   return (
     <main className="flex flex-1 flex-col">
-      <div className="ticket-dot-texture relative h-[150px] shrink-0 bg-muted sm:h-[240px] lg:h-[280px]">
-        {event.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={cloudinaryVariant(event.imageUrl, "hero")}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-muted-foreground">
-            <Ticket className="h-10 w-10" />
-          </div>
-        )}
-      </div>
+      <div className="mx-auto w-full max-w-[1240px] px-[clamp(16px,4vw,40px)] pt-[clamp(16px,3vw,40px)] pb-24">
+        {/* The poster, as big as the app draws it: the event's photo, or its flat colour with the name set huge. */}
+        <EventPoster
+          seed={event._id}
+          title={event.name}
+          tag={host || undefined}
+          imageUrl={event.imageUrl}
+          imageVariant="hero"
+          className="min-h-[clamp(240px,32vw,420px)] rounded-[36px]"
+          titleClassName="text-[clamp(52px,9vw,140px)] tracking-[-0.055em]"
+          badge={
+            <span className="flex h-[34px] items-center gap-2 rounded-full bg-[#16150F] px-3.5 text-sm font-bold text-[#F5F3EF]">
+              <span className={cn("h-2 w-2 rounded-full", soldOut ? "bg-[#F0B9C7]" : "bg-[#15C67C]")} />
+              {soldOut ? "Sold out" : "On sale"}
+            </span>
+          }
+        />
 
-      <div className="mx-auto w-full max-w-6xl px-4 pb-8 sm:px-6 sm:pb-10">
-        <div className="pt-5 sm:pt-6">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-[21px] leading-tight font-bold tracking-[-0.02em] sm:text-3xl">
-              {event.name}
-            </h1>
-            {soldOut ? (
-              <Badge variant="solid">Sold out</Badge>
-            ) : (
-              <Badge>
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                On sale
-              </Badge>
-            )}
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-muted-foreground sm:mt-2.5 sm:text-sm">
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-[15px] w-[15px]" />
-              {event.address}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Clock className="h-[15px] w-[15px]" />
-              {new Intl.DateTimeFormat("en-NG", {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              }).format(new Date(event.nextOccurrenceAt))}
-            </span>
-            <span className="inline-flex items-center gap-1.5 tabular-nums">
-              <Users className="h-[15px] w-[15px]" />
-              {(event.soldTickets || 0).toLocaleString("en-NG")} going
-            </span>
-          </div>
+        <div className="flex flex-col gap-2.5 pt-[clamp(24px,4vw,44px)]">
+          <h1 style={{ lineHeight: 0.95 }} className="text-[clamp(40px,5vw,64px)] font-extrabold tracking-[-0.045em]">
+            {event.name}
+          </h1>
+          <span className="text-base text-muted-foreground">
+            {[
+              new Intl.DateTimeFormat("en-NG", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(when)),
+              placeOf(event),
+              `${(event.soldTickets || 0).toLocaleString("en-NG")} going`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
         </div>
 
-        <nav className="mt-4 flex gap-5 overflow-x-auto sm:mt-5 sm:gap-6" aria-label="Event sections">
+        <div role="tablist" aria-label="Event sections" className="mt-7 flex gap-7 border-b border-border">
           {(
             [
-              ["details", "Details", null],
+              ["details", "About", null],
               ["resale", "Resale", resaleCount],
             ] as const
           ).map(([value, label, count]) => (
             <button
               key={value}
               type="button"
+              role="tab"
+              aria-selected={tab === value}
               onClick={() => setTab(value)}
-              aria-current={tab === value ? "page" : undefined}
               className={cn(
-                "cursor-pointer border-b-2 pb-3 text-sm transition-colors",
-                tab === value
-                  ? "border-primary font-semibold text-foreground"
-                  : "border-transparent font-medium text-muted-foreground hover:text-foreground",
+                "-mb-px cursor-pointer border-b-[2.5px] pb-3.5 text-lg font-bold transition-colors",
+                tab === value ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
               {label}
-              {count ? (
-                <span className="ml-1.5 font-medium text-muted-foreground tabular-nums">
-                  {count}
-                </span>
-              ) : null}
+              {count ? <span className="ml-1.5 text-muted-foreground tabular-nums">· {count}</span> : null}
             </button>
           ))}
-        </nav>
-        <hr className="ticket-perforation" />
+        </div>
 
-        <div className="flex flex-col gap-6 pt-5 lg:flex-row lg:items-start lg:gap-7 lg:pt-6">
+        <div className="flex flex-col gap-8 pt-8 lg:flex-row lg:items-start lg:gap-16">
           <div className="min-w-0 flex-1">
             {tab === "details" ? (
               <div>
                 {(event.addOns ?? []).length ? (
-                  <section className="mb-7">
-                    <h2 className="text-[19px] font-bold tracking-[-0.01em]">
-                      Enhance your experience
+                  <section className="mb-9">
+                    <h2 style={{ lineHeight: 1 }} className="text-[28px] font-extrabold tracking-[-0.03em]">
+                      add to your ticket.
                     </h2>
-                    <p className="mt-1 text-[13.5px] text-muted-foreground">
+                    <p className="mt-2 text-[15px] text-muted-foreground">
                       Optional extras, added to this ticket only. Collected at
                       the event.
                     </p>
@@ -180,30 +161,42 @@ const EventPage = () => {
                   }
                 />
                 {resaleCount > 0 ? (
-                  <Card className="mt-5 flex-row items-center gap-3 px-4 py-3.5 sm:mt-7 sm:gap-4 sm:px-5 sm:py-4">
+                  <div className="flex flex-row items-center gap-4 border-y border-border py-4">
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-semibold">
+                      <div className="text-base font-bold">
                         {resaleCount} {resaleCount === 1 ? "ticket" : "tickets"}{" "}
                         on resale
                       </div>
-                      <div className="mt-0.5 text-xs text-muted-foreground">
+                      <div className="mt-0.5 text-sm text-muted-foreground">
                         From people who can no longer make it.
                       </div>
                     </div>
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="line"
                       onClick={() => setTab("resale")}
                     >
                       See resale
                     </Button>
-                  </Card>
+                  </div>
                 ) : null}
+              </div>
+            ) : !signedIn && !session.isLoading ? (
+              <div className="flex flex-col items-start gap-3.5 border-y border-border py-10">
+                <span style={{ lineHeight: 0.95 }} className="text-[clamp(28px,3vw,40px)] font-extrabold tracking-[-0.04em]">
+                  sign in to see <span className="text-primary">resale.</span>
+                </span>
+                <span className="max-w-md text-base text-muted-foreground">
+                  Tickets here come from people who can no longer go. Sign in to see what&apos;s listed and make an offer.
+                </span>
+                <Button variant="ink" onClick={() => openAuthModal({ view: "sign-in" })}>
+                  Sign in
+                </Button>
               </div>
             ) : (
               <ResaleMarketplace
                 listings={listings}
-                isLoading={marketplaceQuery.isLoading}
+                isLoading={session.isLoading || marketplaceQuery.isLoading}
                 isError={marketplaceQuery.isError}
                 onRetry={() => marketplaceQuery.refetch()}
                 faceValue={faceValue}
@@ -213,20 +206,17 @@ const EventPage = () => {
             )}
           </div>
 
-          <div className="order-first w-full lg:sticky lg:top-24 lg:order-none lg:w-[340px] lg:shrink-0">
+          <div className="order-first w-full lg:sticky lg:top-24 lg:order-none lg:w-[380px] lg:shrink-0">
             <TicketPurchasePanel
               event={event}
               initialTierId={requestedTier}
               addOnSelection={addOnSelection}
             />
 
-            <Card className="mt-3 flex-row items-start gap-3 p-3.5 sm:p-4">
-              <TriangleAlert className="mt-px h-4 w-4 shrink-0 text-muted-foreground" />
-              <p className="text-xs leading-relaxed text-pretty text-muted-foreground">
-                Never pay a seller outside Vera. A ticket only transfers when it
-                is paid for here.
-              </p>
-            </Card>
+            <p className="mt-4 flex items-start gap-2.5 px-2 text-[13px] leading-relaxed text-pretty text-muted-foreground">
+              <TriangleAlert aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+              Never pay a seller outside Vera. A ticket only transfers when it is paid for here.
+            </p>
           </div>
         </div>
       </div>

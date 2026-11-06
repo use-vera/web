@@ -1,25 +1,22 @@
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
+/** A single line across the page to the hosts' side: a hairline row, not a card. */
 const HowItWorksOrganizerCta = () => {
   return (
-    <section className="mx-auto max-w-6xl px-6 pb-4">
+    <section className="mx-auto max-w-[1240px] px-[clamp(16px,4vw,40px)]">
       <Link
         href="/for-organizers"
-        className="group flex flex-col items-start justify-between gap-4 rounded-2xl border border-border bg-card px-8 py-8 transition-colors hover:bg-secondary sm:flex-row sm:items-center"
+        className="group flex flex-wrap items-center justify-between gap-4 border-y border-border py-8"
       >
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-            Hosting an event?
-          </span>
-          <span className="text-lg font-bold text-card-foreground">
+        <span className="flex flex-col gap-1">
+          <span className="text-sm font-semibold text-muted-foreground">Hosting an event?</span>
+          <span className="text-[clamp(24px,3vw,36px)] font-extrabold tracking-[-0.03em] transition-colors group-hover:text-primary">
             See how selling tickets on Vera works.
           </span>
-        </div>
-
-        <span className="flex items-center gap-2 text-sm font-bold text-foreground">
-          Learn more
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </span>
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-foreground text-background">
+          <ArrowRight aria-hidden="true" className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
         </span>
       </Link>
     </section>

@@ -2,7 +2,6 @@
 
 import { LocationMap } from "@/components/location-map";
 import Badge from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { formatNairaAmount } from "@/lib/format-currency";
 import { googleMapsDirectionsUrl } from "@/lib/maps";
 import {
@@ -35,9 +34,9 @@ const Section = ({
   children: ReactNode;
   aside?: ReactNode;
 }) => (
-  <section className="pt-7 first:pt-0">
-    <div className="mb-3 flex items-baseline justify-between gap-4">
-      <h2 className="text-base font-semibold">{title}</h2>
+  <section className="py-9 first:pt-0">
+    <div className="mb-4 flex items-baseline justify-between gap-4">
+      <h2 style={{ lineHeight: 1 }} className="text-[28px] font-extrabold tracking-[-0.03em]">{title}</h2>
       {aside}
     </div>
     {children}
@@ -100,9 +99,9 @@ export const EventDetails = ({
   });
 
   return (
-    <div className="divide-y divide-border">
-      <Section title="About this event">
-        <p className="text-[15px] leading-relaxed text-pretty">
+    <div className="flex flex-col">
+      <Section title="about.">
+        <p className="max-w-[640px] text-lg leading-relaxed text-pretty text-muted-foreground">
           {event.description || "The organizer hasn't written a description yet."}
         </p>
         {categories.length > 0 ? (
@@ -117,7 +116,7 @@ export const EventDetails = ({
       </Section>
 
       <Section
-        title="When"
+        title="when."
         aside={
           repeats ? (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
@@ -132,13 +131,13 @@ export const EventDetails = ({
           ) : null
         }
       >
-        <Card className="gap-0 py-0">
-          <div className="flex items-center gap-4 px-4 py-3.5 sm:px-5 sm:py-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        <div className="flex flex-col border-y border-border">
+          <div className="flex items-center gap-4 py-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
               <CalendarDays className="h-[18px] w-[18px]" />
             </span>
             <div className="min-w-0">
-              <div className="text-sm font-semibold">
+              <div className="text-[17px] font-bold">
                 {longDate(event.nextOccurrenceAt)}
               </div>
               <div className="mt-0.5 text-[13px] text-muted-foreground">
@@ -149,9 +148,8 @@ export const EventDetails = ({
           </div>
           {presale ? (
             <>
-              <hr className="ticket-perforation" />
-              <div className="flex items-center gap-4 px-4 py-3.5 sm:px-5 sm:py-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+              <div className="flex items-center gap-4 border-t border-border py-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
                   <Clock className="h-[18px] w-[18px]" />
                 </span>
                 <div className="min-w-0">
@@ -171,11 +169,11 @@ export const EventDetails = ({
               </div>
             </>
           ) : null}
-        </Card>
+        </div>
       </Section>
 
       <Section
-        title="Where"
+        title="where."
         aside={
           venue?.verified ? (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent-foreground">
@@ -185,13 +183,13 @@ export const EventDetails = ({
           ) : null
         }
       >
-        <Card className="gap-0 overflow-hidden py-0">
-          <div className="flex flex-wrap items-start gap-4 px-4 py-4 sm:flex-nowrap sm:px-5">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-start gap-4 sm:flex-nowrap">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
               <MapPin className="h-[18px] w-[18px]" />
             </span>
             <div className="min-w-0">
-              <div className="text-sm font-semibold">
+              <div className="text-[17px] font-bold">
                 {venue?.name ?? event.address}
               </div>
               <div className="mt-0.5 text-[13px] text-muted-foreground">
@@ -208,7 +206,7 @@ export const EventDetails = ({
                 href={directionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-border px-4 text-sm font-semibold transition-colors hover:bg-secondary sm:ml-auto sm:h-10"
+                className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full border-[1.5px] border-foreground px-4 text-sm font-semibold transition-colors hover:bg-foreground/5 sm:ml-auto"
               >
                 <Navigation className="h-4 w-4" />
                 Open in Maps
@@ -221,15 +219,15 @@ export const EventDetails = ({
               longitude={event.longitude as number}
               radiusMeters={event.geofenceRadiusMeters ?? 150}
               interactive={false}
-              className="h-[220px] rounded-none border-0 border-t border-border"
+              className="h-[260px] overflow-hidden rounded-[28px] border-0"
             />
           ) : null}
-        </Card>
+        </div>
       </Section>
 
       {tiers.length > 0 ? (
         <Section
-          title="Tickets"
+          title="tickets."
           aside={
             <span className="text-xs text-muted-foreground tabular-nums">
               {sold.toLocaleString("en-NG")} of{" "}
@@ -237,17 +235,16 @@ export const EventDetails = ({
             </span>
           }
         >
-          <Card className="gap-0 py-0">
+          <div className="flex flex-col border-y border-border">
             {tiers.map((tier, index) => (
-              <div key={tier._id ?? tier.name}>
-                {index > 0 ? <hr className="ticket-perforation" /> : null}
-                <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
+              <div key={tier._id ?? tier.name} className={cn(index > 0 && "border-t border-border")}>
+                <div className="flex items-center justify-between gap-4 py-4">
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                       <Ticket className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold">
+                      <div className="truncate text-base font-bold">
                         {tier.name}
                       </div>
                       <div className="text-xs text-muted-foreground tabular-nums">
@@ -280,7 +277,7 @@ export const EventDetails = ({
                           : "Closed"}
                       </Badge>
                     ) : null}
-                    <span className="text-sm font-semibold tabular-nums">
+                    <span className="text-base font-bold tabular-nums">
                       {tier.priceNaira > 0
                         ? formatNairaAmount(tier.priceNaira)
                         : "Free"}
@@ -289,13 +286,13 @@ export const EventDetails = ({
                 </div>
               </div>
             ))}
-          </Card>
+          </div>
         </Section>
       ) : null}
 
       {organizer ? (
-        <Section title="Organizer">
-          <Card className="flex-col items-start gap-4 px-4 py-4 sm:flex-row sm:items-center sm:px-5">
+        <Section title="host.">
+          <div className="flex flex-col items-start gap-4 border-y border-border py-4 sm:flex-row sm:items-center">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-semibold text-muted-foreground outline outline-foreground/10 -outline-offset-1">
               {organizer.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -310,7 +307,7 @@ export const EventDetails = ({
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="truncate text-sm font-semibold">
+                <span className="truncate text-[17px] font-bold">
                   {organizer.fullName}
                 </span>
                 {event.organizerBadge?.verified ? (
@@ -334,12 +331,12 @@ export const EventDetails = ({
                 {event.friendsGoingCount} you follow going
               </span>
             ) : null}
-          </Card>
+          </div>
         </Section>
       ) : null}
 
       <Section
-        title="Reviews"
+        title="reviews."
         aside={
           ratings.ratingsCount > 0 ? (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold tabular-nums">
@@ -359,15 +356,15 @@ export const EventDetails = ({
               : "No reviews yet. Attendees are asked the morning after."}
           </p>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col border-t border-border">
             {reviews.slice(0, 4).map((rating) => (
-              <Card key={rating._id} className="flex-row gap-3 px-4 py-3.5 sm:px-5 sm:py-4">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+              <div key={rating._id} className="flex gap-3.5 border-b border-border py-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">
                   {initials(raterOf(rating))}
                 </span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold">
+                    <span className="text-[15px] font-bold">
                       {raterOf(rating)}
                     </span>
                     <span className="inline-flex gap-px">
@@ -383,11 +380,11 @@ export const EventDetails = ({
                       )}
                     </span>
                   </div>
-                  <p className="mt-1 text-[13px] leading-relaxed text-pretty text-muted-foreground">
+                  <p className="mt-1 text-[15px] leading-relaxed text-pretty text-muted-foreground">
                     {rating.review}
                   </p>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
